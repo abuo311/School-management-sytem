@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  db:
+    image: mysql:8.0
+    container_name: edumanager-db
+    restart: always
+    environment:
+      MYSQL_DATABASE: school_management
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - edumanager-net
+    healthcheck:
+      # Added '-u root' so the check has permission to ping the server
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root"]
+      timeout: 10s
+      retries: 10
+      # Gives MySQL 30 seconds to initialize before Docker starts complaining
+      start_period: 30s
+
+  school-app:
+    build: ./School-backend
+    container_name: edumanager-app
+    restart: always
+    ports:
+      - "80:8080"
+    environment:
+      # Explicitly using the container_name 'edumanager-db' to ensure resolution
+      SPRING_DATASOURCE_URL: jdbc:mysql://edumanager-db:3306/school_management?useSSL=false&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: ""
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - edumanager-net
+
+networks:
+  edumanager-net:
+    driver: bridge
+
+volumes:
+  mysql_data:
