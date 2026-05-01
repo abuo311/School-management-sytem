@@ -1,8 +1,19 @@
+# Stage 1: Build
+FROM maven:3.9-eclipse-temurin-17 AS builder
+
+WORKDIR /build
+
+COPY School-backend/pom.xml .
+COPY School-backend/src ./src
+
+RUN mvn clean package -DskipTests
+
+# Stage 2: Runtime
 FROM eclipse-temurin:17-jre-alpine
 
 WORKDIR /app
 
-COPY School-backend/target/School-management-sytem-0.0.1-SNAPSHOT.jar app.jar
+COPY --from=builder /build/target/School-management-sytem-0.0.1-SNAPSHOT.jar app.jar
 
 EXPOSE 8080
 
