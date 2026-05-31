@@ -8,11 +8,8 @@ import io.github.cdimascio.dotenv.Dotenv; // Import the Dotenv class
 public class SchoolManagementSystemApplication { // <--- Add the 's' here!
 
     public static void main(String[] args) {
-
-        Dotenv dotenv = Dotenv.configure().load(); // Load environment variables from .env file
-        System.setProperty("url", dotenv.get("url")); // Set the 'url'
-        System.setProperty("username", dotenv.get("username")); // Set the 'username'
-        System.setProperty("password", dotenv.get("password")); // Set the 'password'
+        Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
+        dotenv.entries().forEach(e -> System.setProperty(e.getKey(), e.getValue()));
         SpringApplication.run(SchoolManagementSystemApplication.class, args); // <--- And here!
     }
 }
