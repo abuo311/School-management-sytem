@@ -28,7 +28,6 @@ public class SchoolSettings {
     @Column(columnDefinition = "TEXT")
     private String reportSmsTemplate;
 
-    // Fixed: Using LONGTEXT to ensure Base64 strings aren't truncated
     @Lob
     @Column(name = "logo_url", columnDefinition = "LONGTEXT")
     private String logoUrl;
@@ -41,19 +40,29 @@ public class SchoolSettings {
     @Column(name = "school_stamp", columnDefinition = "LONGTEXT")
     private String schoolStamp;
 
-    @ElementCollection(fetch = FetchType.EAGER)
-    @CollectionTable(name = "form_masters_list", joinColumns = @JoinColumn(name = "settings_id"))
+    // Fixed: Changed from @ElementCollection to @OneToMany with CascadeType.ALL
+    // to give the collection table its own auto-increment primary key
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
+    @JoinColumn(name = "settings_id")
     private List<FormMasterData> formMasters = new ArrayList<>();
 }
 
-@Embeddable
+// Fixed: Promoted from @Embeddable to @Entity to satisfy the cloud MySQL
+// primary key restriction
+@Entity
+@Table(name = "form_masters_list")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 class FormMasterData {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id; // This satisfies sql_require_primary_key
+
     private String name;
-    
-    @Lob 
+
+    @Lob
     @Column(columnDefinition = "LONGTEXT")
     private String signature;
 }
