@@ -98,11 +98,19 @@ public class WebSecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        // Added 5173 (Vite default) and 3000 (React default)
-        configuration.setAllowedOrigins(Arrays.asList("https://school-management-sytem-seven.vercel.app/:5173",
-                "https://school-management-sytem-seven.vercel.app/:3000"));
+
+        // Corrected: Cleaned up the Vercel domain and added local testing origins
+        configuration.setAllowedOrigins(Arrays.asList(
+                "https://school-management-sytem-seven.vercel.app", // Your production frontend
+                "http://localhost:5173", // Local Vite development environment
+                "http://localhost:3000" // Local Create-React-App environment
+        ));
+
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Requested-With", "Accept"));
+        configuration.setAllowedHeaders(
+                Arrays.asList("Authorization", "Cache-Control", "Content-Type", "X-Requested-With", "Accept"));
+        configuration.setExposedHeaders(Arrays.asList("Authorization")); // Helps frontend interceptors read new JWTs if
+                                                                         // needed
         configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
