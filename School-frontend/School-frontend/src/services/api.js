@@ -7,7 +7,7 @@ const API = axios.create({
     // In production, point directly to your live Render backend URL
     // In development, point directly to your local Spring Boot server (port 8080)
     baseURL: isProduction 
-        ? 'https://your-backend-service-name.onrender.com/api' // Replace with your actual live Render Service URL
+        ? 'https://school-management-sytem.onrender.com/api' // Replace with your actual live Render Service URL
         : 'http://localhost:8080/api', 
     headers: {
         'Content-Type': 'application/json'
