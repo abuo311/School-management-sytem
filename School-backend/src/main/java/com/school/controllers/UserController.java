@@ -13,7 +13,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/users")
-@CrossOrigin(origins = "http://localhost:5173", allowCredentials = "true")
+@CrossOrigin(origins = "https://school-management-sytem-seven.vercel.app/:5173", allowCredentials = "true")
 public class UserController {
 
     @Autowired
@@ -54,7 +54,8 @@ public class UserController {
     public ResponseEntity<?> updateUser(@PathVariable Long id, @RequestBody User userDetails) {
         return userRepository.findById(id).map(user -> {
             if (user.getRole() == Role.ADMIN && "INACTIVE".equalsIgnoreCase(userDetails.getStatus())) {
-                return ResponseEntity.badRequest().body("Security Protection: Administrator accounts cannot be disabled.");
+                return ResponseEntity.badRequest()
+                        .body("Security Protection: Administrator accounts cannot be disabled.");
             }
             user.setStatus(userDetails.getStatus());
             user.setEnabled("ACTIVE".equalsIgnoreCase(userDetails.getStatus()));
@@ -77,7 +78,8 @@ public class UserController {
     public ResponseEntity<?> deleteUser(@PathVariable Long id) {
         return userRepository.findById(id).map(user -> {
             if (user.getRole() == Role.ADMIN) {
-                return ResponseEntity.badRequest().body("Security Protection: Administrator accounts cannot be deleted.");
+                return ResponseEntity.badRequest()
+                        .body("Security Protection: Administrator accounts cannot be deleted.");
             }
             userRepository.delete(user);
             return ResponseEntity.ok("User deleted successfully!");

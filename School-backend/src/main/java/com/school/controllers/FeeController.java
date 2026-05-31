@@ -11,7 +11,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping(value = "/api/fees", produces = "application/json")
-@CrossOrigin(origins = "http://localhost:5173")
+@CrossOrigin(origins = "https://school-management-sytem-seven.vercel.app/:5173")
 public class FeeController {
 
     private final FeeService feeService;
@@ -26,7 +26,8 @@ public class FeeController {
             // The service now handles duplicate checks and transactional logic
             return ResponseEntity.ok(feeService.savePayment(payment));
         } catch (RuntimeException e) {
-            // Returns a 400 error with the specific message (e.g., "Duplicate payment detected")
+            // Returns a 400 error with the specific message (e.g., "Duplicate payment
+            // detected")
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(Map.of("message", e.getMessage()));
         } catch (Exception e) {

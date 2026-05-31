@@ -1,12 +1,14 @@
 import axios from 'axios';
 
-// Detect if we are running in production (Docker) or development
-const isProduction = process.env.NODE_ENV === 'production';
+// Detect environment using standard Vite variable conventions
+const isProduction = import.meta.env.PROD;
 
 const API = axios.create({
-    // In production, we use a relative path so it hits the Docker container's own port.
-    // In development, we point to the local Spring Boot server.
-    baseURL: isProduction ? '/api' : 'http://localhost:8080/api',
+    // In production, point directly to your live Render backend URL
+    // In development, point directly to your local Spring Boot server (port 8080)
+    baseURL: isProduction 
+        ? 'https://your-backend-service-name.onrender.com/api' // Replace with your actual live Render Service URL
+        : 'http://localhost:8080/api', 
     headers: {
         'Content-Type': 'application/json'
     }
@@ -16,10 +18,11 @@ const API = axios.create({
 API.interceptors.request.use((config) => {
     const token = sessionStorage.getItem('token');
 
-    // Debugging logs
-    console.log(`[API Request] Path: ${config.url} | Env: ${process.env.NODE_ENV}`);
+    // Updated debugging logs for Vite tracking
+    console.log(`[API Request] Path: ${config.url} | IsProd: ${isProduction}`);
     
-    if (config.url.endsWith('/settings') && config.method === 'get') {
+    // Allow unauthenticated GET requests to reach public settings
+    if (config.url.endsWith('/settings') && config.method?.toLowerCase() === 'get') {
         return config;
     }
 

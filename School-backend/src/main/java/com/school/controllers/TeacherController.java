@@ -9,7 +9,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/teachers")
-@CrossOrigin(origins = "http://localhost:5173") // Matches your React port
+@CrossOrigin(origins = "https://school-management-sytem-seven.vercel.app/:5173") // Matches your React port
 public class TeacherController {
 
     private final TeacherService teacherService;
@@ -23,13 +23,13 @@ public class TeacherController {
         return teacherService.getAllTeachers();
     }
 
- @PostMapping
-public ResponseEntity<Teacher> createTeacher(@RequestBody Teacher teacher) {
-    // We can just call saveTeacher. 
-    // The service now handles checking for the User ID automatically.
-    Teacher savedTeacher = teacherService.saveTeacher(teacher);
-    return ResponseEntity.ok(savedTeacher);
-}
+    @PostMapping
+    public ResponseEntity<Teacher> createTeacher(@RequestBody Teacher teacher) {
+        // We can just call saveTeacher.
+        // The service now handles checking for the User ID automatically.
+        Teacher savedTeacher = teacherService.saveTeacher(teacher);
+        return ResponseEntity.ok(savedTeacher);
+    }
 
     @PutMapping("/{id}")
     public ResponseEntity<Teacher> updateTeacher(@PathVariable Long id, @RequestBody Teacher teacher) {

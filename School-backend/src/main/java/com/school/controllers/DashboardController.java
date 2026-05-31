@@ -12,7 +12,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/dashboard")
-@CrossOrigin(origins = "http://localhost:5173")
+@CrossOrigin(origins = "https://school-management-sytem-seven.vercel.app/:5173")
 public class DashboardController {
 
     private final StudentRepository studentRepository;
@@ -20,8 +20,8 @@ public class DashboardController {
     private final FeeRepository feeRepository;
 
     public DashboardController(StudentRepository studentRepository,
-                               TeacherRepository teacherRepository,
-                               FeeRepository feeRepository) {
+            TeacherRepository teacherRepository,
+            FeeRepository feeRepository) {
         this.studentRepository = studentRepository;
         this.teacherRepository = teacherRepository;
         this.feeRepository = feeRepository;

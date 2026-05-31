@@ -9,7 +9,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/classes")
-@CrossOrigin(origins = "http://localhost:5173")
+@CrossOrigin(origins = "https://school-management-sytem-seven.vercel.app/:5173")
 public class ClassController {
 
     @Autowired
@@ -29,7 +29,8 @@ public class ClassController {
         }
 
         schoolClass.setClassName(name);
-        // formMasterName is automatically set by @RequestBody if it matches the entity field
+        // formMasterName is automatically set by @RequestBody if it matches the entity
+        // field
         return ResponseEntity.ok(classRepository.save(schoolClass));
     }
 
@@ -40,12 +41,13 @@ public class ClassController {
 
             // Check if the name is being changed to something that already exists elsewhere
             if (!schoolClass.getClassName().equals(newName) && classRepository.existsByClassName(newName)) {
-                return ResponseEntity.badRequest().body("{\"message\": \"Another class with this name already exists.\"}");
+                return ResponseEntity.badRequest()
+                        .body("{\"message\": \"Another class with this name already exists.\"}");
             }
 
             // Update fields
             schoolClass.setClassName(newName);
-            
+
             // CRITICAL: Update the form master name here
             schoolClass.setFormMasterName(classDetails.getFormMasterName());
 
@@ -60,7 +62,8 @@ public class ClassController {
             classRepository.deleteById(id);
             return ResponseEntity.ok().body("{\"message\": \"Class deleted successfully.\"}");
         } catch (Exception e) {
-            return ResponseEntity.status(500).body("{\"message\": \"Could not delete class. It may be linked to students.\"}");
+            return ResponseEntity.status(500)
+                    .body("{\"message\": \"Could not delete class. It may be linked to students.\"}");
         }
     }
 }

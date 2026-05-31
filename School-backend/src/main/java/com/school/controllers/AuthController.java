@@ -18,7 +18,7 @@ import java.time.LocalDateTime; // Added import
 
 @RestController
 @RequestMapping("/api/auth")
-@CrossOrigin(origins = "http://localhost:5173", allowCredentials = "true")
+@CrossOrigin(origins = "https://school-management-sytem-seven.vercel.app/:5173", allowCredentials = "true")
 public class AuthController {
 
     private final AuthenticationManager authenticationManager;
@@ -27,8 +27,8 @@ public class AuthController {
 
     // Updated constructor to include UserRepository
     public AuthController(AuthenticationManager authenticationManager,
-                          JwtService jwtService,
-                          UserRepository userRepository) {
+            JwtService jwtService,
+            UserRepository userRepository) {
         this.authenticationManager = authenticationManager;
         this.jwtService = jwtService;
         this.userRepository = userRepository;

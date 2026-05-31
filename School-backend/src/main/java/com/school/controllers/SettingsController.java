@@ -7,7 +7,7 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/settings")
-@CrossOrigin(origins = "http://localhost:5173")
+@CrossOrigin(origins = "https://school-management-sytem-seven.vercel.app/:5173")
 public class SettingsController {
 
     private final SettingsRepository settingsRepository;
@@ -30,14 +30,14 @@ public class SettingsController {
 
         if (existingOpt.isPresent()) {
             SchoolSettings existing = existingOpt.get();
-            
+
             // 1. Update Basic Identity Fields
             existing.setSchoolName(settings.getSchoolName());
             existing.setMotto(settings.getMotto());
             existing.setAddress(settings.getAddress());
             existing.setPhone(settings.getPhone());
             existing.setEmail(settings.getEmail());
-            
+
             // 2. Update Academic Context
             existing.setAcademicYear(settings.getAcademicYear());
             existing.setCurrentTerm(settings.getCurrentTerm());

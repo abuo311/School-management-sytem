@@ -14,7 +14,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/results")
-@CrossOrigin(origins = "http://localhost:5173")
+@CrossOrigin(origins = "https://school-management-sytem-seven.vercel.app/:5173")
 public class ExamResultController {
 
     private final ExamResultRepository resultRepository;
@@ -37,7 +37,8 @@ public class ExamResultController {
     public ResponseEntity<String> deliverClassReports(@PathVariable String className, @PathVariable String term) {
         List<ExamResult> results = resultRepository.findByStudent_ClassNameAndTerm(className, term);
 
-        if (results.isEmpty()) return ResponseEntity.badRequest().body("No results found to deliver.");
+        if (results.isEmpty())
+            return ResponseEntity.badRequest().body("No results found to deliver.");
 
         Map<Long, List<ExamResult>> studentMap = results.stream()
                 .collect(Collectors.groupingBy(r -> r.getStudent().getId()));
@@ -51,8 +52,7 @@ public class ExamResultController {
                 // FIXED: Changed getGuardianName() to getParentName()
                 String message = String.format(
                         "Hello %s, your child %s's %s term report is ready. Total: %.2f, Avg: %.2f%%.",
-                        student.getParentName(), student.getFirstName(), term, total, avg
-                );
+                        student.getParentName(), student.getFirstName(), term, total, avg);
 
                 // FIXED: Changed getGuardianEmail() to getParentEmail()
                 if (student.getParentEmail() != null && !student.getParentEmail().isEmpty()) {
@@ -90,7 +90,8 @@ public class ExamResultController {
     }
 
     @GetMapping("/class/{grade}/subject/{subject}/term/{term}")
-    public List<ExamResult> getExistingScores(@PathVariable String grade, @PathVariable String subject, @PathVariable String term) {
+    public List<ExamResult> getExistingScores(@PathVariable String grade, @PathVariable String subject,
+            @PathVariable String term) {
         return resultRepository.findByStudent_GradeLevelAndSubjectAndTerm(grade, subject, term);
     }
 
@@ -106,8 +107,7 @@ public class ExamResultController {
                     res.getStudent().getId(),
                     res.getSubject(),
                     res.getTerm(),
-                    res.getAcademicYear()
-            );
+                    res.getAcademicYear());
 
             if (!existingRecords.isEmpty()) {
                 res.setId(existingRecords.get(0).getId());
@@ -118,15 +118,34 @@ public class ExamResultController {
             double total = classS + examS;
             res.setTotalScore(total);
 
-            if (total >= 80) { res.setGrade("1"); res.setRemarks("Highest Achievement"); }
-            else if (total >= 75) { res.setGrade("2"); res.setRemarks("Excellent"); }
-            else if (total >= 70) { res.setGrade("3"); res.setRemarks("Very Good"); }
-            else if (total >= 65) { res.setGrade("4"); res.setRemarks("Good"); }
-            else if (total >= 60) { res.setGrade("5"); res.setRemarks("Credit"); }
-            else if (total >= 55) { res.setGrade("6"); res.setRemarks("Credit"); }
-            else if (total >= 50) { res.setGrade("7"); res.setRemarks("Pass"); }
-            else if (total >= 45) { res.setGrade("8"); res.setRemarks("Pass"); }
-            else { res.setGrade("9"); res.setRemarks("Fail"); }
+            if (total >= 80) {
+                res.setGrade("1");
+                res.setRemarks("Highest Achievement");
+            } else if (total >= 75) {
+                res.setGrade("2");
+                res.setRemarks("Excellent");
+            } else if (total >= 70) {
+                res.setGrade("3");
+                res.setRemarks("Very Good");
+            } else if (total >= 65) {
+                res.setGrade("4");
+                res.setRemarks("Good");
+            } else if (total >= 60) {
+                res.setGrade("5");
+                res.setRemarks("Credit");
+            } else if (total >= 55) {
+                res.setGrade("6");
+                res.setRemarks("Credit");
+            } else if (total >= 50) {
+                res.setGrade("7");
+                res.setRemarks("Pass");
+            } else if (total >= 45) {
+                res.setGrade("8");
+                res.setRemarks("Pass");
+            } else {
+                res.setGrade("9");
+                res.setRemarks("Fail");
+            }
         }
         return resultRepository.saveAll(results);
     }

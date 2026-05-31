@@ -31,7 +31,7 @@ public class WebSecurityConfig {
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
     public WebSecurityConfig(UserDetailsServiceImpl userDetailsService,
-                            JwtAuthenticationFilter jwtAuthenticationFilter) {
+            JwtAuthenticationFilter jwtAuthenticationFilter) {
         this.userDetailsService = userDetailsService;
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
     }
@@ -69,11 +69,11 @@ public class WebSecurityConfig {
 
                         // Settings & Global Config: Only ADMIN
                         .requestMatchers("/api/settings/**").hasRole("ADMIN")
-                        
+
                         // Student Management: ADMIN and TEACHER
                         .requestMatchers("/api/students/**").hasAnyRole("ADMIN", "TEACHER", "BURSAR")
                         .requestMatchers("/api/attendance/**").hasAnyRole("ADMIN", "TEACHER")
-                        
+
                         // Academic Management: ADMIN and TEACHER
                         .requestMatchers("/api/subjects/**").hasAnyRole("ADMIN", "TEACHER")
                         .requestMatchers("/api/classes/**").hasAnyRole("ADMIN", "TEACHER")
@@ -99,7 +99,8 @@ public class WebSecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         // Added 5173 (Vite default) and 3000 (React default)
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:5173", "http://localhost:3000"));
+        configuration.setAllowedOrigins(Arrays.asList("https://school-management-sytem-seven.vercel.app/:5173",
+                "https://school-management-sytem-seven.vercel.app/:3000"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Requested-With", "Accept"));
         configuration.setAllowCredentials(true);

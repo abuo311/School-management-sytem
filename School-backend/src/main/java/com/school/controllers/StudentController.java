@@ -16,7 +16,8 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/students")
-@CrossOrigin(origins = "http://localhost:5173", methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE})
+@CrossOrigin(origins = "https://school-management-sytem-seven.vercel.app/:5173", methods = { RequestMethod.GET,
+        RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE })
 public class StudentController {
 
     private static final Logger logger = LoggerFactory.getLogger(StudentController.class);
@@ -33,7 +34,8 @@ public class StudentController {
         try {
             logger.info("Fetching students for class: {}", className);
             List<Student> students = studentRepository.findByClassName(className);
-            if (students.isEmpty()) return ResponseEntity.noContent().build();
+            if (students.isEmpty())
+                return ResponseEntity.noContent().build();
             return ResponseEntity.ok(students);
         } catch (Exception e) {
             logger.error("Error fetching students for class: " + className, e);

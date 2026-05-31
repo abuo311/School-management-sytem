@@ -14,7 +14,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/notifications")
-@CrossOrigin(origins = "http://localhost:5173")
+@CrossOrigin(origins = "https://school-management-sytem-seven.vercel.app/:5173")
 public class NotificationController {
 
     private final SmsService smsService;
@@ -23,9 +23,9 @@ public class NotificationController {
     private final SettingsRepository settingsRepository;
 
     public NotificationController(SmsService smsService,
-                                  EmailService emailService,
-                                  ExamResultRepository resultRepository,
-                                  SettingsRepository settingsRepository) {
+            EmailService emailService,
+            ExamResultRepository resultRepository,
+            SettingsRepository settingsRepository) {
         this.smsService = smsService;
         this.emailService = emailService;
         this.resultRepository = resultRepository;
@@ -38,31 +38,32 @@ public class NotificationController {
      */
     @PostMapping("/email/report/student/{studentId}/term/{term}/attachment")
     public ResponseEntity<String> sendStudentEmailWithAttachment(
-            @PathVariable Long studentId, 
+            @PathVariable Long studentId,
             @PathVariable String term,
             @RequestParam("file") MultipartFile file) {
-        
+
         try {
             List<ExamResult> results = resultRepository.findByStudent_IdAndTerm(studentId, term);
-            if (results.isEmpty()) return ResponseEntity.badRequest().body("No results found for student");
+            if (results.isEmpty())
+                return ResponseEntity.badRequest().body("No results found for student");
 
             var student = results.get(0).getStudent();
             if (student.getParentEmail() == null || student.getParentEmail().isEmpty()) {
                 return ResponseEntity.badRequest().body("Parent email not found");
             }
 
-            String subject = "Academic Report Card: " + student.getFirstName() + " " + student.getLastName() + " - " + term;
-            String body = "<h3>Dear Parent,</h3><p>Please find the attached academic report for <b>" 
-                          + student.getFirstName() + " " + student.getLastName() + "</b> for " + term + ".</p>"
-                          + "<p>Best Regards,<br>School Administration</p>";
+            String subject = "Academic Report Card: " + student.getFirstName() + " " + student.getLastName() + " - "
+                    + term;
+            String body = "<h3>Dear Parent,</h3><p>Please find the attached academic report for <b>"
+                    + student.getFirstName() + " " + student.getLastName() + "</b> for " + term + ".</p>"
+                    + "<p>Best Regards,<br>School Administration</p>";
 
             emailService.sendEmailWithAttachment(
-                student.getParentEmail(), 
-                subject, 
-                body, 
-                file.getBytes(), 
-                "Report_" + student.getLastName() + "_" + term.replace(" ", "_") + ".pdf"
-            );
+                    student.getParentEmail(),
+                    subject,
+                    body,
+                    file.getBytes(),
+                    "Report_" + student.getLastName() + "_" + term.replace(" ", "_") + ".pdf");
 
             return ResponseEntity.ok("Email sent successfully to " + student.getParentEmail());
         } catch (Exception e) {
@@ -72,11 +73,12 @@ public class NotificationController {
 
     /**
      * BULK EMAIL TRIGGER (Simplified)
-     * For high-volume, you would typically generate PDFs on the backend using iText/OpenPDF
+     * For high-volume, you would typically generate PDFs on the backend using
+     * iText/OpenPDF
      */
     @PostMapping("/email/report/bulk/class/{className}/term/{term}")
     public ResponseEntity<String> sendBulkClassEmail(@PathVariable String className, @PathVariable String term) {
-        // This endpoint can be used to trigger backend-generated reports 
+        // This endpoint can be used to trigger backend-generated reports
         // Or simply acknowledge that the frontend will loop through students
         return ResponseEntity.ok("Bulk request received for class: " + className);
     }
@@ -87,12 +89,13 @@ public class NotificationController {
     @PostMapping("/sms/report/student/{studentId}/term/{term}")
     public ResponseEntity<String> sendStudentSms(@PathVariable Long studentId, @PathVariable String term) {
         List<ExamResult> results = resultRepository.findByStudent_IdAndTerm(studentId, term);
-        if (results.isEmpty()) return ResponseEntity.badRequest().body("No results found");
+        if (results.isEmpty())
+            return ResponseEntity.badRequest().body("No results found");
 
         var student = results.get(0).getStudent();
         double totalScore = results.stream().mapToDouble(ExamResult::getTotalScore).sum();
         List<Object[]> ranks = resultRepository.findClassRanks(student.getClassName(), term);
-        
+
         int position = 0;
         for (int i = 0; i < ranks.size(); i++) {
             if (ranks.get(i)[0].equals(studentId)) {
