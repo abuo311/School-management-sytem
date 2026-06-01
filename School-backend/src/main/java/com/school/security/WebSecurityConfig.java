@@ -99,18 +99,20 @@ public class WebSecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        // Corrected: Cleaned up the Vercel domain and added local testing origins
-        configuration.setAllowedOrigins(Arrays.asList(
-                "https://school-management-sytem-seven.vercel.app", // Your production frontend
-                "http://localhost:5173", // Local Vite development environment
-                "http://localhost:3000" // Local Create-React-App environment
+        // Using allowed origin patterns to dynamically support all Vercel preview
+        // deployment URLs
+        configuration.setAllowedOriginPatterns(Arrays.asList(
+                "https://school-management-sytem-seven.vercel.app", // Your primary production domain
+                "https://school-management-sytem-*.vercel.app", // Wildcard to match ALL your Vercel deployment
+                                                                // variations!
+                "http://localhost:5173", // Local Vite environment
+                "http://localhost:3000" // Local CRA environment
         ));
 
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(
                 Arrays.asList("Authorization", "Cache-Control", "Content-Type", "X-Requested-With", "Accept"));
-        configuration.setExposedHeaders(Arrays.asList("Authorization")); // Helps frontend interceptors read new JWTs if
-                                                                         // needed
+        configuration.setExposedHeaders(Arrays.asList("Authorization"));
         configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
