@@ -61,6 +61,8 @@ public class WebSecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                        // CRITICAL: Explicitly allow browser OPTIONS requests to bypass auth checks
+                        // entirely
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/settings").permitAll()
@@ -70,7 +72,7 @@ public class WebSecurityConfig {
                         // Settings & Global Config: Only ADMIN
                         .requestMatchers("/api/settings/**").hasRole("ADMIN")
 
-                        // Student Management: ADMIN and TEACHER
+                        // Student Management: ADMIN, TEACHER, and BURSAR
                         .requestMatchers("/api/students/**").hasAnyRole("ADMIN", "TEACHER", "BURSAR")
                         .requestMatchers("/api/attendance/**").hasAnyRole("ADMIN", "TEACHER")
 
@@ -109,9 +111,20 @@ public class WebSecurityConfig {
                 "http://localhost:3000" // Local CRA environment
         ));
 
+        // Allowed request types
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(
-                Arrays.asList("Authorization", "Cache-Control", "Content-Type", "X-Requested-With", "Accept"));
+
+        // Comprehensive headers matching typical browser request signatures
+        configuration.setAllowedHeaders(Arrays.asList(
+                "Authorization",
+                "Cache-Control",
+                "Content-Type",
+                "X-Requested-With",
+                "Accept",
+                "Origin",
+                "Pragma",
+                "Expires"));
+
         configuration.setExposedHeaders(Arrays.asList("Authorization"));
         configuration.setAllowCredentials(true);
 
