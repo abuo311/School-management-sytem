@@ -69,19 +69,40 @@ const PromotionManager = () => {
         if (!window.confirm("CRITICAL: This clears current logs after backup. Proceed?")) return;
 
         setLoading(true);
-        const backupSuccess = await backupAttendanceToExcel(false);
+        try {
+            const backupSuccess = await backupAttendanceToExcel(false);
 
-        if (backupSuccess) {
-            try {
-                await API.post('/promotion/process');
-                await API.delete('/attendance/clear-all');
-                alert("Promotion successful. Data archived.");
-                fetchHistory();
-            } catch (err) {
-                alert("Promotion command failed. Data was NOT cleared.");
+            if (backupSuccess) {
+                try {
+                    const res = await API.post('/promotion/process');
+                    console.log("Promotion response:", res.data);
+                    
+                    // Clear attendance after successful promotion
+                    try {
+                        await API.delete('/attendance/clear-all');
+                    } catch (clearErr) {
+                        console.warn("Attendance clear warning (may require admin):", clearErr);
+                    }
+                    
+                    alert("Promotion successful. Data archived.");
+                    await fetchHistory(); // Refresh history
+                    setServerError(false);
+                } catch (promErr) {
+                    console.error("Promotion error:", promErr);
+                    alert("Promotion command failed. Data was NOT cleared. " + (promErr.response?.data || promErr.message));
+                    setServerError(true);
+                }
+            } else {
+                alert("Backup failed. Promotion cancelled for safety.");
+                setServerError(true);
             }
+        } catch (err) {
+            console.error("Unexpected error:", err);
+            alert("An unexpected error occurred: " + err.message);
+            setServerError(true);
+        } finally {
+            setLoading(false);
         }
-        setLoading(false);
     };
 
     return (
@@ -145,7 +166,7 @@ const PromotionManager = () => {
                         </h6>
                         <div className="table-responsive">
                             <table className="table table-hover align-middle">
-                                <thead className="bg-dark text-warning small text-uppercase">
+                                <thead className="bg-dark text-white small text-uppercase">
                                 <tr>
                                     <th className="py-3 px-3">Date</th>
                                     <th>Academic Year</th>

@@ -59,6 +59,12 @@ public class SettingsController {
                 existing.getFormMasters().addAll(settings.getFormMasters()); // Adds new entries
             }
 
+            // 5. SYNC STAFF REMARKS COLLECTION
+            existing.getStaffRemarks().clear(); // Deletes old entries in staff_remarks_list
+            if (settings.getStaffRemarks() != null) {
+                existing.getStaffRemarks().addAll(settings.getStaffRemarks()); // Adds new entries
+            }
+
             return settingsRepository.save(existing);
         } else {
             // Very first time setup

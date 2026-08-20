@@ -19,12 +19,14 @@ const Settings = () => {
         nextTermFees: 0,
         headTeacherSign: '',
         schoolStamp: '',
-        formMasters: [], 
+        formMasters: [],
+        staffRemarks: [],
         reportSmsTemplate: "Dear Parent, {name}'s report for {term} is ready. Score: {score}, Pos: {position}/{total}."
     });
     
     const [teachers, setTeachers] = useState([]);
     const [activeMasterIndex, setActiveMasterIndex] = useState(0);
+    const [activeRemarkIndex, setActiveRemarkIndex] = useState(0);
     const [loading, setLoading] = useState(false);
 
     const goldColor = '#d4af37';
@@ -52,10 +54,15 @@ const Settings = () => {
                 const masters = res.data.formMasters && res.data.formMasters.length > 0 
                     ? res.data.formMasters 
                     : [{ name: '', signature: '' }];
+                
+                const remarks = res.data.staffRemarks && res.data.staffRemarks.length > 0
+                    ? res.data.staffRemarks
+                    : [{ staffName: '', remarks: '' }];
 
                 setConfig({
                     ...res.data,
-                    formMasters: masters
+                    formMasters: masters,
+                    staffRemarks: remarks
                 });
             }
         } catch (err) {
@@ -111,6 +118,19 @@ const Settings = () => {
         const updated = config.formMasters.filter((_, i) => i !== index);
         setConfig(prev => ({ ...prev, formMasters: updated }));
         setActiveMasterIndex(0);
+    };
+
+    const addStaffRemark = () => {
+        const newRemarks = [...config.staffRemarks, { staffName: '', remarks: '' }];
+        setConfig(prev => ({ ...prev, staffRemarks: newRemarks }));
+        setActiveRemarkIndex(newRemarks.length - 1);
+    };
+
+    const removeStaffRemark = (index) => {
+        if (config.staffRemarks.length <= 1) return;
+        const updated = config.staffRemarks.filter((_, i) => i !== index);
+        setConfig(prev => ({ ...prev, staffRemarks: updated }));
+        setActiveRemarkIndex(Math.max(0, activeRemarkIndex - 1));
     };
 
     const handleSave = async (e) => {
@@ -263,6 +283,78 @@ const Settings = () => {
                                     <input type="file" className="form-control form-control-sm mx-auto" style={{maxWidth: '280px'}} accept="image/*"
                                            onChange={(e) => handleFileUpload(e, null, true)} />
                                 </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Section 2.5: Staff Remarks */}
+                    <div className="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
+                        <div className="d-flex justify-content-between align-items-center mb-4">
+                            <h5 className="fw-bold mb-0 d-flex align-items-center gap-2">
+                                <MessageSquare size={20} style={{ color: goldColor }}/> Staff Remarks
+                            </h5>
+                            <button type="button" className="btn btn-sm btn-outline-dark rounded-pill" onClick={addStaffRemark}>
+                                <Plus size={16} /> Add Remark
+                            </button>
+                        </div>
+
+                        <div className="row g-4">
+                            <div className="col-md-6">
+                                <label className="small fw-bold mb-1">Select Remark Slot</label>
+                                <div className="d-flex gap-2">
+                                    <select className="form-select bg-light border-0" 
+                                            value={activeRemarkIndex} 
+                                            onChange={e => setActiveRemarkIndex(parseInt(e.target.value))}>
+                                        {config.staffRemarks.map((r, i) => (
+                                            <option key={i} value={i}>
+                                                {r.staffName ? `Remark: ${r.staffName}` : `Empty Slot ${i+1}`}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    <button type="button" className="btn btn-light text-danger" onClick={() => removeStaffRemark(activeRemarkIndex)}>
+                                        <Trash2 size={18}/>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div className="col-md-6">
+                                <label className="small fw-bold mb-1">Staff Name/Title</label>
+                                <input 
+                                    type="text"
+                                    className="form-control bg-light border-0"
+                                    placeholder="e.g., Sports Director, Chaplain, Music Teacher"
+                                    value={config.staffRemarks[activeRemarkIndex]?.staffName || ''}
+                                    onChange={e => {
+                                        const newValue = e.target.value;
+                                        setConfig(prev => {
+                                            const updated = [...prev.staffRemarks];
+                                            if (updated[activeRemarkIndex]) {
+                                                updated[activeRemarkIndex] = { ...updated[activeRemarkIndex], staffName: newValue };
+                                            }
+                                            return { ...prev, staffRemarks: updated };
+                                        });
+                                    }}
+                                />
+                            </div>
+
+                            <div className="col-12 mt-2">
+                                <label className="small fw-bold mb-1">Remark Content</label>
+                                <textarea 
+                                    className="form-control bg-light border-0 small" 
+                                    rows="3"
+                                    placeholder="Enter the remark/comment for this staff member"
+                                    value={config.staffRemarks[activeRemarkIndex]?.remarks || ''}
+                                    onChange={e => {
+                                        const newValue = e.target.value;
+                                        setConfig(prev => {
+                                            const updated = [...prev.staffRemarks];
+                                            if (updated[activeRemarkIndex]) {
+                                                updated[activeRemarkIndex] = { ...updated[activeRemarkIndex], remarks: newValue };
+                                            }
+                                            return { ...prev, staffRemarks: updated };
+                                        });
+                                    }}
+                                ></textarea>
                             </div>
                         </div>
                     </div>

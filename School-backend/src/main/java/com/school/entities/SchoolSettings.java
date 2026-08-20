@@ -52,6 +52,10 @@ public class SchoolSettings {
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
     @JoinColumn(name = "settings_id")
     private List<FormMasterData> formMasters = new ArrayList<>();
+
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
+    @JoinColumn(name = "settings_id")
+    private List<StaffRemarkData> staffRemarks = new ArrayList<>();
 }
 
 // Fixed: Promoted from @Embeddable to @Entity to satisfy the cloud MySQL
@@ -72,4 +76,22 @@ class FormMasterData {
     @Lob
     @Column(columnDefinition = "LONGTEXT")
     private String signature;
+}
+
+@Entity
+@Table(name = "staff_remarks_list")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+class StaffRemarkData {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    private String staffName;
+
+    @Lob
+    @Column(columnDefinition = "LONGTEXT")
+    private String remarks;
 }

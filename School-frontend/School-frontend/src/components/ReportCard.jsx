@@ -271,7 +271,7 @@ const ReportCard = () => {
                         display: flex; 
                         flex-direction: column; 
                         width: 210mm; 
-                        min-height: 297mm; 
+                        height: 297mm;
                         max-width: 100%;
                         background: white; 
                         border: 1px solid #ddd; 
@@ -290,34 +290,34 @@ const ReportCard = () => {
                         }
                         .report-page {
                             width: 100%;
-                            min-height: auto;
+                            height: auto;
                             aspect-ratio: 210 / 297;
                             transform: none;
                             transform-origin: top center;
                             margin: 0 !important;
                             flex-shrink: 0;
-                            font-size: clamp(0.72rem, 2vw, 0.95rem);
+                            font-size: clamp(0.7rem, 1.8vw, 0.9rem);
                         }
                         .report-page .report-header {
                             flex-direction: column;
-                            gap: 0.7rem;
+                            gap: 0.5rem;
                             text-align: center;
                         }
                         .report-page .report-header .text-start {
                             text-align: center;
                         }
                         .report-page .report-header img {
-                            height: 56px;
+                            height: 40px;
                         }
-                        .report-page .p-5 {
-                            padding: 1rem !important;
+                        .report-page .p-2 {
+                            padding: 0.5rem !important;
                         }
                         .report-page .col-3 {
                             flex: 0 0 50%;
                             max-width: 50%;
                         }
                         .report-page .table {
-                            font-size: clamp(0.7rem, 2vw, 0.85rem);
+                            font-size: clamp(0.6rem, 1.8vw, 0.75rem);
                         }
                     }
 
@@ -333,6 +333,16 @@ const ReportCard = () => {
                             page-break-after: always !important; 
                             border: none !important; 
                             margin: 0 !important; 
+                        }
+                        /* Ensure remarks section stays horizontal in print */
+                        .report-page .border-top .row {
+                            display: flex !important;
+                            flex-wrap: wrap !important;
+                        }
+                        .report-page .border-top .col-md-4 {
+                            flex: 0 0 33.333% !important;
+                            max-width: 33.333% !important;
+                            page-break-inside: avoid !important;
                         }
                     }
                     .fw-black { font-weight: 900; }
@@ -399,32 +409,32 @@ const ReportCard = () => {
                         <div id={`report-page-${report.studentId}`} className="report-page">
                             
                             {/* Header */}
-                            <div className="bg-black text-white p-4 text-center border-bottom border-warning border-5 report-header">
-                                <div className="d-flex align-items-center justify-content-center gap-4">
-                                    {settings?.logoUrl && <img src={settings.logoUrl} alt="Logo" style={{ height: '80px' }} />}
+                            <div className="bg-black text-white p-2 text-center border-bottom border-dark border-5 report-header">
+                                <div className="d-flex align-items-center justify-content-center gap-2">
+                                    {settings?.logoUrl && <img src={settings.logoUrl} alt="Logo" style={{ height: '50px' }} />}
                                     <div className="text-start">
-                                        <h2 className="fw-300 text-uppercase m-0 text-warning text-lg" style={{ fontSize: '1.75rem'  }}>{settings.schoolName}</h2>
-                                        <p className="mb-0 small fw-bold text-white">{settings?.motto}</p>
-                                        <p className="small mb-0 text-white">{settings?.address} | {settings?.phone}</p>
+                                        <h2 className="fw-300 text-uppercase m-0 text-dark text-lg" style={{ fontSize: '1.3rem'  }}>{settings.schoolName}</h2>
+                                        <p className="mb-0 x-small fw-bold text-white" style={{ fontSize: '0.7rem' }}>{settings?.motto}</p>
+                                        <p className="x-small mb-0 text-white" style={{ fontSize: '0.65rem' }}>{settings?.address} | {settings?.phone}</p>
                                     </div>
                                 </div>
                             </div>
 
-                            <div className="p-5 flex-grow-1 d-flex flex-column justify-content-between">
+                            <div className="p-2 flex-grow-1 d-flex flex-column justify-content-between" style={{ fontSize: '0.9rem', overflowY: 'hidden' }}>
                                 {/* Student Info */}
-                                <div className="row mb-4 bg-light p-3 rounded-3 mx-0 border-start border-warning border-5 align-items-center">
+                                <div className="row mb-2 bg-light p-2 rounded-2 mx-0 border-start border-dark border-5 align-items-center">
                                     <div className="col-7">
-                                        <small className="text-dark d-block text-uppercase fw-bold" style={{ fontSize: '0.75rem' }}>Pupil Name</small>
-                                        <h5 className="mb-0 text-uppercase fw-black" style={{ fontSize: '1.2rem' }}>{report.studentName}</h5>
+                                        <small className="text-dark d-block text-uppercase fw-bold" style={{ fontSize: '0.6rem' }}>Pupil Name</small>
+                                        <h5 className="mb-0 text-uppercase fw-black" style={{ fontSize: '0.9rem', color: '#1a1a1a' }}>{report.studentName}</h5>
                                     </div>
                                     <div className="col-5 text-end">
-                                        <span className="badge bg-black text-warning px-3 py-2 mb-2">{term.toUpperCase()}</span>
-                                        <p className="mb-0 small fw-bold text-dark">Class: {selectedClass} | {report.academicYear}</p>
+                                        <span className="badge bg-dark text-white px-2 py-1 mb-1" style={{ fontSize: '0.6rem' }}>{term.toUpperCase()}</span>
+                                        <p className="mb-0 x-small fw-bold text-dark" style={{ fontSize: '0.65rem' }}>Class: {selectedClass} | {report.academicYear}</p>
                                     </div>
                                 </div>
 
                                 {/* Key Stats */}
-                                <div className="row g-3 mb-4 text-center">
+                                <div className="row g-2 mb-2 text-center">
                                     {[
                                         { label: 'Total Score', value: report.totalScore },
                                         { label: 'Average', value: report.subjects.length > 0 ? `${(report.totalScore / report.subjects.length).toFixed(1)}%` : '0%' },
@@ -432,87 +442,105 @@ const ReportCard = () => {
                                         { label: 'Class Size', value: report.classSize }
                                     ].map((stat, i) => (
                                         <div className="col-3" key={i}>
-                                            <div className={`p-2 border rounded shadow-sm ${stat.highlight ? 'border-warning bg-warning bg-opacity-10' : 'bg-white'}`}>
-                                                <small className="text-dark d-block fw-bold" style={{fontSize: '0.65rem'}}>{stat.label}</small>
-                                                <h5 className="fw-black mb-0" style={{ fontSize: '1.1rem' }}>{stat.value}</h5>
+                                            <div className={`p-1 border rounded shadow-sm ${stat.highlight ? 'border-dark bg-light' : 'bg-white'}`}>
+                                                <small className="text-dark d-block fw-bold" style={{fontSize: '0.55rem', color: '#333'}}>{stat.label}</small>
+                                                <h5 className="fw-black mb-0 text-dark" style={{ fontSize: '0.85rem', color: '#1a1a1a' }}>{stat.value}</h5>
                                             </div>
                                         </div>
                                     ))}
                                 </div>
 
                                 {/* Subjects Table */}
-                                <div className="table-responsive">
-                                    <table className="table table-bordered border-dark align-middle mb-4">
-                                        <thead className="bg-black text-warning">
+                                <div className="table-responsive" style={{ overflow: 'hidden' }}>
+                                    <table className="table table-bordered border-dark align-middle mb-2" style={{ fontSize: '0.75rem', marginBottom: '0' }}>
+                                        <thead className="bg-dark text-white">
                                             <tr>
-                                                <th className="px-3">SUBJECT</th>
-                                                <th className="text-center" style={{ width: '100px' }}>SCORE</th>
-                                                <th className="text-center" style={{ width: '100px' }}>GRADE</th>
-                                                <th>REMARKS</th>
+                                                <th className="px-2 py-1" style={{ fontSize: '0.7rem' }}>SUBJECT</th>
+                                                <th className="text-center py-1" style={{ width: '80px', fontSize: '0.7rem' }}>SCORE</th>
+                                                <th className="text-center py-1" style={{ width: '70px', fontSize: '0.7rem' }}>GRADE</th>
+                                                <th className="py-1" style={{ fontSize: '0.7rem' }}>REMARKS</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             {report.subjects.map((sub, i) => (
                                                 <tr key={i}>
-                                                    <td className="fw-bold px-3">{sub.subjectName}</td>
-                                                    <td className="text-center fw-bold">{sub.score}</td>
-                                                    <td className="text-center"><span className="badge bg-light text-dark border border-dark">{sub.grade}</span></td>
-                                                    <td className="small italic text-dark">{sub.remarks}</td>
+                                                    <td className="fw-bold px-2 py-1" style={{ color: '#1a1a1a' }}>{sub.subjectName}</td>
+                                                    <td className="text-center fw-bold py-1" style={{ color: '#1a1a1a' }}>{sub.score}</td>
+                                                    <td className="text-center py-1"><span className="badge bg-light text-dark border border-dark" style={{ fontSize: '0.65rem' }}>{sub.grade}</span></td>
+                                                    <td className="py-1" style={{ fontSize: '0.7rem', color: '#333' }}>{sub.remarks}</td>
                                                 </tr>
                                             ))}
                                         </tbody>
                                     </table>
                                 </div>
 
-                                {/* School Notice */}
-                                <div className="border rounded-3 p-3 bg-light mb-4">
-                                    <div className="row g-3">
+                                {/* School Notice & Remarks - Horizontal Layout */}
+                                <div className="border rounded-2 p-2 bg-light mb-2">
+                                    <div className="row g-2 mb-2">
                                         <div className="col-md-6">
-                                            <small className="text-uppercase fw-bold text-dark">Fees Owed</small>
-                                            <p className="mb-0 fw-black text-dark">{formatCurrency(report.feesOwed)}</p>
+                                            <small className="text-uppercase fw-bold text-dark" style={{ fontSize: '0.65rem', color: '#1a1a1a' }}>Fees Owed</small>
+                                            <p className="mb-0 fw-black text-dark" style={{ fontSize: '0.8rem', color: '#1a1a1a' }}>{formatCurrency(report.feesOwed)}</p>
                                         </div>
                                         <div className="col-md-6">
-                                            <small className="text-uppercase fw-bold text-dark">Next Term Fees</small>
-                                            <p className="mb-0 fw-black text-dark">{formatCurrency(report.nextTermFees)}</p>
+                                            <small className="text-uppercase fw-bold text-dark" style={{ fontSize: '0.65rem', color: '#1a1a1a' }}>Next Term Fees</small>
+                                            <p className="mb-0 fw-black text-dark" style={{ fontSize: '0.8rem', color: '#1a1a1a' }}>{formatCurrency(report.nextTermFees)}</p>
                                         </div>
                                     </div>
-                                    <div className="mt-3 border-top pt-3">
-                                        <p className="mb-1 small fw-bold text-dark">Headmaster's Remark</p>
-                                        <p className="mb-2 small text-dark">{settings?.headMasterRemark || 'A great effort has been made this term. Keep up the good work.'}</p>
-                                        <p className="mb-1 small fw-bold text-dark">Teacher's Remark</p>
-                                        <p className="mb-2 small text-dark">{settings?.teacherRemark || 'Consistent effort and steady improvement are encouraged.'}</p>
-                                        <p className="mb-1 small fw-bold text-dark">Next Term Begins</p>
-                                        <p className="mb-0 small text-dark">{settings?.nextTermBegins ? new Date(settings.nextTermBegins).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }) : 'To be announced soon.'}</p>
+                                    <div className="border-top pt-2">
+                                        <div className="row g-2">
+                                            <div className="col-md-4">
+                                                <p className="mb-1 x-small fw-bold text-dark" style={{ fontSize: '0.65rem', color: '#1a1a1a' }}>Headmaster's Remark</p>
+                                                <p className="mb-1 x-small text-dark" style={{ fontSize: '0.65rem', color: '#333', lineHeight: '1.2' }}>{settings?.headMasterRemark || 'A great effort has been made this term. Keep up the good work.'}</p>
+                                            </div>
+                                            <div className="col-md-4">
+                                                <p className="mb-1 x-small fw-bold text-dark" style={{ fontSize: '0.65rem', color: '#1a1a1a' }}>Teacher's Remark</p>
+                                                <p className="mb-1 x-small text-dark" style={{ fontSize: '0.65rem', color: '#333', lineHeight: '1.2' }}>{settings?.teacherRemark || 'Consistent effort and steady improvement are encouraged.'}</p>
+                                            </div>
+                                            <div className="col-md-4">
+                                                <p className="mb-1 x-small fw-bold text-dark" style={{ fontSize: '0.65rem', color: '#1a1a1a' }}>Next Term Begins</p>
+                                                <p className="mb-0 x-small text-dark" style={{ fontSize: '0.65rem', color: '#333', lineHeight: '1.2' }}>{settings?.nextTermBegins ? new Date(settings.nextTermBegins).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }) : 'To be announced soon.'}</p>
+                                            </div>
+                                            {settings?.staffRemarks && Array.isArray(settings.staffRemarks) && settings.staffRemarks.length > 0 && (
+                                                <>
+                                                    {settings.staffRemarks.map((remark, idx) => (
+                                                        <div className="col-md-4" key={idx}>
+                                                            <p className="mb-1 x-small fw-bold text-dark" style={{ fontSize: '0.65rem', color: '#1a1a1a' }}>{remark.staffName || `Staff Remark ${idx + 1}`}</p>
+                                                            <p className="mb-1 x-small text-dark" style={{ fontSize: '0.65rem', color: '#333', lineHeight: '1.2' }}>{remark.remarks || 'No remarks.'}</p>
+                                                        </div>
+                                                    ))}
+                                                </>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
 
                                 {/* Signatures */}
-                                <div className="mt-auto pt-4">
+                                <div className="mt-auto pt-2">
                                     <div className="row align-items-end text-center">
                                         <div className="col-4">
-                                            <div style={{ height: '50px' }} className="d-flex align-items-end justify-content-center mb-1">
-                                                {settings?.headTeacherSign && <img src={settings.headTeacherSign} alt="Sign" style={{ maxHeight: '50px' }} />}
+                                            <div style={{ height: '35px' }} className="d-flex align-items-end justify-content-center mb-0">
+                                                {settings?.headTeacherSign && <img src={settings.headTeacherSign} alt="Sign" style={{ maxHeight: '35px' }} />}
                                             </div>
-                                            <div className="border-top border-dark mx-2 pt-1">
-                                                <p className="small mb-0 fw-bold">HEADMASTER</p>
-                                                <small className="text-dark" style={{fontSize: '10px'}}>{settings?.headMasterName || 'Signatory'}</small>
+                                            <div className="border-top border-dark mx-1 pt-0">
+                                                <p className="x-small mb-0 fw-bold" style={{ fontSize: '0.65rem', color: '#1a1a1a' }}>HEADMASTER</p>
+                                                <small className="text-dark" style={{fontSize: '0.6rem', color: '#333'}}>{settings?.headMasterName || 'Signatory'}</small>
                                             </div>
                                         </div>
                                         <div className="col-4">
-                                            <div style={{ height: '80px' }} className="d-flex align-items-center justify-content-center">
-                                                {settings?.schoolStamp && <img src={settings.schoolStamp} alt="Stamp" style={{ maxHeight: '80px', opacity: '0.5' }} />}
+                                            <div style={{ height: '50px' }} className="d-flex align-items-center justify-content-center">
+                                                {settings?.schoolStamp && <img src={settings.schoolStamp} alt="Stamp" style={{ maxHeight: '50px', opacity: '0.5' }} />}
                                             </div>
-                                            <small className="text-dark fw-bold" style={{fontSize: '9px'}}>OFFICIAL STAMP</small>
+                                            <small className="text-dark fw-bold" style={{fontSize: '0.6rem', color: '#1a1a1a'}}>OFFICIAL STAMP</small>
                                         </div>
                                         <div className="col-4">
-                                            <div style={{ height: '50px' }} className="d-flex align-items-end justify-content-center mb-1">
+                                            <div style={{ height: '35px' }} className="d-flex align-items-end justify-content-center mb-0">
                                                 {getMasterSignature(report.formMasterName) && (
-                                                    <img src={getMasterSignature(report.formMasterName)} alt="Sign" style={{ maxHeight: '50px' }} />
+                                                    <img src={getMasterSignature(report.formMasterName)} alt="Sign" style={{ maxHeight: '35px' }} />
                                                 )}
                                             </div>
-                                            <div className="border-top border-dark mx-2 pt-1">
-                                                <p className="small mb-0 fw-bold">FORM MASTER</p>
-                                                <small className="text-dark" style={{fontSize: '10px'}}>{report.formMasterName || '________________'}</small>
+                                            <div className="border-top border-dark mx-1 pt-0">
+                                                <p className="x-small mb-0 fw-bold" style={{ fontSize: '0.65rem', color: '#1a1a1a' }}>FORM MASTER</p>
+                                                <small className="text-dark" style={{fontSize: '0.6rem', color: '#333'}}>{report.formMasterName || '________________'}</small>
                                             </div>
                                         </div>
                                     </div>
