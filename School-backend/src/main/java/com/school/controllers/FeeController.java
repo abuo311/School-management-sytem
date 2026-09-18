@@ -11,7 +11,11 @@ import java.util.Map;
 
 @RestController
 @RequestMapping(value = "/api/fees", produces = "application/json")
-@CrossOrigin(origins = "https://school-management-sytem-seven.vercel.app/:5173")
+@CrossOrigin(origins = {
+    "https://school-management-sytem-seven.vercel.app",
+    "http://localhost:5173",
+    "http://127.0.0.1:5173"
+})
 public class FeeController {
 
     private final FeeService feeService;
@@ -64,11 +68,25 @@ public class FeeController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<?> delete(@PathVariable Long id) {
+        return deletePayment(id);
+    }
+
+    // POST fallback for hosting/proxy environments that block DELETE requests.
+    @PostMapping("/delete/{id}")
+    public ResponseEntity<?> deleteByPost(@PathVariable Long id) {
+        return deletePayment(id);
+    }
+
+    private ResponseEntity<?> deletePayment(Long id) {
         try {
             feeService.deleteFeeRecord(id);
-            return ResponseEntity.ok().build();
+            return ResponseEntity.ok(Map.of("message", "Payment record deleted successfully."));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("message", e.getMessage()));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("message", "Unable to delete payment record."));
         }
     }
 

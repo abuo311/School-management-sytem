@@ -17,6 +17,7 @@ const Settings = () => {
         teacherRemark: '',
         nextTermBegins: '',
         nextTermFees: 0,
+        termlyFees: 0,
         headTeacherSign: '',
         schoolStamp: '',
         formMasters: [],
@@ -61,6 +62,7 @@ const Settings = () => {
 
                 setConfig({
                     ...res.data,
+                    termlyFees: res.data.termlyFees ?? res.data.nextTermFees ?? 0,
                     formMasters: masters,
                     staffRemarks: remarks
                 });
@@ -379,6 +381,13 @@ const Settings = () => {
                                 <option value="Term 2">Term 2</option>
                                 <option value="Term 3">Term 3</option>
                             </select>
+                        </div>
+                        <div className="mt-3">
+                            <label className="small fw-bold mb-1">Current Term Fees</label>
+                            <input type="number" min="0" step="0.01" className="form-control bg-light border-0"
+                                   value={config.termlyFees ?? 0}
+                                   onChange={e => setConfig({...config, termlyFees: Number(e.target.value) || 0})} />
+                            <div className="form-text">Applied to the selected term when recording payments and calculating arrears.</div>
                         </div>
                     </div>
 

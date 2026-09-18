@@ -2,7 +2,9 @@ package com.school.controllers;
 
 import com.school.entities.Student;
 import com.school.services.StudentService;
+import com.school.services.FeeService;
 import com.school.repositories.StudentRepository;
+import com.school.repositories.SettingsRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -23,10 +25,25 @@ public class StudentController {
     private static final Logger logger = LoggerFactory.getLogger(StudentController.class);
     private final StudentService studentService;
     private final StudentRepository studentRepository;
+    private final FeeService feeService;
+    private final SettingsRepository settingsRepository;
 
-    public StudentController(StudentService studentService, StudentRepository studentRepository) {
+    public StudentController(StudentService studentService, StudentRepository studentRepository,
+            FeeService feeService, SettingsRepository settingsRepository) {
         this.studentService = studentService;
         this.studentRepository = studentRepository;
+        this.feeService = feeService;
+        this.settingsRepository = settingsRepository;
+    }
+
+    private List<Student> addCurrentFeeBalances(List<Student> students) {
+        var settings = settingsRepository.findAll().stream().findFirst().orElse(null);
+        String term = settings != null && settings.getCurrentTerm() != null ? settings.getCurrentTerm() : "Term 1";
+        String academicYear = settings != null && settings.getAcademicYear() != null
+                ? settings.getAcademicYear() : "2025/2026";
+        students.forEach(student -> student.setCurrentFeeBalance(
+                feeService.getCurrentBalance(student.getId(), term, academicYear)));
+        return students;
     }
 
     @GetMapping("/class/{className}")
@@ -36,7 +53,7 @@ public class StudentController {
             List<Student> students = studentRepository.findByClassName(className);
             if (students.isEmpty())
                 return ResponseEntity.noContent().build();
-            return ResponseEntity.ok(students);
+            return ResponseEntity.ok(addCurrentFeeBalances(students));
         } catch (Exception e) {
             logger.error("Error fetching students for class: " + className, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
@@ -56,7 +73,7 @@ public class StudentController {
     @GetMapping
     public ResponseEntity<List<Student>> getAllStudents() {
         try {
-            return ResponseEntity.ok(studentService.getAllStudents());
+            return ResponseEntity.ok(addCurrentFeeBalances(studentService.getAllStudents()));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }

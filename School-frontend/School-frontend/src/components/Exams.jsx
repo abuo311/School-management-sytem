@@ -77,8 +77,8 @@ const Exams = () => {
             res.data.forEach(item => {
                 scoresMap[item.student.id] = {
                     dbId: item.id,
-                    classScore: item.classScore,
-                    examScore: item.examScore,
+                    classScore: item.rawClassScore ?? (Number(item.classScore || 0) / 0.6),
+                    examScore: item.rawExamScore ?? (Number(item.examScore || 0) / 0.7),
                     totalScore: item.totalScore,
                     grade: item.grade,
                     saved: true
@@ -121,8 +121,8 @@ const Exams = () => {
     const handleScoreChange = (studentId, field, value) => {
         const numValue = value === '' ? '' : parseFloat(value);
         if (numValue !== '') {
-            if (field === 'classScore' && numValue > 30) return;
-            if (field === 'examScore' && numValue > 70) return;
+            if (field === 'classScore' && numValue > 50) return;
+            if (field === 'examScore' && numValue > 100) return;
             if (numValue < 0) return;
         }
         setMarks(prev => {
@@ -130,7 +130,7 @@ const Exams = () => {
             const updated = { ...current, [field]: numValue, saved: false };
             const cScore = parseFloat(updated.classScore) || 0;
             const eScore = parseFloat(updated.examScore) || 0;
-            const total = cScore + eScore;
+            const total = (cScore * 30 / 50) + (eScore * 70 / 100);
             updated.totalScore = total;
             updated.grade = calculateGrade(total);
             return { ...prev, [studentId]: updated };
@@ -146,8 +146,8 @@ const Exams = () => {
                 subject: subject, // Uses the state synced with DB
                 term: term,
                 academicYear: '2025/2026',
-                classScore: parseFloat(marks[s.id].classScore) || 0,
-                examScore: parseFloat(marks[s.id].examScore) || 0,
+                rawClassScore: parseFloat(marks[s.id].classScore) || 0,
+                rawExamScore: parseFloat(marks[s.id].examScore) || 0,
                 totalScore: marks[s.id].totalScore,
                 grade: marks[s.id].grade
             }));

@@ -19,8 +19,10 @@ public class ExamResult {
     private String term;
     private String academicYear;
 
-    private double classScore; // Max 30
-    private double examScore;  // Max 70
+    private double classScore; // Weighted score, max 30
+    private double examScore;  // Weighted score, max 70
+    private Double rawClassScore; // Raw class score, max 50
+    private Double rawExamScore; // Raw exam score, max 100
     private double totalScore; // Sum of class + exam
     private String grade;      // Now stores 1-9
     private String remarks;    // e.g., Excellent, Credit

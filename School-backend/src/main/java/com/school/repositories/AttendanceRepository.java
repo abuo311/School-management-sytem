@@ -21,4 +21,6 @@ public interface AttendanceRepository extends JpaRepository<Attendance, Long> {
     @Modifying
     @Query("DELETE FROM Attendance")
     void deleteAllAttendance();
+
+    void deleteByStudentIdIn(List<Long> studentIds);
 }

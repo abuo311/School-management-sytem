@@ -18,7 +18,9 @@ const Fees = () => {
 
     const [schoolInfo, setSchoolInfo] = useState({
         schoolName: 'ASONKWAA M/A BASIC SCHOOL',
+        academicYear: '2025/2026',
         currentTerm: 'Term 1',
+        termlyFees: 0,
         address: 'Nkoranza-South, Asonkwaa',
         phone: '+233 24 344 4321',
         email: 'asonkwaabasic@edu.gh'
@@ -57,6 +59,10 @@ const Fees = () => {
             // Use the data directly from the server instead of resetting to 0
             const studentList = res.data || [];
             setStudents(studentList);
+            if (selectedStudent?.id) {
+                const refreshedStudent = studentList.find(s => s.id === selectedStudent.id);
+                if (refreshedStudent) setSelectedStudent(refreshedStudent);
+            }
         } catch (err) {
             showToast("Failed to load students", "danger");
             console.error("Student fetch error:", err);
@@ -67,7 +73,7 @@ const Fees = () => {
 
     const selectStudent = async (student) => {
         setSelectedStudent(student);
-        setPayment({ amount: '', totalBill: student.lastBalance || '', method: 'Cash' });
+        setPayment({ amount: '', totalBill: schoolInfo.termlyFees ?? 0, method: 'Cash' });
         try {
             const res = await API.get(`/fees/student/${student.id}`);
             setHistory((res.data || []).sort((a, b) => b.id - a.id));
@@ -89,7 +95,7 @@ const Fees = () => {
             balance: bill - amount,
             paymentMethod: payment.method,
             term: schoolInfo.currentTerm,
-            academicYear: "2025/2026",
+            academicYear: schoolInfo.academicYear,
             datePaid: new Date().toISOString().split('T')[0],
             receivedBy: "Admin"
         };
@@ -107,14 +113,19 @@ const Fees = () => {
     };
 
     const handleDeletePayment = async (feeId) => {
+        if (!feeId) return showToast("This payment record has no valid ID.", "danger");
         if (!window.confirm("Are you sure you want to delete this payment record?")) return;
         try {
-            await API.delete(`/fees/${feeId}`);
+            await API.post(`/fees/delete/${feeId}`);
+            setHistory(previousHistory => previousHistory.filter(record => record.id !== feeId));
             showToast("Record deleted successfully");
             await fetchStudents();
             const res = await API.get(`/fees/student/${selectedStudent.id}`);
-            setHistory((res.data || []).sort((a, b) => b.id - a.id));
-        } catch (err) { showToast("Failed to delete record", "danger"); }
+            const refreshedHistory = (res.data || []).filter(record => record.id !== feeId);
+            setHistory(refreshedHistory.sort((a, b) => b.id - a.id));
+        } catch (err) {
+            showToast(err.response?.data?.message || "Failed to delete record", "danger");
+        }
     };
 
     const handlePrintReceipt = (h) => {
@@ -125,7 +136,7 @@ const Fees = () => {
     };
 
     const getStatus = (student) => {
-        const bal = parseFloat(student.lastBalance || 0);
+        const bal = parseFloat(student.currentFeeBalance ?? student.lastBalance ?? 0);
         const paidCount = parseInt(student.totalPaid || 0);
         if (paidCount > 0 && bal === 0)
             return { label: "Paid Fully", color: "bg-success text-white", cardColor: "bg-success text-white" };
@@ -279,7 +290,7 @@ const Fees = () => {
                         <>
                             <div className={`card border-0 shadow-sm p-4 mb-4 rounded-4 transition-all text-start ${getStatus(selectedStudent).cardColor}`}>
                                 <p className="small text-uppercase fw-bold opacity-75 mb-0">Current {getStatus(selectedStudent).label} Balance</p>
-                                <h2 className="fw-bold mb-0">₵{(selectedStudent.lastBalance || 0).toLocaleString()}</h2>
+                                <h2 className="fw-bold mb-0">₵{Number(selectedStudent.currentFeeBalance ?? selectedStudent.lastBalance ?? 0).toLocaleString()}</h2>
                             </div>
 
                             <div className="card border-0 shadow-sm p-4 mb-4 rounded-4 bg-white text-start">

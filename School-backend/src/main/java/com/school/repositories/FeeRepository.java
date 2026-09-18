@@ -11,6 +11,11 @@ public interface FeeRepository extends JpaRepository<FeePayment, Long> {
 
     List<FeePayment> findByStudentId(Long studentId);
 
+        List<FeePayment> findByStudentIdAndTermIgnoreCaseAndAcademicYearIgnoreCase(
+            Long studentId, String term, String academicYear);
+
+        void deleteByAcademicYear(String academicYear);
+
     // Finds students who currently owe money based on their most recent transaction
     @Query("SELECT f FROM FeePayment f WHERE f.id IN (SELECT MAX(f2.id) FROM FeePayment f2 GROUP BY f2.student.id) AND f.balance > 0")
     List<FeePayment> findAllDebtors();

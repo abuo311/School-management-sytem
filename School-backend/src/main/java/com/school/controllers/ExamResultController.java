@@ -113,9 +113,22 @@ public class ExamResultController {
                 res.setId(existingRecords.get(0).getId());
             }
 
-            double classS = (res.getClassScore() > 0) ? res.getClassScore() : 0;
-            double examS = (res.getExamScore() > 0) ? res.getExamScore() : 0;
-            double total = classS + examS;
+                double rawClassScore = res.getRawClassScore() != null
+                    ? res.getRawClassScore()
+                    : res.getClassScore() / 0.6;
+                double rawExamScore = res.getRawExamScore() != null
+                    ? res.getRawExamScore()
+                    : res.getExamScore() / 0.7;
+                rawClassScore = Math.max(0, Math.min(50, rawClassScore));
+                rawExamScore = Math.max(0, Math.min(100, rawExamScore));
+                res.setRawClassScore(rawClassScore);
+                res.setRawExamScore(rawExamScore);
+
+                double classS = rawClassScore * 30 / 50;
+                double examS = rawExamScore * 70 / 100;
+                res.setClassScore(classS);
+                res.setExamScore(examS);
+                double total = classS + examS;
             res.setTotalScore(total);
 
             if (total >= 80) {

@@ -1,4 +1,6 @@
 @echo off
+setlocal
+
 title School Management System - Local Portal
 cls
 
@@ -7,8 +9,10 @@ echo              SCHOOL MANAGEMENT SYSTEM - LOCAL RUNNER
 echo ===================================================================
 echo.
 
+cd /d "%~dp0"
+
 :: --- STEP 1: Verify Java (Required for Backend) ---
-java -version >nul 2>&1
+where java >nul 2>nul
 if %errorlevel% neq 0 (
     echo [ERROR] Java JDK is not installed or not added to your PATH!
     echo Please install JDK 17 or higher to run the Spring Boot backend.
@@ -18,7 +22,7 @@ if %errorlevel% neq 0 (
 )
 
 :: --- STEP 2: Verify Node.js (Required for Frontend) ---
-node -v >nul 2>&1
+where node >nul 2>nul
 if %errorlevel% neq 0 (
     echo [ERROR] Node.js is not installed!
     echo Please install Node.js from https://nodejs.org/ to run the frontend.
@@ -27,49 +31,60 @@ if %errorlevel% neq 0 (
     exit /b
 )
 
-:: --- STEP 3: Handle Spring Boot Backend ---
-echo [1/2] Preparing Spring Boot Backend...
-cd School-backend
+set BACKEND_DIR=%~dp0School-backend
+set BACKEND_JAR=%BACKEND_DIR%\target\School-management-sytem-0.0.1-SNAPSHOT.jar
+set FRONTEND_DIR=%~dp0School-frontend\School-frontend
+set FRONTEND_DIST=%FRONTEND_DIR%\dist
 
-:: Start backend using Maven Wrapper (avoids needing local Maven installed)
-if exist mvnw.cmd (
-    echo [Backend] Starting Spring Boot via Maven Wrapper...
-    start "School System - Backend (Port 8080)" cmd /k "mvnw.cmd spring-boot:run"
-) else if exist gradlew.bat (
-    echo [Backend] Starting Spring Boot via Gradle Wrapper...
-    start "School System - Backend (Port 8080)" cmd /k "gradlew.bat bootRun"
+:: --- STEP 3: Package Spring Boot Backend if needed ---
+echo [1/3] Preparing Spring Boot backend package...
+if not exist "%BACKEND_JAR%" (
+    echo [Backend] JAR not found. Building backend package...
+    cd /d "%BACKEND_DIR%"
+    if exist mvnw.cmd (
+        call mvnw.cmd -DskipTests package
+    ) else (
+        call mvn -DskipTests package
+    )
+    if errorlevel 1 (
+        echo [ERROR] Backend packaging failed.
+        pause
+        exit /b
+    )
 ) else (
-    echo [WARNING] No Wrapper found. Attempting to run via global Maven...
-    start "School System - Backend (Port 8080)" cmd /k "mvn spring-boot:run"
+    echo [Backend] Found packaged backend jar.
 )
 
-cd ..
-echo.
-
-:: --- STEP 4: Handle Vite React Frontend ---
-echo [2/2] Preparing React-Vite Frontend...
-:: Navigating into the nested frontend directory
-cd School-frontend\School-frontend
-
-:: Check if node_modules exists; if not, automatically install packages
-if not exist node_modules (
-    echo [Frontend] "node_modules" not found. Installing all packages...
-    echo (This may take 1-2 minutes on the first run...)
-    call npm install
+:: --- STEP 4: Package React Frontend if needed ---
+echo [2/3] Preparing frontend production bundle...
+if not exist "%FRONTEND_DIST%" (
+    echo [Frontend] dist folder not found. Installing dependencies and building frontend...
+    cd /d "%FRONTEND_DIR%"
+    call npm install --no-fund --no-audit
+    call npm run build
+    if errorlevel 1 (
+        echo [ERROR] Frontend build failed.
+        pause
+        exit /b
+    )
+) else (
+    echo [Frontend] Found production bundle.
 )
 
-echo [Frontend] Starting Vite Development Server...
-:: Runs Vite dev server and forces it to open the browser automatically
-start "School System - Frontend" cmd /k "npm run dev -- --open"
+:: --- STEP 5: Launch packaged services ---
+echo [3/3] Starting packaged services...
+start "School System - Backend" cmd /k "cd /d "%BACKEND_DIR%" && java -jar target\School-management-sytem-0.0.1-SNAPSHOT.jar"
+start "School System - Frontend" cmd /k "cd /d "%FRONTEND_DIR%" && npm run preview -- --host 0.0.0.0 --port 4173"
+start "" http://localhost:4173
 
-cd ..\..
 echo.
 echo ===================================================================
-echo  SUCCESS: Both systems are spinning up in separate windows!
+echo  SUCCESS: Local packaged app is starting in separate windows!
 echo  
 echo  - Backend API: http://localhost:8080/api
-echo  - Frontend Client: (Check the browser tab that opens up!)
+echo  - Frontend UI: http://localhost:4173
 echo.
 echo  Note: Make sure your local MySQL server is running on port 3306!
 echo ===================================================================
+endlocal
 pause

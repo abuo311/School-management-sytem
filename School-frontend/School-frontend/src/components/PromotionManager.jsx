@@ -66,7 +66,7 @@ const PromotionManager = () => {
     };
 
     const handlePromotion = async () => {
-        if (!window.confirm("CRITICAL: This clears current logs after backup. Proceed?")) return;
+        if (!window.confirm("CRITICAL: This records each student as promoted or failed, clears the current year's fees, results, and attendance, and starts the next academic year. Proceed?")) return;
 
         setLoading(true);
         try {
@@ -84,7 +84,7 @@ const PromotionManager = () => {
                         console.warn("Attendance clear warning (may require admin):", clearErr);
                     }
                     
-                    alert("Promotion successful. Data archived.");
+                    alert("Promotion successful. Promotion results were saved and the new academic year has started.");
                     await fetchHistory(); // Refresh history
                     setServerError(false);
                 } catch (promErr) {

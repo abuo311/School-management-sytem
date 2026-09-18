@@ -6,7 +6,9 @@
 
     <modelVersion>4.0.0</modelVersion>
 
-    <!-- Spring Boot Parent -->
+    <!-- =========================================================
+         SPRING BOOT PARENT
+         ========================================================= -->
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
@@ -14,74 +16,112 @@
         <relativePath/>
     </parent>
 
-    <!-- Project Information -->
+    <!-- =========================================================
+         PROJECT INFORMATION
+         ========================================================= -->
     <groupId>com.school</groupId>
     <artifactId>School-management-sytem</artifactId>
     <version>0.0.1-SNAPSHOT</version>
+
     <name>School-management-sytem</name>
     <description>School Management System</description>
 
-    <!-- Project Properties -->
+    <!-- =========================================================
+         PROJECT PROPERTIES
+         ========================================================= -->
     <properties>
+
+        <!-- Your application is compiled for Java 17 -->
         <java.version>17</java.version>
+
+        <!-- Lombok -->
         <lombok.version>1.18.38</lombok.version>
+
+        <!--
+            Java 25-compatible Byte Buddy.
+
+            Your computer is running Java 25 while Maven tests are
+            executing. Byte Buddy 1.17+ supports Java 25.
+        -->
+        <byte-buddy.version>1.18.12</byte-buddy.version>
+
     </properties>
 
-    <!-- Dependencies -->
+    <!-- =========================================================
+         DEPENDENCIES
+         ========================================================= -->
     <dependencies>
 
-        <!-- Spring Web -->
+        <!-- =====================================================
+             SPRING WEB
+             ===================================================== -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
 
-        <!-- Spring Data JPA -->
+        <!-- =====================================================
+             SPRING DATA JPA
+             ===================================================== -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-jpa</artifactId>
         </dependency>
 
-        <!-- Validation -->
+        <!-- =====================================================
+             VALIDATION
+             ===================================================== -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-validation</artifactId>
         </dependency>
 
-        <!-- Spring Security -->
+        <!-- =====================================================
+             SPRING SECURITY
+             ===================================================== -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-security</artifactId>
         </dependency>
 
-        <!-- Environment Variables -->
+        <!-- =====================================================
+             ENVIRONMENT VARIABLES
+             ===================================================== -->
         <dependency>
             <groupId>io.github.cdimascio</groupId>
             <artifactId>dotenv-java</artifactId>
             <version>3.0.0</version>
         </dependency>
 
-        <!-- Email -->
+        <!-- =====================================================
+             EMAIL
+             ===================================================== -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-mail</artifactId>
         </dependency>
 
-        <!-- Twilio SMS -->
+        <!-- =====================================================
+             TWILIO SMS
+             ===================================================== -->
         <dependency>
             <groupId>com.twilio.sdk</groupId>
             <artifactId>twilio</artifactId>
             <version>10.6.2</version>
         </dependency>
 
-        <!-- MySQL -->
+        <!-- =====================================================
+             MYSQL
+             ===================================================== -->
         <dependency>
             <groupId>com.mysql</groupId>
             <artifactId>mysql-connector-j</artifactId>
             <scope>runtime</scope>
         </dependency>
 
-        <!-- Lombok -->
+        <!-- =====================================================
+             LOMBOK
+             ===================================================== -->
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
@@ -89,14 +129,18 @@
             <scope>provided</scope>
         </dependency>
 
-        <!-- JWT API -->
+        <!-- =====================================================
+             JWT API
+             ===================================================== -->
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
             <artifactId>jjwt-api</artifactId>
             <version>0.12.6</version>
         </dependency>
 
-        <!-- JWT Implementation -->
+        <!-- =====================================================
+             JWT IMPLEMENTATION
+             ===================================================== -->
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
             <artifactId>jjwt-impl</artifactId>
@@ -104,7 +148,9 @@
             <scope>runtime</scope>
         </dependency>
 
-        <!-- JWT Jackson -->
+        <!-- =====================================================
+             JWT JACKSON
+             ===================================================== -->
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
             <artifactId>jjwt-jackson</artifactId>
@@ -112,31 +158,61 @@
             <scope>runtime</scope>
         </dependency>
 
-        <!-- Testing -->
+        <!-- =====================================================
+             TESTING
+             ===================================================== -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
 
+        <!-- =====================================================
+             BYTE BUDDY
+             
+             Hibernate needs Byte Buddy on the runtime classpath.
+             If this stays in the test scope, Spring/Hibernate will
+             fail during startup with the NoClassDefFoundError seen
+             above on modern JDKs.
+             ===================================================== -->
+        <dependency>
+            <groupId>net.bytebuddy</groupId>
+            <artifactId>byte-buddy</artifactId>
+            <version>${byte-buddy.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>net.bytebuddy</groupId>
+            <artifactId>byte-buddy-agent</artifactId>
+            <version>${byte-buddy.version}</version>
+            <scope>test</scope>
+        </dependency>
+
     </dependencies>
 
-    <!-- Build Configuration -->
+    <!-- =========================================================
+         BUILD CONFIGURATION
+         ========================================================= -->
     <build>
+
         <plugins>
 
-            <!-- Maven Compiler Plugin -->
+            <!-- =================================================
+                 MAVEN COMPILER
+                 ================================================= -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.13.0</version>
 
                 <configuration>
+
+                    <!-- Compile application for Java 17 -->
                     <release>${java.version}</release>
 
+                    <!-- Lombok Annotation Processor -->
                     <annotationProcessorPaths>
 
-                        <!-- Lombok Annotation Processor -->
                         <path>
                             <groupId>org.projectlombok</groupId>
                             <artifactId>lombok</artifactId>
@@ -144,41 +220,51 @@
                         </path>
 
                     </annotationProcessorPaths>
+
                 </configuration>
             </plugin>
 
-            <!-- Spring Boot Maven Plugin -->
+            <!-- =================================================
+                 SPRING BOOT MAVEN PLUGIN
+                 ================================================= -->
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
 
                 <configuration>
+
                     <mainClass>
                         com.school.SchoolManagementSystemApplication
                     </mainClass>
 
                     <layout>JAR</layout>
 
-                    <!-- Do not package Lombok inside the application JAR -->
+                    <!-- Do not package Lombok -->
                     <excludes>
+
                         <exclude>
                             <groupId>org.projectlombok</groupId>
                             <artifactId>lombok</artifactId>
                         </exclude>
+
                     </excludes>
+
                 </configuration>
 
                 <executions>
+
                     <execution>
                         <goals>
                             <goal>repackage</goal>
                         </goals>
                     </execution>
+
                 </executions>
 
             </plugin>
 
         </plugins>
+
     </build>
 
 </project>

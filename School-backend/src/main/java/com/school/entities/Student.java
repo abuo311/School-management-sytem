@@ -36,6 +36,7 @@ public class Student {
     private String parentName;
     private String parentEmail;
     private String parentContact;
+    private String promotionStatus;
 
     @Column(name = "home_address")
     @JsonProperty("homeAddress")
@@ -50,6 +51,10 @@ public class Student {
     @OneToMany(mappedBy = "student", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     @JsonIgnoreProperties("student")
     private List<FeePayment> feeHistory;
+
+    @Transient
+    @JsonProperty("currentFeeBalance")
+    private double currentFeeBalance;
 
     // --- Dynamic Status Helpers (Transient) ---
 

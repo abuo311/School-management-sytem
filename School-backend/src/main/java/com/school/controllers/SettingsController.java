@@ -46,6 +46,7 @@ public class SettingsController {
             existing.setTeacherRemark(settings.getTeacherRemark());
             existing.setNextTermBegins(settings.getNextTermBegins());
             existing.setNextTermFees(settings.getNextTermFees());
+            existing.setTermlyFees(settings.getTermlyFees());
             existing.setReportSmsTemplate(settings.getReportSmsTemplate());
 
             // 3. Update Global Images

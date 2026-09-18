@@ -24,5 +24,6 @@ public class Attendance {
 
     private LocalDate attendanceDate;
     private String status; // PRESENT, ABSENT, etc.
+    private String reason;
 }
 

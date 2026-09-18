@@ -1,7 +1,9 @@
 package com.school.services;
 
 import com.school.entities.FeePayment;
+import com.school.entities.SchoolSettings;
 import com.school.repositories.FeeRepository;
+import com.school.repositories.SettingsRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,9 +16,11 @@ import java.util.Map;
 public class FeeService {
 
     private final FeeRepository feeRepository;
+    private final SettingsRepository settingsRepository;
 
-    public FeeService(FeeRepository feeRepository) {
+    public FeeService(FeeRepository feeRepository, SettingsRepository settingsRepository) {
         this.feeRepository = feeRepository;
+        this.settingsRepository = settingsRepository;
     }
 
     @Transactional
@@ -24,6 +28,13 @@ public class FeeService {
         // 1. SAFETY CHECK: Prevents "return value of getStudent() is null" crash
         if (payment.getStudent() == null || payment.getStudent().getId() == null) {
             throw new RuntimeException("Cannot process payment: No valid student selected.");
+        }
+
+        if (payment.getTotalBill() <= 0) {
+            SchoolSettings settings = settingsRepository.findAll().stream().findFirst().orElse(null);
+            if (settings != null && settings.getTermlyFees() != null) {
+                payment.setTotalBill(settings.getTermlyFees());
+            }
         }
 
         // 2. DUPLICATE PREVENTION LOGIC
@@ -83,6 +94,22 @@ public class FeeService {
 
     public List<FeePayment> getFeesByStudent(Long studentId) {
         return feeRepository.findByStudentId(studentId);
+    }
+
+    public double getCurrentBalance(Long studentId, String term, String academicYear) {
+        List<FeePayment> payments = feeRepository
+                .findByStudentIdAndTermIgnoreCaseAndAcademicYearIgnoreCase(studentId, term, academicYear);
+        if (payments.isEmpty()) {
+            return 0;
+        }
+
+        double totalBill = payments.stream()
+                .mapToDouble(FeePayment::getTotalBill)
+                .filter(bill -> bill > 0)
+                .max()
+                .orElse(0);
+        double totalPaid = payments.stream().mapToDouble(FeePayment::getAmountPaid).sum();
+        return Math.max(0, totalBill - totalPaid);
     }
 
     public Map<String, Double> getFinanceSummary(String term) {
@@ -150,7 +177,14 @@ public class FeeService {
 
     @Transactional
     public void deleteFeeRecord(Long id) {
+        if (!feeRepository.existsById(id)) {
+            throw new IllegalArgumentException("Payment record not found with id " + id);
+        }
         feeRepository.deleteById(id);
+        feeRepository.flush();
+        if (feeRepository.existsById(id)) {
+            throw new IllegalStateException("Payment record was not deleted with id " + id);
+        }
     }
 
     public List<FeePayment> getAllLatestStatuses() {

@@ -51,4 +51,8 @@ public interface ExamResultRepository extends JpaRepository<ExamResult, Long> {
             String term,
             String academicYear
     );
+
+        List<ExamResult> findByStudent_IdAndAcademicYear(Long studentId, String academicYear);
+
+        void deleteByAcademicYear(String academicYear);
 }

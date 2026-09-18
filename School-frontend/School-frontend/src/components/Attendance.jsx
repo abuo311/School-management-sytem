@@ -12,6 +12,7 @@ import {
 const Attendance = () => {
     const [students, setStudents] = useState([]);
     const [attendanceMap, setAttendanceMap] = useState({});
+    const [attendanceReasons, setAttendanceReasons] = useState({});
     const [history, setHistory] = useState([]);
     const [classCategories, setClassCategories] = useState(['All']);
     const [loading, setLoading] = useState(false);
@@ -28,6 +29,14 @@ const Attendance = () => {
     const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
     const [selectedGrade, setSelectedGrade] = useState('All');
     const [searchTerm, setSearchTerm] = useState('');
+    const attendanceStatuses = [
+        { value: 'PRESENT', label: 'Present' },
+        { value: 'LATE', label: 'Late' },
+        { value: 'ABSENT', label: 'Absent' },
+        { value: 'SICK', label: 'Sick' },
+        { value: 'STOPPED_SCHOOLING', label: 'Stopped Schooling' },
+        { value: 'OTHER', label: 'Other' }
+    ];
 
     useEffect(() => {
         fetchDynamicClasses();
@@ -75,6 +84,7 @@ const Attendance = () => {
             const initialMap = {};
             data.forEach(s => initialMap[s.id] = "PRESENT");
             setAttendanceMap(initialMap);
+            setAttendanceReasons({});
         } catch (err) { console.error(err); }
         setLoading(false);
     };
@@ -88,11 +98,8 @@ const Attendance = () => {
         setLoading(false);
     };
 
-    const toggleStatus = (id) => {
-        setAttendanceMap(prev => ({
-            ...prev,
-            [id]: prev[id] === "PRESENT" ? "ABSENT" : "PRESENT"
-        }));
+    const updateAttendanceStatus = (id, status) => {
+        setAttendanceMap(prev => ({ ...prev, [id]: status }));
     };
 
     const handleSubmit = async () => {
@@ -103,6 +110,7 @@ const Attendance = () => {
         const payload = targetStudents.map(s => ({
             student: { id: s.id },
             status: attendanceMap[s.id] || "PRESENT",
+            reason: attendanceReasons[s.id] || '',
             attendanceDate: selectedDate
         }));
 
@@ -129,8 +137,8 @@ const Attendance = () => {
 
         const currentData = viewMode === 'view'
             ? history.filter(h => selectedGrade === 'All' || h.student.gradeLevel === selectedGrade)
-                .map(h => ({ name: `${h.student.firstName} ${h.student.lastName}`, class: h.student.gradeLevel, status: h.status }))
-            : filteredStudents.map(s => ({ name: `${s.firstName} ${s.lastName}`, class: s.gradeLevel, status: attendanceMap[s.id] }));
+                .map(h => ({ name: `${h.student.firstName} ${h.student.lastName}`, class: h.student.gradeLevel, status: h.status, reason: h.reason || '' }))
+            : filteredStudents.map(s => ({ name: `${s.firstName} ${s.lastName}`, class: s.gradeLevel, status: attendanceMap[s.id], reason: attendanceReasons[s.id] || '' }));
 
         if (currentData.length === 0) return alert("No data to export.");
 
@@ -174,8 +182,8 @@ const Attendance = () => {
 
         autoTable(doc, {
             startY: 70,
-            head: [['Student Name', 'Class', 'Status']],
-            body: currentData.map(d => [d.name, d.class, d.status]),
+            head: [['Student Name', 'Class', 'Status', 'Reason']],
+            body: currentData.map(d => [d.name, d.class, d.status, d.reason]),
             headStyles: { fillColor: [26, 26, 26], textColor: [212, 175, 55], fontStyle: 'bold' },
             bodyStyles: { textColor: 50 },
             alternateRowStyles: { fillColor: [250, 250, 250] },
@@ -275,27 +283,31 @@ const Attendance = () => {
                             <th className="px-4 py-3">Student Name</th>
                             <th>Class</th>
                             <th className="text-center">Status</th>
+                            <th>Reason</th>
                         </tr>
                     </thead>
                     <tbody>
                         {loading ? (
-                            <tr><td colSpan="3" className="text-center py-5"><Loader2 className="animate-spin text-primary mx-auto" /> Loading...</td></tr>
+                            <tr><td colSpan="4" className="text-center py-5"><Loader2 className="animate-spin text-primary mx-auto" /> Loading...</td></tr>
                         ) : viewMode === 'mark' ? (
                             filteredStudents.map(s => (
                                 <tr key={s.id}>
                                     <td className="px-4 fw-bold">{s.firstName} {s.lastName}</td>
                                     <td>{s.gradeLevel}</td>
                                     <td className="text-center">
-                                        <button onClick={() => toggleStatus(s.id)} className={`btn btn-sm px-4 rounded-pill text-white ${attendanceMap[s.id] === "PRESENT" ? 'btn-success' : 'btn-danger'}`}>
-                                            {attendanceMap[s.id] === "PRESENT" ? 'Present' : 'Absent'}
-                                        </button>
+                                        <select className="form-select form-select-sm" value={attendanceMap[s.id] || 'PRESENT'} onChange={e => updateAttendanceStatus(s.id, e.target.value)}>
+                                            {attendanceStatuses.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <input type="text" className="form-control form-control-sm" value={attendanceReasons[s.id] || ''} onChange={e => setAttendanceReasons(prev => ({ ...prev, [s.id]: e.target.value }))} placeholder="Optional reason" />
                                     </td>
                                 </tr>
                             ))
                         ) : (
                             Object.keys(groupedHistory).map(date => (
                                 <React.Fragment key={date}>
-                                    <tr className="bg-light"><td colSpan="3" className="px-4 fw-bold">{date}</td></tr>
+                                    <tr className="bg-light"><td colSpan="4" className="px-4 fw-bold">{date}</td></tr>
                                     {groupedHistory[date].filter(h => selectedGrade === 'All' || h.student.gradeLevel === selectedGrade).map(h => (
                                         <tr key={h.id}>
                                             <td className="px-5">{h.student.firstName} {h.student.lastName}</td>
@@ -303,6 +315,7 @@ const Attendance = () => {
                                             <td className="text-center">
                                                 <span className={`badge px-3 ${h.status === 'PRESENT' ? 'bg-success' : 'bg-danger'}`}>{h.status}</span>
                                             </td>
+                                            <td className="small text-muted">{h.reason || '—'}</td>
                                         </tr>
                                     ))}
                                 </React.Fragment>
