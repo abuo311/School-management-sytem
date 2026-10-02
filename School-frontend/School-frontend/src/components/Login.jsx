@@ -24,7 +24,7 @@ const Login = () => {
     useEffect(() => {
         const fetchSchoolSettings = async () => {
             try {
-                const res = await API.get('/settings');
+                const res = await API.get('/settings/branding');
                 if (res.data) {
                     setSchoolInfo({
                         name: res.data.schoolName || 'EDUMANAGER',
@@ -80,7 +80,16 @@ const Login = () => {
                             {isFetchingBranding ? (
                                 <div className="spinner-border text-warning" style={{ width: '2rem', height: '2rem' }}></div>
                             ) : schoolInfo.logo ? (
-                                <img src={schoolInfo.logo} alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                                <img
+                                    src={schoolInfo.logo}
+                                    alt="Logo"
+                                    width="128"
+                                    height="128"
+                                    fetchPriority="high"
+                                    decoding="async"
+                                    style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                                    onError={() => setSchoolInfo(previous => ({ ...previous, logo: null }))}
+                                />
                             ) : (
                                 <GraduationCap size={60} style={{ color: goldColor }}/>
                             )}
@@ -129,7 +138,7 @@ const Login = () => {
                             </div>
 
                             <button className="btn btn-dark w-100 py-3 fw-black rounded-3 shadow d-flex align-items-center justify-content-center gap-2 text-uppercase"
-                                    disabled={loading || isFetchingBranding}>
+                                    disabled={loading}>
                                 {loading ? <span className="spinner-border spinner-border-sm" style={{ color: goldColor }}></span> : <><LogIn size={20} style={{ color: goldColor }} /><span>Sign In</span></>}
                             </button>
                         </form>

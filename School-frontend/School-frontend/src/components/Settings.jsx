@@ -80,13 +80,16 @@ const Settings = () => {
             img.src = event.target.result;
             img.onload = () => {
                 const canvas = document.createElement('canvas');
-                const MAX_WIDTH = 500; 
-                const scaleSize = MAX_WIDTH / img.width;
-                canvas.width = MAX_WIDTH;
-                canvas.height = img.height * scaleSize;
+                const isSchoolLogo = field === 'logoUrl' && !isFormMaster;
+                const maxEdge = isSchoolLogo ? 256 : 500;
+                const scaleSize = Math.min(1, maxEdge / Math.max(img.width, img.height));
+                canvas.width = Math.max(1, Math.round(img.width * scaleSize));
+                canvas.height = Math.max(1, Math.round(img.height * scaleSize));
                 const ctx = canvas.getContext('2d');
                 ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                const compressedBase64 = canvas.toDataURL('image/png');
+                const compressedBase64 = isSchoolLogo
+                    ? canvas.toDataURL('image/jpeg', 0.78)
+                    : canvas.toDataURL('image/png');
 
                 if (isFormMaster) {
                     setConfig(prev => {

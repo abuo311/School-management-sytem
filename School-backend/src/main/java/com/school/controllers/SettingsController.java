@@ -1,7 +1,9 @@
 package com.school.controllers;
 
 import com.school.entities.SchoolSettings;
+import com.school.dto.SchoolBrandingDto;
 import com.school.repositories.SettingsRepository;
+import com.school.services.SchoolBrandingService;
 import org.springframework.web.bind.annotation.*;
 import java.util.Optional;
 
@@ -11,15 +13,22 @@ import java.util.Optional;
 public class SettingsController {
 
     private final SettingsRepository settingsRepository;
+    private final SchoolBrandingService schoolBrandingService;
 
-    public SettingsController(SettingsRepository settingsRepository) {
+    public SettingsController(SettingsRepository settingsRepository, SchoolBrandingService schoolBrandingService) {
         this.settingsRepository = settingsRepository;
+        this.schoolBrandingService = schoolBrandingService;
     }
 
     @GetMapping
     public SchoolSettings getSettings() {
         return settingsRepository.findFirstByOrderByIdAsc()
                 .orElse(new SchoolSettings());
+    }
+
+    @GetMapping("/branding")
+    public SchoolBrandingDto getBranding() {
+        return schoolBrandingService.getBranding();
     }
 
     @PostMapping

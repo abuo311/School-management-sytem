@@ -66,7 +66,7 @@ public class WebSecurityConfig {
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/paystack/webhook").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/settings").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/settings", "/api/settings/branding").permitAll()
 
                         // --- ROLE-BASED ACCESS CONTROL ---
 
