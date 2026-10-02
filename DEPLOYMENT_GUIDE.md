@@ -62,6 +62,8 @@ SERVER_PORT=8080
 
 3. Click "Deploy" to rebuild with environment variables
 
+For online fee payments, also set `PAYSTACK_SECRET_KEY` to the secret key from your Paystack dashboard. Keep this key only in the backend environment; do not add it to the frontend. Set `PAYSTACK_CURRENCY` to `GHS` and configure the Paystack webhook URL as `https://<your-backend-domain>/api/paystack/webhook`. The return URL is configured with `PAYSTACK_CALLBACK_URL` and should point to the deployed fee management page.
+
 ### 7. Test Your Application
 Once deployed:
 - Render will give you a URL: https://school-management-backend-XXXX.onrender.com

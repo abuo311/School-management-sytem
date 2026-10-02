@@ -1,13 +1,13 @@
 package com.school.controllers;
 
-import com.school.entities.FeePayment;
 import com.school.repositories.FeeRepository;
 import com.school.repositories.StudentRepository;
 import com.school.repositories.TeacherRepository;
+import com.school.services.FeeAssessmentService;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -18,33 +18,33 @@ public class DashboardController {
     private final StudentRepository studentRepository;
     private final TeacherRepository teacherRepository;
     private final FeeRepository feeRepository;
+    private final FeeAssessmentService feeAssessmentService;
 
     public DashboardController(StudentRepository studentRepository,
             TeacherRepository teacherRepository,
-            FeeRepository feeRepository) {
+            FeeRepository feeRepository,
+            FeeAssessmentService feeAssessmentService) {
         this.studentRepository = studentRepository;
         this.teacherRepository = teacherRepository;
         this.feeRepository = feeRepository;
+        this.feeAssessmentService = feeAssessmentService;
     }
 
     @GetMapping("/stats")
-    public Map<String, Object> getDashboardStats() {
+    public Map<String, Object> getDashboardStats(Authentication authentication) {
         Map<String, Object> stats = new HashMap<>();
 
         // 1. Basic Counts
-        stats.put("totalStudents", studentRepository.count());
+        stats.put("totalStudents", studentRepository.countByEnabledTrue());
         stats.put("totalTeachers", teacherRepository.count());
 
-        // 2. Total Collected (Sums every payment row in the DB)
-        Double totalCollected = feeRepository.sumAllCollectedFees();
-        stats.put("totalCollected", totalCollected);
-
-        // 3. Total Debt (Calculated from the most recent balance of each student)
-        List<FeePayment> allLatest = feeRepository.findAllLatestPayments();
-        double totalDebt = allLatest.stream()
-                .mapToDouble(FeePayment::getBalance)
-                .sum();
-        stats.put("totalDebt", totalDebt);
+        boolean canViewFinance = authentication != null && authentication.getAuthorities().stream()
+                .anyMatch(authority -> authority.getAuthority().equals("ROLE_ADMIN")
+                        || authority.getAuthority().equals("ROLE_BURSAR"));
+        if (canViewFinance) {
+            stats.put("totalCollected", feeRepository.sumCollectedFeesForActiveStudents());
+            stats.put("totalDebt", feeAssessmentService.getActiveLearnerOutstandingTotal());
+        }
 
         return stats;
     }

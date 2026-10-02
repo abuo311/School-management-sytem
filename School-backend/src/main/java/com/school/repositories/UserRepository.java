@@ -14,9 +14,12 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     boolean existsByUsername(String username);
 
+    List<User> findByEnabledTrueOrderByFullNameAsc();
+
     /**
      * Fetches users who do not have an associated Teacher record.
-     * This prevents one User account from being linked to multiple Teacher profiles.
+     * This prevents one User account from being linked to multiple Teacher
+     * profiles.
      */
     @Query("SELECT u FROM User u WHERE u.id NOT IN (SELECT t.user.id FROM Teacher t WHERE t.user.id IS NOT NULL)")
     List<User> findUnassignedUsers();

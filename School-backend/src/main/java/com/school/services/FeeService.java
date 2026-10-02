@@ -2,7 +2,9 @@ package com.school.services;
 
 import com.school.entities.FeePayment;
 import com.school.entities.SchoolSettings;
+import com.school.entities.FeeAssessment;
 import com.school.repositories.FeeRepository;
+import com.school.repositories.FeeAssessmentRepository;
 import com.school.repositories.SettingsRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -11,85 +13,87 @@ import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 @Service
 public class FeeService {
 
     private final FeeRepository feeRepository;
     private final SettingsRepository settingsRepository;
+    private final FeeAssessmentRepository assessmentRepository;
 
-    public FeeService(FeeRepository feeRepository, SettingsRepository settingsRepository) {
+    public FeeService(FeeRepository feeRepository, SettingsRepository settingsRepository,
+            FeeAssessmentRepository assessmentRepository) {
         this.feeRepository = feeRepository;
         this.settingsRepository = settingsRepository;
+        this.assessmentRepository = assessmentRepository;
     }
 
     @Transactional
     public FeePayment savePayment(FeePayment payment) {
-        // 1. SAFETY CHECK: Prevents "return value of getStudent() is null" crash
         if (payment.getStudent() == null || payment.getStudent().getId() == null) {
             throw new RuntimeException("Cannot process payment: No valid student selected.");
         }
-
-        if (payment.getTotalBill() <= 0) {
-            SchoolSettings settings = settingsRepository.findAll().stream().findFirst().orElse(null);
-            if (settings != null && settings.getTermlyFees() != null) {
-                payment.setTotalBill(settings.getTermlyFees());
-            }
+        SchoolSettings settings = settingsRepository.findFirstByOrderByIdAsc()
+                .orElseThrow(() -> new IllegalArgumentException("School fee settings are not configured."));
+        String term = settings.getCurrentTerm();
+        String academicYear = settings.getAcademicYear();
+        if (term == null || academicYear == null) {
+            throw new IllegalArgumentException("Set the current term and academic year before recording payments.");
+        }
+        FeeAssessment assessment = assessmentRepository
+                .findByStudentIdAndTermIgnoreCaseAndAcademicYearIgnoreCase(
+                        payment.getStudent().getId(), term, academicYear)
+                .orElseGet(() -> createCurrentAssessment(payment, settings, term, academicYear));
+        if (!Double.isFinite(payment.getAmountPaid()) || payment.getAmountPaid() <= 0) {
+            throw new IllegalArgumentException("Payment amount must be greater than zero.");
         }
 
-        // 2. DUPLICATE PREVENTION LOGIC
-        // Fetch history using the validated student ID
-        List<FeePayment> history = feeRepository.findByStudentId(payment.getStudent().getId());
-
-        // Check for duplicates (Same student, amount, term, academic year, and day)
-        boolean isDuplicate = history.stream().anyMatch(p -> p.getAmountPaid() == payment.getAmountPaid() &&
-                p.getTerm() != null && p.getTerm().equalsIgnoreCase(payment.getTerm()) &&
-                p.getAcademicYear() != null && p.getAcademicYear().equalsIgnoreCase(payment.getAcademicYear()) &&
-                p.getDatePaid() != null && p.getDatePaid().equals(LocalDate.now()));
-
-        if (isDuplicate) {
-            throw new RuntimeException("Duplicate payment detected. This transaction has already been recorded today.");
-        }
-
-        // 3. Logic for calculating balance for installments
+        List<FeePayment> history = feeRepository.findByStudentIdAndTermIgnoreCaseAndAcademicYearIgnoreCase(
+                payment.getStudent().getId(), term, academicYear);
         double previousPayments = history.stream()
-                .filter(p -> p != null && p.getStudent() != null && p.getStudent().getId() != null
-                        && p.getStudent().getId().equals(payment.getStudent().getId()))
-                .filter(p -> sameBillingCycle(p, payment))
-                .mapToDouble(FeePayment::getAmountPaid)
+                .mapToDouble(existingPayment -> existingPayment != null ? existingPayment.getAmountPaid() : 0d)
                 .sum();
-
-        double balance = Math.max(0, payment.getTotalBill() - previousPayments - payment.getAmountPaid());
+        double assessedAmount = assessment.getAssessedAmount().doubleValue();
+        double balance = Math.max(0, assessedAmount - previousPayments - payment.getAmountPaid());
+        if (payment.getAmountPaid() > assessedAmount - previousPayments) {
+            throw new IllegalArgumentException("Payment exceeds the outstanding balance.");
+        }
+        payment.setTerm(term);
+        payment.setAcademicYear(academicYear);
+        payment.setTotalBill(assessedAmount);
         payment.setBalance(balance);
-
-        // 4. Defaults & Safety Checks for database fields
-        if (payment.getAcademicYear() == null || payment.getAcademicYear().isEmpty()) {
-            payment.setAcademicYear("2025/2026");
-        }
-
-        if (payment.getDatePaid() == null) {
-            payment.setDatePaid(LocalDate.now());
-        }
-
-        if (payment.getReceivedBy() == null || payment.getReceivedBy().isEmpty()) {
-            payment.setReceivedBy("Admin");
-        }
+        payment.setDatePaid(LocalDate.now());
+        payment.setReceivedBy("Admin");
 
         return feeRepository.save(payment);
     }
 
-    private boolean sameBillingCycle(FeePayment existing, FeePayment incoming) {
-        if (existing == null || incoming == null) {
-            return false;
+    private FeeAssessment createCurrentAssessment(FeePayment payment, SchoolSettings settings,
+            String term, String academicYear) {
+        List<FeePayment> existingPayments = feeRepository.findByStudentIdAndTermIgnoreCaseAndAcademicYearIgnoreCase(
+                payment.getStudent().getId(), term, academicYear);
+        double legacyBill = existingPayments.stream()
+                .filter(existing -> existing != null && Double.isFinite(existing.getTotalBill()))
+                .mapToDouble(existing -> existing == null ? 0d : existing.getTotalBill())
+                .filter(amount -> amount > 0)
+                .max()
+                .orElse(0);
+        double configuredFee = settings.getNextTermFees() == null ? 0 : settings.getNextTermFees();
+        double assessedFee = legacyBill > 0 ? legacyBill : configuredFee;
+        if (!Double.isFinite(assessedFee) || assessedFee <= 0) {
+            throw new IllegalArgumentException(
+                    "No term fee is configured. Set and save Termly Fees before recording a payment.");
         }
 
-        boolean sameTerm = existing.getTerm() == null && incoming.getTerm() == null
-                || existing.getTerm() != null && existing.getTerm().equalsIgnoreCase(incoming.getTerm());
-        boolean sameYear = existing.getAcademicYear() == null && incoming.getAcademicYear() == null
-                || existing.getAcademicYear() != null
-                        && existing.getAcademicYear().equalsIgnoreCase(incoming.getAcademicYear());
-
-        return sameTerm && sameYear;
+        FeeAssessment newAssessment = new FeeAssessment();
+        newAssessment.setStudent(payment.getStudent());
+        newAssessment.setTerm(term);
+        newAssessment.setAcademicYear(academicYear);
+        newAssessment.setAssessedAmount(java.math.BigDecimal.valueOf(assessedFee)
+                .setScale(2, java.math.RoundingMode.HALF_UP));
+        newAssessment.setIssuedAt(java.time.LocalDateTime.now());
+        return assessmentRepository.save(newAssessment);
     }
 
     public List<FeePayment> getFeesByStudent(Long studentId) {
@@ -97,27 +101,36 @@ public class FeeService {
     }
 
     public double getCurrentBalance(Long studentId, String term, String academicYear) {
+        var assessment = assessmentRepository.findByStudentIdAndTermIgnoreCaseAndAcademicYearIgnoreCase(
+                studentId, term, academicYear);
         List<FeePayment> payments = feeRepository
                 .findByStudentIdAndTermIgnoreCaseAndAcademicYearIgnoreCase(studentId, term, academicYear);
-        if (payments.isEmpty()) {
-            return 0;
-        }
-
-        double totalBill = payments.stream()
-                .mapToDouble(FeePayment::getTotalBill)
-                .filter(bill -> bill > 0)
-                .max()
-                .orElse(0);
-        double totalPaid = payments.stream().mapToDouble(FeePayment::getAmountPaid).sum();
+        double totalBill = assessment.map(item -> item.getAssessedAmount().doubleValue())
+                .orElseGet(() -> payments.stream()
+                        .mapToDouble(p -> p != null ? p.getTotalBill() : 0d)
+                        .filter(bill -> bill > 0)
+                        .max()
+                        .orElse(0));
+        double totalPaid = payments.stream().mapToDouble(p -> p != null ? p.getAmountPaid() : 0d).sum();
         return Math.max(0, totalBill - totalPaid);
     }
 
     public Map<String, Double> getFinanceSummary(String term) {
-        List<FeePayment> allPayments = feeRepository.findAll();
+        List<FeePayment> allPayments = feeRepository.findAll().stream()
+                .filter(payment -> payment != null && payment.getStudent() != null
+                        && payment.getStudent().isEnabled())
+                .toList();
+        SchoolSettings settings = settingsRepository.findFirstByOrderByIdAsc().orElse(null);
+        String selectedTerm = term == null || term.isBlank()
+                ? settings == null ? null : settings.getCurrentTerm()
+                : term;
+        String selectedYear = settings == null ? null : settings.getAcademicYear();
 
-        if (term != null && !term.isEmpty()) {
+        if (selectedTerm != null) {
             allPayments = allPayments.stream()
-                    .filter(p -> p.getTerm() != null && p.getTerm().equalsIgnoreCase(term))
+                    .filter(p -> p.getTerm() != null && p.getTerm().equalsIgnoreCase(selectedTerm))
+                    .filter(p -> selectedYear == null || p.getAcademicYear() != null
+                            && p.getAcademicYear().equalsIgnoreCase(selectedYear))
                     .toList();
         }
 
@@ -141,12 +154,20 @@ public class FeeService {
             }
         }
 
-        List<FeePayment> latestRecords = feeRepository.findAllLatestPayments();
-        double totalDebt = latestRecords.stream()
-                .filter(p -> term == null || term.isEmpty()
-                        || (p.getTerm() != null && p.getTerm().equalsIgnoreCase(term)))
-                .mapToDouble(FeePayment::getBalance)
-                .sum();
+        double totalDebt = 0;
+        if (selectedTerm != null && selectedYear != null) {
+            totalDebt = assessmentRepository.findByTermIgnoreCaseAndAcademicYearIgnoreCase(selectedTerm, selectedYear)
+                    .stream()
+                    .filter(assessment -> assessment != null && assessment.getStudent() != null
+                            && assessment.getStudent().isEnabled())
+                    .mapToDouble(assessment -> {
+                        double paid = feeRepository.findByStudentIdAndTermIgnoreCaseAndAcademicYearIgnoreCase(
+                                assessment.getStudent().getId(), selectedTerm, selectedYear)
+                                .stream().mapToDouble(payment -> payment != null ? payment.getAmountPaid() : 0d).sum();
+                        return Math.max(0, assessment.getAssessedAmount().doubleValue() - paid);
+                    })
+                    .sum();
+        }
 
         Map<String, Double> stats = new HashMap<>();
         stats.put("expected", totalCollected + totalDebt);
@@ -160,7 +181,9 @@ public class FeeService {
 
     @Transactional
     public FeePayment updateFeeRecord(Long id, FeePayment updatedDetails) {
-        return feeRepository.findById(id).map(existingFee -> {
+        Long paymentId = Objects.requireNonNull(id, "Fee id must not be null");
+
+        return feeRepository.findById(paymentId).map(existingFee -> {
             existingFee.setTotalBill(updatedDetails.getTotalBill());
             existingFee.setAmountPaid(updatedDetails.getAmountPaid());
             existingFee.setPaymentMethod(updatedDetails.getPaymentMethod());
@@ -172,19 +195,21 @@ public class FeeService {
             existingFee.setBalance(newBalance);
 
             return feeRepository.save(existingFee);
-        }).orElseThrow(() -> new RuntimeException("Fee Record not found with id " + id));
+        }).orElseThrow(() -> new RuntimeException("Fee Record not found with id " + paymentId));
     }
 
     @Transactional
     public void deleteFeeRecord(Long id) {
-        if (!feeRepository.existsById(id)) {
-            throw new IllegalArgumentException("Payment record not found with id " + id);
+        Long paymentId = Objects.requireNonNull(id, "Fee id must not be null");
+        FeePayment payment = feeRepository.findById(paymentId)
+                .orElseThrow(() -> new IllegalArgumentException("Payment record not found with id " + paymentId));
+
+        if (payment.getStudent() != null && payment.getStudent().getFeeHistory() != null) {
+            payment.getStudent().getFeeHistory().removeIf(existing -> id.equals(existing.getId()));
         }
-        feeRepository.deleteById(id);
+
+        feeRepository.delete(payment);
         feeRepository.flush();
-        if (feeRepository.existsById(id)) {
-            throw new IllegalStateException("Payment record was not deleted with id " + id);
-        }
     }
 
     public List<FeePayment> getAllLatestStatuses() {

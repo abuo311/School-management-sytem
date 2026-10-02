@@ -17,7 +17,6 @@ const Settings = () => {
         teacherRemark: '',
         nextTermBegins: '',
         nextTermFees: 0,
-        termlyFees: 0,
         headTeacherSign: '',
         schoolStamp: '',
         formMasters: [],
@@ -62,7 +61,6 @@ const Settings = () => {
 
                 setConfig({
                     ...res.data,
-                    termlyFees: res.data.termlyFees ?? res.data.nextTermFees ?? 0,
                     formMasters: masters,
                     staffRemarks: remarks
                 });
@@ -139,11 +137,15 @@ const Settings = () => {
         if (e) e.preventDefault();
         setLoading(true);
         try {
-            await API.post('/settings', config);
-            alert("Settings saved successfully!");
-            fetchSettings();
+            const response = await API.post('/settings', config);
+            if (response.data) {
+                setConfig(previous => ({ ...previous, ...response.data }));
+                alert(`Settings saved. Termly fee saved: ₵${Number(response.data.nextTermFees || 0).toLocaleString()}`);
+            } else {
+                alert("Settings saved, but the server did not return the saved values. Reload Settings to verify the term fee.");
+            }
         } catch (err) {
-            alert("Failed to save. Check server connection.");
+            alert(err.response?.data?.message || "Failed to save settings. Check your server connection and permissions.");
         } finally { setLoading(false); }
     };
 
@@ -382,13 +384,6 @@ const Settings = () => {
                                 <option value="Term 3">Term 3</option>
                             </select>
                         </div>
-                        <div className="mt-3">
-                            <label className="small fw-bold mb-1">Current Term Fees</label>
-                            <input type="number" min="0" step="0.01" className="form-control bg-light border-0"
-                                   value={config.termlyFees ?? 0}
-                                   onChange={e => setConfig({...config, termlyFees: Number(e.target.value) || 0})} />
-                            <div className="form-text">Applied to the selected term when recording payments and calculating arrears.</div>
-                        </div>
                     </div>
 
                     {/* Section 4: Global Auth */}
@@ -441,7 +436,7 @@ const Settings = () => {
                                        onChange={e => setConfig({...config, nextTermBegins: e.target.value})} />
                             </div>
                             <div className="col-md-6">
-                                <label className="small fw-bold mb-1">Next Term Fees</label>
+                                <label className="small fw-bold mb-1">Termly Fees</label>
                                 <input type="number" className="form-control bg-light border-0"
                                        value={config.nextTermFees ?? 0}
                                        onChange={e => setConfig({...config, nextTermFees: Number(e.target.value) || 0})} />

@@ -27,7 +27,7 @@ public class RankingService {
     @Transactional
     public void calculateClassPositions(String className, String term, String academicYear) {
         // 1. Fetch all students in that class
-        List<Student> students = studentRepository.findByClassName(className);
+        List<Student> students = studentRepository.findByClassNameAndEnabledTrue(className);
         int classSize = students.size();
 
         // 2. Fetch their results and sort by Total Score (Descending)
@@ -54,10 +54,14 @@ public class RankingService {
     }
 
     private String generateRemarks(Double score) {
-        if (score == null) return "No data";
-        if (score >= 80) return "Excellent Performance";
-        if (score >= 70) return "Very Good";
-        if (score >= 50) return "Credit Pass";
+        if (score == null)
+            return "No data";
+        if (score >= 80)
+            return "Excellent Performance";
+        if (score >= 70)
+            return "Very Good";
+        if (score >= 50)
+            return "Credit Pass";
         return "Needs Improvement";
     }
 }

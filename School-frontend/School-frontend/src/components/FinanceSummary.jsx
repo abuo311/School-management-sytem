@@ -46,18 +46,7 @@ const FinanceSummary = () => {
         try {
             const res = await API.get(`/fees/summary?term=${selectedTerm}`);
             setStats(res.data);
-            
-            // Assuming your backend can return trend data or we mock it for the visual:
-            // Replace this with actual API call if available: API.get('/fees/trends')
-            const mockTrend = [
-                { name: 'Week 1', collected: 4000, debt: 2400 },
-                { name: 'Week 2', collected: 3000, debt: 1398 },
-                { name: 'Week 3', collected: 2000, debt: 9800 },
-                { name: 'Week 4', collected: 2780, debt: 3908 },
-                { name: 'Week 5', collected: 1890, debt: 4800 },
-                { name: 'Week 6', collected: 2390, debt: 3800 },
-            ];
-            setTrendData(res.data.trends || mockTrend);
+            setTrendData(Array.isArray(res.data.trends) ? res.data.trends : []);
         } catch (err) {
             console.error("Finance Error:", err);
         } finally {
@@ -150,7 +139,11 @@ const FinanceSummary = () => {
                             <TrendingUp size={20} className="text-muted" />
                         </div>
                         <div style={{ width: '100%', height: 350 }}>
-                            <ResponsiveContainer>
+                            {trendData.length === 0 ? (
+                                <div className="h-100 d-flex align-items-center justify-content-center text-muted">
+                                    No collection trend data is available for this period.
+                                </div>
+                            ) : <ResponsiveContainer>
                                 <AreaChart data={trendData}>
                                     <defs>
                                         <linearGradient id="colorCol" x1="0" y1="0" x2="0" y2="1">
@@ -184,7 +177,7 @@ const FinanceSummary = () => {
                                         strokeDasharray="5 5"
                                     />
                                 </AreaChart>
-                            </ResponsiveContainer>
+                            </ResponsiveContainer>}
                         </div>
                     </div>
                 </div>

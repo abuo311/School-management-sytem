@@ -65,6 +65,7 @@ public class WebSecurityConfig {
                         // entirely
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/paystack/webhook").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/settings").permitAll()
 
                         // --- ROLE-BASED ACCESS CONTROL ---
@@ -76,13 +77,18 @@ public class WebSecurityConfig {
                         // Student Management: ADMIN, TEACHER, and BURSAR
                         .requestMatchers("/api/students/**").hasAnyRole("ADMIN", "TEACHER", "BURSAR")
                         .requestMatchers("/api/attendance/**").hasAnyRole("ADMIN", "TEACHER")
+                        .requestMatchers("/api/staff-attendance/**").hasRole("ADMIN")
 
                         // Academic Management: ADMIN and TEACHER
                         .requestMatchers("/api/subjects/**").hasAnyRole("ADMIN", "TEACHER")
                         .requestMatchers("/api/classes/**").hasAnyRole("ADMIN", "TEACHER")
+                        .requestMatchers("/api/timetable/**", "/api/lesson-notes/**")
+                        .hasAnyRole("ADMIN", "TEACHER")
 
                         // Finance/Bursary Management: ADMIN and BURSAR
                         .requestMatchers("/api/fees/**").hasAnyRole("ADMIN", "BURSAR")
+                        .requestMatchers("/api/paystack/initialize", "/api/paystack/verify")
+                        .hasAnyRole("ADMIN", "BURSAR")
                         .requestMatchers("/api/payments/**").hasAnyRole("ADMIN", "BURSAR")
                         .requestMatchers("/api/expenses/**").hasAnyRole("ADMIN", "BURSAR")
 

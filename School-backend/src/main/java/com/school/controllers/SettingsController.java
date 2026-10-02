@@ -18,15 +18,13 @@ public class SettingsController {
 
     @GetMapping
     public SchoolSettings getSettings() {
-        return settingsRepository.findAll()
-                .stream()
-                .findFirst()
+        return settingsRepository.findFirstByOrderByIdAsc()
                 .orElse(new SchoolSettings());
     }
 
     @PostMapping
     public SchoolSettings updateSettings(@RequestBody SchoolSettings settings) {
-        Optional<SchoolSettings> existingOpt = settingsRepository.findAll().stream().findFirst();
+        Optional<SchoolSettings> existingOpt = settingsRepository.findFirstByOrderByIdAsc();
 
         if (existingOpt.isPresent()) {
             SchoolSettings existing = existingOpt.get();
@@ -46,7 +44,6 @@ public class SettingsController {
             existing.setTeacherRemark(settings.getTeacherRemark());
             existing.setNextTermBegins(settings.getNextTermBegins());
             existing.setNextTermFees(settings.getNextTermFees());
-            existing.setTermlyFees(settings.getTermlyFees());
             existing.setReportSmsTemplate(settings.getReportSmsTemplate());
 
             // 3. Update Global Images

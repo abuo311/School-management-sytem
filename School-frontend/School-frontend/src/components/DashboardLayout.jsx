@@ -5,7 +5,8 @@ import {
     LayoutDashboard, Users, UserCog, BookOpen,
     Settings, LogOut, Home, CalendarCheck,
     FileText, PenTool, Wallet, AlertTriangle, BarChart3, Menu, X,
-    ShieldPlus, UserCircle, User, LayoutGrid, TrendingUp, Database, Download
+    ShieldPlus, UserCircle, User, LayoutGrid, TrendingUp, Database, Download, ClipboardCheck,
+    CalendarClock, NotebookPen
 } from 'lucide-react';
 import '../styles/Dashboard.css';
 
@@ -150,6 +151,12 @@ const DashboardLayout = () => {
                             <Link to="/dashboard/attendance" className={`menu-item d-flex align-items-center gap-2 p-2 rounded text-decoration-none ${isActive('/dashboard/attendance') ? 'active' : ''}`} onClick={closeMobileMenu}>
                                 <CalendarCheck size={20} /><span>Attendance</span>
                             </Link>
+                            <Link to="/dashboard/timetable" className={`menu-item d-flex align-items-center gap-2 p-2 rounded text-decoration-none ${isActive('/dashboard/timetable') ? 'active' : ''}`} onClick={closeMobileMenu}>
+                                <CalendarClock size={20} /><span>Timetable</span>
+                            </Link>
+                            <Link to="/dashboard/lesson-notes" className={`menu-item d-flex align-items-center gap-2 p-2 rounded text-decoration-none ${isActive('/dashboard/lesson-notes') ? 'active' : ''}`} onClick={closeMobileMenu}>
+                                <NotebookPen size={20} /><span>Lesson Notes</span>
+                            </Link>
                             <Link to="/dashboard/exams" className={`menu-item d-flex align-items-center gap-2 p-2 rounded text-decoration-none ${isActive('/dashboard/exams') ? 'active' : ''}`} onClick={closeMobileMenu}>
                                 <PenTool size={20} /><span>Exam Scores</span>
                             </Link>
@@ -179,6 +186,9 @@ const DashboardLayout = () => {
                             <p className="menu-label small text-uppercase fw-bold mt-4 mb-2 px-2" style={{ color: goldColor, opacity: 0.7, fontSize: '0.7rem' }}>Admin Control</p>
                             <Link to="/dashboard/teachers" className={`menu-item d-flex align-items-center gap-2 p-2 rounded text-decoration-none ${isActive('/dashboard/teachers') ? 'active' : ''}`} onClick={closeMobileMenu}>
                                 <UserCog size={20} /><span>Staff Management</span>
+                            </Link>
+                            <Link to="/dashboard/staff-attendance" className={`menu-item d-flex align-items-center gap-2 p-2 rounded text-decoration-none ${isActive('/dashboard/staff-attendance') ? 'active' : ''}`} onClick={closeMobileMenu}>
+                                <ClipboardCheck size={20} /><span>Staff Attendance</span>
                             </Link>
                             <Link to="/dashboard/subjects" className={`menu-item d-flex align-items-center gap-2 p-2 rounded text-decoration-none ${isActive('/dashboard/subjects') ? 'active' : ''}`} onClick={closeMobileMenu}>
                                 <BookOpen size={20} /><span>Manage Subjects</span>

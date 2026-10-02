@@ -1,8 +1,10 @@
 package com.school.controllers;
 
 import com.school.entities.Student;
+import com.school.dto.StudentContactUpdateRequest;
 import com.school.services.StudentService;
 import com.school.services.FeeService;
+import com.school.services.FeeAssessmentService;
 import com.school.repositories.StudentRepository;
 import com.school.repositories.SettingsRepository;
 import org.slf4j.Logger;
@@ -26,23 +28,32 @@ public class StudentController {
     private final StudentService studentService;
     private final StudentRepository studentRepository;
     private final FeeService feeService;
+    private final FeeAssessmentService feeAssessmentService;
     private final SettingsRepository settingsRepository;
 
     public StudentController(StudentService studentService, StudentRepository studentRepository,
-            FeeService feeService, SettingsRepository settingsRepository) {
+            FeeService feeService, FeeAssessmentService feeAssessmentService, SettingsRepository settingsRepository) {
         this.studentService = studentService;
         this.studentRepository = studentRepository;
         this.feeService = feeService;
+        this.feeAssessmentService = feeAssessmentService;
         this.settingsRepository = settingsRepository;
     }
 
     private List<Student> addCurrentFeeBalances(List<Student> students) {
-        var settings = settingsRepository.findAll().stream().findFirst().orElse(null);
+        var settings = settingsRepository.findFirstByOrderByIdAsc().orElse(null);
         String term = settings != null && settings.getCurrentTerm() != null ? settings.getCurrentTerm() : "Term 1";
         String academicYear = settings != null && settings.getAcademicYear() != null
-                ? settings.getAcademicYear() : "2025/2026";
-        students.forEach(student -> student.setCurrentFeeBalance(
-                feeService.getCurrentBalance(student.getId(), term, academicYear)));
+                ? settings.getAcademicYear()
+                : "2025/2026";
+        feeAssessmentService.ensureCurrentTermAssessments();
+        students.forEach(student -> {
+            student.setCurrentFeeTerm(term);
+            student.setCurrentFeeAcademicYear(academicYear);
+            student.setCurrentFeeAssessedAmount(feeAssessmentService
+                    .getAssessedAmount(student.getId(), term, academicYear).doubleValue());
+            student.setCurrentFeeBalance(feeService.getCurrentBalance(student.getId(), term, academicYear));
+        });
         return students;
     }
 
@@ -50,7 +61,7 @@ public class StudentController {
     public ResponseEntity<List<Student>> getStudentsByClass(@PathVariable String className) {
         try {
             logger.info("Fetching students for class: {}", className);
-            List<Student> students = studentRepository.findByClassName(className);
+            List<Student> students = studentRepository.findByClassNameAndEnabledTrue(className);
             if (students.isEmpty())
                 return ResponseEntity.noContent().build();
             return ResponseEntity.ok(addCurrentFeeBalances(students));
@@ -111,6 +122,15 @@ public class StudentController {
         }
     }
 
+    @PatchMapping("/{id}/contact")
+    public ResponseEntity<?> updateStudentContact(@PathVariable Long id,
+            @RequestBody StudentContactUpdateRequest request) {
+        return studentRepository.findById(id).map(student -> {
+            student.setParentContact(request.parentContact());
+            return ResponseEntity.ok(studentRepository.save(student));
+        }).orElse(ResponseEntity.notFound().build());
+    }
+
     // --- UPDATED: Added explicit MediaType ---
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> createStudent(@RequestBody Student student) {
@@ -128,17 +148,22 @@ public class StudentController {
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteStudent(@PathVariable Long id) {
         try {
-            studentService.deleteStudent(id);
-            return ResponseEntity.ok(Map.of("message", "Student deleted successfully."));
+            studentService.archiveStudent(id);
+            return ResponseEntity
+                    .ok(Map.of("message", "Student archived. Attendance, fee and academic records were retained."));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("message", e.getMessage()));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            logger.error("Error archiving student ID: {}", id, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("message", "Unable to archive student."));
         }
     }
 
     @GetMapping("/classes")
     public ResponseEntity<List<String>> getAllUniqueClasses() {
         try {
-            List<String> classes = studentRepository.findAll()
+            List<String> classes = studentRepository.findAllByEnabledTrue()
                     .stream()
                     .map(s -> s.getClassName() != null ? s.getClassName() : s.getGradeLevel())
                     .filter(c -> c != null && !c.trim().isEmpty())

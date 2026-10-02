@@ -56,6 +56,18 @@ public class Student {
     @JsonProperty("currentFeeBalance")
     private double currentFeeBalance;
 
+    @Transient
+    @JsonProperty("currentFeeAssessedAmount")
+    private double currentFeeAssessedAmount;
+
+    @Transient
+    @JsonProperty("currentFeeTerm")
+    private String currentFeeTerm;
+
+    @Transient
+    @JsonProperty("currentFeeAcademicYear")
+    private String currentFeeAcademicYear;
+
     // --- Dynamic Status Helpers (Transient) ---
 
     @Transient
@@ -74,14 +86,29 @@ public class Student {
         if (feeHistory == null) {
             return 0;
         }
-        // Returns the number of transactions to trigger the "Paid" status logic in React
+        // Returns the number of transactions to trigger the "Paid" status logic in
+        // React
         return feeHistory.size();
     }
 
     // --- Compatibility Aliases ---
-    public String getGuardianName() { return this.parentName; }
-    public String getGuardianEmail() { return this.parentEmail; }
-    public String getGuardianPhone() { return this.parentContact; }
-    public String getAddress() { return this.homeAddress; }
-    public void setAddress(String address) { this.homeAddress = address; }
+    public String getGuardianName() {
+        return this.parentName;
+    }
+
+    public String getGuardianEmail() {
+        return this.parentEmail;
+    }
+
+    public String getGuardianPhone() {
+        return this.parentContact;
+    }
+
+    public String getAddress() {
+        return this.homeAddress;
+    }
+
+    public void setAddress(String address) {
+        this.homeAddress = address;
+    }
 }

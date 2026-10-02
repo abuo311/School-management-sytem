@@ -11,10 +11,10 @@ public interface FeeRepository extends JpaRepository<FeePayment, Long> {
 
     List<FeePayment> findByStudentId(Long studentId);
 
-        List<FeePayment> findByStudentIdAndTermIgnoreCaseAndAcademicYearIgnoreCase(
+    List<FeePayment> findByStudentIdAndTermIgnoreCaseAndAcademicYearIgnoreCase(
             Long studentId, String term, String academicYear);
 
-        void deleteByAcademicYear(String academicYear);
+    void deleteByAcademicYear(String academicYear);
 
     // Finds students who currently owe money based on their most recent transaction
     @Query("SELECT f FROM FeePayment f WHERE f.id IN (SELECT MAX(f2.id) FROM FeePayment f2 GROUP BY f2.student.id) AND f.balance > 0")
@@ -23,6 +23,9 @@ public interface FeeRepository extends JpaRepository<FeePayment, Long> {
     // Gets the latest transaction for every student
     @Query("SELECT f FROM FeePayment f WHERE f.id IN (SELECT MAX(f2.id) FROM FeePayment f2 GROUP BY f2.student.id)")
     List<FeePayment> findAllLatestPayments();
+
+    @Query("SELECT COALESCE(SUM(f.amountPaid), 0) FROM FeePayment f WHERE f.student.enabled = true")
+    Double sumCollectedFeesForActiveStudents();
 
     // Sums every single payment ever recorded
     @Query("SELECT COALESCE(SUM(f.amountPaid), 0) FROM FeePayment f")

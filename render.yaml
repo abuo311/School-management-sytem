@@ -21,3 +21,9 @@ services:
         value: 8080
       - key: SPRING_JPA_HIBERNATE_DDL_AUTO
         value: update
+      - key: PAYSTACK_SECRET_KEY
+        sync: false
+      - key: PAYSTACK_CURRENCY
+        value: GHS
+      - key: PAYSTACK_CALLBACK_URL
+        value: https://school-management-sytem-seven.vercel.app/dashboard/fees

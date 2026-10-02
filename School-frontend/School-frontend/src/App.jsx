@@ -5,6 +5,9 @@ import DashboardLayout from './components/DashboardLayout';
 import StudentList from './components/StudentList';
 import TeacherList from './components/TeacherList';
 import Attendance from './components/Attendance';
+import StaffAttendance from './components/StaffAttendance';
+import Timetable from './components/Timetable';
+import LessonNotes from './components/LessonNotes';
 import UserManagement from './components/UserManagement.jsx';
 import Exams from './components/Exams';
 import ReportCard from './components/ReportCard';
@@ -70,6 +73,8 @@ const PageTitleManager = () => {
 const DashboardHome = () => {
     const [data, setData] = useState({ totalStudents: 0, totalTeachers: 0, totalCollected: 0, totalDebt: 0 });
     const [schoolName, setSchoolName] = useState('EDUMANAGER');
+    const userRole = sessionStorage.getItem('userRole');
+    const canViewFinance = userRole === 'ADMIN' || userRole === 'BURSAR';
 
     const goldColor = '#d4af37';
     const darkColor = '#1a1a1a';
@@ -89,8 +94,8 @@ const DashboardHome = () => {
                 setData({
                     totalStudents: statsRes.data.totalStudents || 0,
                     totalTeachers: statsRes.data.totalTeachers || 0,
-                    totalCollected: statsRes.data.totalCollected || 0,
-                    totalDebt: statsRes.data.totalDebt || 0
+                    totalCollected: canViewFinance ? statsRes.data.totalCollected || 0 : 0,
+                    totalDebt: canViewFinance ? statsRes.data.totalDebt || 0 : 0
                 });
 
                 if (settingsRes.data?.schoolName) {
@@ -101,13 +106,15 @@ const DashboardHome = () => {
             }
         };
         loadDashboard();
-    }, []);
+    }, [canViewFinance]);
 
     const stats = [
         { label: 'Total Pupils', value: data.totalStudents, icon: <Users size={22}/>, bg: '#fdfcf0', border: goldColor },
         { label: 'Staff Count', value: data.totalTeachers, icon: <UserCog size={22}/>, bg: '#f8f9fa', border: darkColor },
-        { label: 'Fees Collected', value: `₵${data.totalCollected.toLocaleString()}`, icon: <Wallet size={22}/>, bg: '#fdfcf0', border: goldColor },
-        { label: 'Outstanding', value: `₵${data.totalDebt.toLocaleString()}`, icon: <AlertTriangle size={22}/>, bg: '#fff5f5', border: '#e74a3b' },
+        ...(canViewFinance ? [
+            { label: 'Fees Collected', value: `₵${data.totalCollected.toLocaleString()}`, icon: <Wallet size={22}/>, bg: '#fdfcf0', border: goldColor },
+            { label: 'Outstanding', value: `₵${data.totalDebt.toLocaleString()}`, icon: <AlertTriangle size={22}/>, bg: '#fff5f5', border: '#e74a3b' }
+        ] : [])
     ];
 
     return (
@@ -187,6 +194,9 @@ function App() {
                     <Route index element={<DashboardHome />} />
                     <Route path="students" element={<ProtectedRoute allowedRoles={['ADMIN', 'TEACHER']}><StudentList /></ProtectedRoute>} />
                     <Route path="attendance" element={<ProtectedRoute allowedRoles={['ADMIN', 'TEACHER']}><Attendance /></ProtectedRoute>} />
+                    <Route path="timetable" element={<ProtectedRoute allowedRoles={['ADMIN', 'TEACHER']}><Timetable /></ProtectedRoute>} />
+                    <Route path="lesson-notes" element={<ProtectedRoute allowedRoles={['ADMIN', 'TEACHER']}><LessonNotes /></ProtectedRoute>} />
+                    <Route path="staff-attendance" element={<ProtectedRoute allowedRoles={['ADMIN']}><StaffAttendance /></ProtectedRoute>} />
                     <Route path="exams" element={<ProtectedRoute allowedRoles={['ADMIN', 'TEACHER']}><Exams /></ProtectedRoute>} />
                     <Route path="reports" element={<ProtectedRoute allowedRoles={['ADMIN', 'TEACHER']}><ReportCard /></ProtectedRoute>} />
                     <Route path="fees" element={<ProtectedRoute allowedRoles={['ADMIN', 'BURSAR']}><Fees /></ProtectedRoute>} />

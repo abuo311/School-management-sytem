@@ -16,12 +16,12 @@ public class StudentService {
     private StudentRepository studentRepository;
 
     public List<Student> getAllStudents() {
-        return studentRepository.findAll();
+        return studentRepository.findAllByEnabledTrue();
     }
 
     // Added to support the new Controller endpoint
     public List<Student> getStudentsByClass(String className) {
-        return studentRepository.findByClassName(className);
+        return studentRepository.findByClassNameAndEnabledTrue(className);
     }
 
     public Student getStudentById(Long id) {
@@ -31,15 +31,20 @@ public class StudentService {
 
     @Transactional
     public Student saveStudent(Student student) {
-        // Logic for NEW students only
-        if (student.getId() == null && (student.getAdmissionNumber() == null || student.getAdmissionNumber().isEmpty())) {
-            generateDynamicAdmissionNumber(student);
+        if (student.getId() == null) {
+            String requestedAdmissionNumber = student.getAdmissionNumber();
+            if (requestedAdmissionNumber == null || requestedAdmissionNumber.isBlank()
+                    || studentRepository.existsByAdmissionNumber(requestedAdmissionNumber.trim())) {
+                generateDynamicAdmissionNumber(student);
+            } else {
+                student.setAdmissionNumber(requestedAdmissionNumber.trim());
+            }
         }
 
         return studentRepository.save(student);
     }
 
-    private void generateDynamicAdmissionNumber(Student student) {
+    private synchronized void generateDynamicAdmissionNumber(Student student) {
         int currentYear = LocalDate.now().getYear();
         long nextId = studentRepository.count() + 1;
         String generatedID = String.format("ADM-%d-%04d", currentYear, nextId);
@@ -53,14 +58,14 @@ public class StudentService {
     }
 
     @Transactional
-    public void deleteStudent(Long id) {
-        if (!studentRepository.existsById(id)) {
-            throw new RuntimeException("Cannot delete. Student not found with id: " + id);
-        }
-        studentRepository.deleteById(id);
+    public void archiveStudent(Long id) {
+        Student student = studentRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Student not found with id: " + id));
+        student.setEnabled(false);
+        studentRepository.save(student);
     }
 
     public long countStudents() {
-        return studentRepository.count();
+        return studentRepository.countByEnabledTrue();
     }
 }

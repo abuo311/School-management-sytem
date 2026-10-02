@@ -31,7 +31,6 @@ public class SchoolSettings {
     private String nextTermBegins;
 
     private Double nextTermFees;
-    private Double termlyFees;
 
     @Column(columnDefinition = "TEXT")
     private String reportSmsTemplate;

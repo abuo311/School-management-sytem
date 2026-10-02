@@ -242,28 +242,9 @@ const StudentList = () => {
         } else {
             setIsEditing(false);
             setPhotoPreview(null);
-            
-            // --- PATTERN CHANGE: ADM-YEAR-SEQUENCE ---
-            const currentYear = new Date().getFullYear();
-            let nextNo = `ADM-${currentYear}-0001`;
-
-            if (students.length > 0) {
-                // Find students from the current year pattern
-                const yearPrefix = `ADM-${currentYear}-`;
-                const yearStudents = students.filter(s => s.admissionNumber?.startsWith(yearPrefix));
-
-                if (yearStudents.length > 0) {
-                    const lastNums = yearStudents.map(s => {
-                        const parts = s.admissionNumber.split('-');
-                        return parseInt(parts[2]) || 0;
-                    });
-                    const maxNum = Math.max(...lastNums);
-                    nextNo = `ADM-${currentYear}-${String(maxNum + 1).padStart(4, '0')}`;
-                }
-            }
 
             setFormData({
-                id: null, firstName: '', lastName: '', admissionNumber: nextNo,
+                id: null, firstName: '', lastName: '', admissionNumber: '',
                 gradeLevel: '', className: '', dateOfBirth: '', gender: '',
                 parentName: '', parentContact: '', parentEmail: '', homeAddress: '',
                 studentPhoto: ''
@@ -307,12 +288,14 @@ const StudentList = () => {
     };
 
     const handleDelete = async (id) => {
-        if (window.confirm("Are you sure you want to delete this student?")) {
+        if (window.confirm("Archive this learner? They will leave active lists, but attendance, fee and academic records will be retained.")) {
             try {
                 await API.delete(`/students/${id}`);
-                fetchData();
+                await fetchData();
                 setSelectedIDs(prev => prev.filter(item => item !== id));
-            } catch (err) { console.error(err); }
+            } catch (err) {
+                alert(err.response?.data?.message || "Unable to archive learner.");
+            }
         }
     };
 
@@ -486,7 +469,7 @@ const StudentList = () => {
                                             <div className="d-flex justify-content-center gap-1">
                                                 <button onClick={() => openViewModal(s)} className="btn btn-sm btn-light text-info"><Eye size={16}/></button>
                                                 <button onClick={() => openAddModal(s)} className="btn btn-sm btn-light text-warning"><Edit size={16}/></button>
-                                                <button onClick={() => handleDelete(s.id)} className="btn btn-sm btn-light text-danger"><Trash2 size={16}/></button>
+                                                <button onClick={() => handleDelete(s.id)} className="btn btn-sm btn-light text-danger" title="Archive learner" aria-label="Archive learner"><Trash2 size={16}/></button>
                                             </div>
                                         </td>
                                     </tr>
@@ -585,7 +568,7 @@ const StudentList = () => {
                                         </div>
                                         <div className="col-6">
                                             <label className="small fw-bold text-primary">Admission No.</label>
-                                            <input type="text" className="form-control form-control-sm bg-white fw-bold" value={formData.admissionNumber} readOnly />
+                                            <input type="text" className="form-control form-control-sm bg-white fw-bold" value={formData.admissionNumber || 'Assigned when saved'} readOnly />
                                         </div>
                                     </div>
                                 </div>

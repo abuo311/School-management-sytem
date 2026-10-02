@@ -53,10 +53,11 @@ public class PromotionService {
 
     @Transactional
     public String promoteAllStudents() {
-        List<Student> students = studentRepository.findAll();
+        List<Student> students = studentRepository.findAllByEnabledTrue();
         var settings = settingsRepository.findAll().stream().findFirst().orElse(null);
         String previousYear = settings != null && settings.getAcademicYear() != null
-                ? settings.getAcademicYear() : "2025/2026";
+                ? settings.getAcademicYear()
+                : "2025/2026";
         String nextYear = nextAcademicYear(previousYear);
         int promotedCount = 0;
 
@@ -72,7 +73,8 @@ public class PromotionService {
                 String nextLevel = PROMOTION_MAP.get(currentLevel);
                 student.setGradeLevel(nextLevel);
                 student.setClassName(nextLevel);
-                if ("GRADUATED".equals(nextLevel)) student.setEnabled(false);
+                if ("GRADUATED".equals(nextLevel))
+                    student.setEnabled(false);
 
                 studentRepository.save(student);
                 promotedCount++;

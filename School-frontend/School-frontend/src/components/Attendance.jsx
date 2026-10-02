@@ -144,8 +144,10 @@ const Attendance = () => {
 
         const total = currentData.length;
         const present = currentData.filter(d => d.status === 'PRESENT').length;
-        const absent = total - present;
-        const rate = ((present / total) * 100).toFixed(1);
+        const absent = currentData.filter(d => d.status === 'ABSENT').length;
+        const late = currentData.filter(d => d.status === 'LATE').length;
+        const other = total - present - absent - late;
+        const rate = total ? ((present / total) * 100).toFixed(1) : '0.0';
 
         // --- HEADER SECTION ---
         doc.setFillColor(26, 26, 26);
@@ -199,7 +201,7 @@ const Attendance = () => {
         doc.setDrawColor(212, 175, 55);
         doc.setLineWidth(0.5);
         doc.rect(14, finalY, 182, 20);
-        doc.text(`Total: ${total} | Present: ${present} | Absent: ${absent} | Rate: ${rate}%`, 105, finalY + 12, { align: 'center' });
+        doc.text(`Total: ${total} | Present: ${present} | Absent: ${absent} | Late: ${late} | Other: ${other} | Present rate: ${rate}%`, 105, finalY + 12, { align: 'center' });
 
         doc.save(`Attendance_${selectedGrade}_${selectedDate}.pdf`);
     };

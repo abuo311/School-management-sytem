@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import * as bootstrap from 'bootstrap';
 import API from '../services/api';
 import {
-    Wallet, Search, History, BadgeCheck, Loader2, Trash2, Printer
+    Wallet, Search, History, BadgeCheck, Loader2, Trash2, Printer, CreditCard, FileText
 } from 'lucide-react';
 
 const Fees = () => {
@@ -13,18 +13,22 @@ const Fees = () => {
     const [history, setHistory] = useState([]);
     const [loading, setLoading] = useState(false);
     const [actionLoading, setActionLoading] = useState(false);
-    const [payment, setPayment] = useState({ amount: '', totalBill: '', method: 'Cash' });
+    const [issuingFees, setIssuingFees] = useState(false);
+    const [paystackConfigured, setPaystackConfigured] = useState(null);
+    const [payment, setPayment] = useState({ amount: '' });
+    const [feeIssueSummary, setFeeIssueSummary] = useState(null);
     const [receiptData, setReceiptData] = useState(null);
 
     const [schoolInfo, setSchoolInfo] = useState({
         schoolName: 'ASONKWAA M/A BASIC SCHOOL',
         academicYear: '2025/2026',
         currentTerm: 'Term 1',
-        termlyFees: 0,
+        nextTermFees: 0,
         address: 'Nkoranza-South, Asonkwaa',
         phone: '+233 24 344 4321',
         email: 'asonkwaabasic@edu.gh'
     });
+    const configuredTermFee = Number(schoolInfo.nextTermFees || 0);
 
     const showToast = (message, type = 'success') => {
         const toastEl = document.getElementById('feeToast');
@@ -36,9 +40,58 @@ const Fees = () => {
         toast.show();
     };
 
+    const getStudentTermFee = (student, feeRecords = student?.feeHistory || []) => {
+        if (!student) return Number(schoolInfo.nextTermFees || 0);
+        if (Number(student.currentFeeAssessedAmount) > 0) {
+            return Number(student.currentFeeAssessedAmount);
+        }
+        const savedBills = feeRecords
+            .filter(record =>
+                record.term?.toLowerCase() === schoolInfo.currentTerm?.toLowerCase() &&
+                record.academicYear?.toLowerCase() === schoolInfo.academicYear?.toLowerCase() &&
+                Number(record.totalBill) > 0)
+            .map(record => Number(record.totalBill));
+
+        return savedBills.length ? Math.max(...savedBills) : Number(schoolInfo.nextTermFees || 0);
+    };
+
+    const getCyclePayments = (student, feeRecords = student?.feeHistory || []) => feeRecords.filter(record =>
+        record.term?.toLowerCase() === schoolInfo.currentTerm?.toLowerCase() &&
+        record.academicYear?.toLowerCase() === schoolInfo.academicYear?.toLowerCase());
+
+    const getStudentOutstanding = (student, feeRecords = student?.feeHistory || []) => {
+        if (!student) return 0;
+        if (Number(student.currentFeeAssessedAmount) > 0) {
+            return Math.max(0, Number(student.currentFeeBalance || 0));
+        }
+        const paid = getCyclePayments(student, feeRecords)
+            .reduce((total, record) => total + Number(record.amountPaid || 0), 0);
+        return Math.max(0, getStudentTermFee(student, feeRecords) - paid);
+    };
+
     useEffect(() => {
         fetchStudents();
         fetchSettings();
+        fetchPaystackStatus();
+    }, []);
+
+    useEffect(() => {
+        const reference = new URLSearchParams(window.location.search).get('reference');
+        if (!reference) return;
+
+        API.post('/paystack/verify', { reference })
+            .then(async response => {
+                if (response.data?.verified) {
+                    showToast('Online payment verified successfully');
+                    await fetchStudents();
+                    if (selectedStudent?.id) {
+                        const historyResponse = await API.get(`/fees/student/${selectedStudent.id}`);
+                        setHistory((historyResponse.data || []).sort((a, b) => b.id - a.id));
+                    }
+                }
+            })
+            .catch(error => showToast(error.response?.data?.message || 'Payment verification failed', 'danger'))
+            .finally(() => window.history.replaceState({}, document.title, window.location.pathname));
     }, []);
 
     const fetchSettings = async () => {
@@ -49,6 +102,16 @@ const Fees = () => {
             }
         } catch (err) {
             console.error("Failed to load settings", err);
+        }
+    };
+
+    const fetchPaystackStatus = async () => {
+        try {
+            const response = await API.get('/paystack/status');
+            setPaystackConfigured(Boolean(response.data?.configured));
+        } catch (err) {
+            setPaystackConfigured(false);
+            console.error('Paystack readiness check failed', err);
         }
     };
 
@@ -73,31 +136,27 @@ const Fees = () => {
 
     const selectStudent = async (student) => {
         setSelectedStudent(student);
-        setPayment({ amount: '', totalBill: schoolInfo.termlyFees ?? 0, method: 'Cash' });
+        setHistory([]);
+        setPayment({ amount: '' });
         try {
             const res = await API.get(`/fees/student/${student.id}`);
-            setHistory((res.data || []).sort((a, b) => b.id - a.id));
+            const studentHistory = res.data || [];
+            setHistory(studentHistory.sort((a, b) => b.id - a.id));
         } catch (err) { console.error(err); }
     };
 
     const handlePayment = async () => {
         const amount = parseFloat(payment.amount || 0);
-        const bill = parseFloat(payment.totalBill || 0);
         if (!selectedStudent?.id) return showToast("Please select a student first", "danger");
         if (amount <= 0) return showToast("Please enter an amount", "danger");
+        const outstanding = getStudentOutstanding(selectedStudent, history);
+        if (amount > outstanding) return showToast("Cash received cannot exceed the outstanding balance", "danger");
         setActionLoading(true);
 
         const payload = {
             student: { id: parseInt(selectedStudent.id) },
             amountPaid: amount,
-            totalBill: bill,
-            // ADD THIS LINE:
-            balance: bill - amount,
-            paymentMethod: payment.method,
-            term: schoolInfo.currentTerm,
-            academicYear: schoolInfo.academicYear,
-            datePaid: new Date().toISOString().split('T')[0],
-            receivedBy: "Admin"
+            paymentMethod: 'Cash',
         };
 
         try {
@@ -110,6 +169,52 @@ const Fees = () => {
         } catch (err) {
             showToast(err.response?.data?.message || "Error saving payment.", "danger");
         } finally { setActionLoading(false); }
+    };
+
+    const issueTermFees = async () => {
+        if (!Number.isFinite(configuredTermFee) || configuredTermFee <= 0) {
+            return showToast('No saved term fee is configured. Open Settings, enter Termly Fees, and save changes first.', 'danger');
+        }
+        setIssuingFees(true);
+        try {
+            const response = await API.post('/fees/assessments/issue');
+            setFeeIssueSummary(response.data);
+            if (response.data.assessedCount > 0) {
+                showToast(`Issued fees to ${response.data.assessedCount} learners for ${response.data.term}`);
+            } else if (response.data.activeLearnerCount > 0) {
+                showToast(`Fees are already issued for ${response.data.totalAssessedCount} of ${response.data.activeLearnerCount} active learners`);
+            } else {
+                showToast('There are no active learners to assess', 'danger');
+            }
+            await fetchStudents();
+        } catch (err) {
+            showToast(err.response?.data?.message || 'Unable to issue term fees', 'danger');
+        } finally {
+            setIssuingFees(false);
+        }
+    };
+
+    const startOnlinePayment = async () => {
+        if (!paystackConfigured) {
+            return showToast('Online payments are not configured. Contact the system administrator.', 'danger');
+        }
+        const amount = Number(payment.amount);
+        const outstanding = getStudentOutstanding(selectedStudent, history);
+        if (!selectedStudent?.id) return showToast('Please select a learner first', 'danger');
+        if (!Number.isFinite(amount) || amount <= 0 || amount > outstanding) {
+            return showToast('Enter a positive amount no greater than the outstanding balance', 'danger');
+        }
+        setActionLoading(true);
+        try {
+            const response = await API.post('/paystack/initialize', {
+                studentId: selectedStudent.id,
+                amount
+            });
+            window.location.assign(response.data.authorizationUrl);
+        } catch (err) {
+            showToast(err.response?.data?.message || 'Unable to start online payment', 'danger');
+            setActionLoading(false);
+        }
     };
 
     const handleDeletePayment = async (feeId) => {
@@ -136,12 +241,17 @@ const Fees = () => {
     };
 
     const getStatus = (student) => {
-        const bal = parseFloat(student.currentFeeBalance ?? student.lastBalance ?? 0);
-        const paidCount = parseInt(student.totalPaid || 0);
+        const bal = getStudentOutstanding(student);
+        const hasAssessment = getStudentTermFee(student) > 0;
+        const paidCount = getCyclePayments(student).length;
+        if (hasAssessment && bal === 0)
+            return { label: "Paid Fully", color: "bg-success text-white", cardColor: "bg-success text-white" };
+        if (hasAssessment && paidCount > 0 && bal > 0)
+            return { label: "Incomplete", color: "bg-warning text-dark", cardColor: "bg-warning text-dark" };
+        if (hasAssessment)
+            return { label: "Not Yet Pay", color: "bg-danger text-white", cardColor: "bg-danger text-white" };
         if (paidCount > 0 && bal === 0)
             return { label: "Paid Fully", color: "bg-success text-white", cardColor: "bg-success text-white" };
-        if (paidCount > 0 && bal > 0)
-            return { label: "Incomplete", color: "bg-warning text-dark", cardColor: "bg-warning text-dark" };
         return { label: "Not Yet Pay", color: "bg-danger text-white", cardColor: "bg-danger text-white" };
     };
 
@@ -243,7 +353,11 @@ const Fees = () => {
 
             <header className="mb-4 d-flex justify-content-between align-items-center no-print">
                 <h3 className="fw-bold text-start"><Wallet className="me-2 text-primary" /> Fee Management</h3>
-                <div className="d-flex gap-2 align-items-center">
+                <div className="d-flex gap-2 align-items-center flex-wrap justify-content-end">
+                    <button type="button" className="btn btn-dark d-flex align-items-center gap-2" onClick={issueTermFees} disabled={issuingFees || students.length === 0 || configuredTermFee <= 0} title={configuredTermFee <= 0 ? 'Set and save a positive Termly Fees amount in Settings first' : `Issue ${schoolInfo.currentTerm} at ₵${configuredTermFee.toLocaleString()} per learner`}>
+                        {issuingFees ? <Loader2 size={17} className="animate-spin" /> : <FileText size={17} />}
+                        {issuingFees ? 'Issuing Fees...' : `Issue ${schoolInfo.currentTerm} Fees`}
+                    </button>
                     {loading && <div className="spinner-border spinner-border-sm text-primary me-2"></div>}
                     <select className="form-select border-0 shadow-sm rounded-pill" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
                         <option value="All">All Students</option>
@@ -253,6 +367,24 @@ const Fees = () => {
                     </select>
                 </div>
             </header>
+
+            <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 bg-white border rounded px-3 py-2 mb-4 no-print">
+                <div className="small">
+                    <strong>{schoolInfo.currentTerm} · {schoolInfo.academicYear}</strong>
+                    <span className="text-muted"> · Configured term fee: </span>
+                    <strong>₵{configuredTermFee.toLocaleString()}</strong>
+                </div>
+                <div className="small text-muted">
+                    {feeIssueSummary
+                        ? `${feeIssueSummary.totalAssessedCount}/${feeIssueSummary.activeLearnerCount} learners assessed`
+                        : `${students.filter(student => Number(student.currentFeeAssessedAmount) > 0).length}/${students.length} learners assessed`}
+                </div>
+            </div>
+            {configuredTermFee <= 0 && (
+                <div className="alert alert-warning py-2 mb-4 no-print" role="status">
+                    Termly Fees is not saved as a positive amount. Set it in Settings and save before issuing this term's fees.
+                </div>
+            )}
 
             <div className="row g-4 no-print">
                 {/* Sidebar */}
@@ -274,6 +406,9 @@ const Fees = () => {
                                             <div>
                                                 <div className={`fw-bold ${selectedStudent?.id === s.id ? 'text-white' : ''}`}>{s.firstName} {s.lastName}</div>
                                                 <div className={`small ${selectedStudent?.id === s.id ? 'text-white-50' : 'opacity-75'}`}>{s.gradeLevel}</div>
+                                                <div className={`small ${selectedStudent?.id === s.id ? 'text-white-50' : 'text-muted'}`}>
+                                                    {schoolInfo.currentTerm} fee: ₵{getStudentTermFee(s).toLocaleString()} · Owed: ₵{getStudentOutstanding(s).toLocaleString()}
+                                                </div>
                                             </div>
                                             <span className={`badge rounded-pill ${status.color}`} style={{ fontSize: '10px' }}>{status.label}</span>
                                         </div>
@@ -289,31 +424,30 @@ const Fees = () => {
                     {selectedStudent ? (
                         <>
                             <div className={`card border-0 shadow-sm p-4 mb-4 rounded-4 transition-all text-start ${getStatus(selectedStudent).cardColor}`}>
-                                <p className="small text-uppercase fw-bold opacity-75 mb-0">Current {getStatus(selectedStudent).label} Balance</p>
-                                <h2 className="fw-bold mb-0">₵{Number(selectedStudent.currentFeeBalance ?? selectedStudent.lastBalance ?? 0).toLocaleString()}</h2>
+                                <p className="small text-uppercase fw-bold opacity-75 mb-0">{schoolInfo.currentTerm} Outstanding Balance</p>
+                                <h2 className="fw-bold mb-0">₵{getStudentOutstanding(selectedStudent, history).toLocaleString()}</h2>
+                                <small>Assessed: ₵{getStudentTermFee(selectedStudent, history).toLocaleString()} · Paid: ₵{getCyclePayments(selectedStudent, history).reduce((total, record) => total + Number(record.amountPaid || 0), 0).toLocaleString()}</small>
                             </div>
 
                             <div className="card border-0 shadow-sm p-4 mb-4 rounded-4 bg-white text-start">
                                 <div className="row g-3">
                                     <div className="col-md-4">
-                                        <label className="small fw-bold text-secondary">Total Fee / Arrears</label>
-                                        <input type="number" className="form-control border-secondary-subtle bg-light" value={payment.totalBill} onChange={e => setPayment({ ...payment, totalBill: e.target.value })} />
+                                        <label className="small fw-bold text-secondary">Total {schoolInfo.currentTerm} Fee</label>
+                                        <input type="number" className="form-control border-secondary-subtle bg-light" value={getStudentTermFee(selectedStudent, history)} readOnly />
                                     </div>
                                     <div className="col-md-4">
-                                        <label className="small fw-bold text-primary">Paying Now</label>
-                                        <input type="number" className="form-control border-primary" value={payment.amount} onChange={e => setPayment({ ...payment, amount: e.target.value })} placeholder="0.00" />
-                                    </div>
-                                    <div className="col-md-4">
-                                        <label className="small fw-bold text-secondary">Method</label>
-                                        <select className="form-select" value={payment.method} onChange={e => setPayment({ ...payment, method: e.target.value })}>
-                                            <option>Cash</option><option>Mobile Money</option>
-                                        </select>
+                                        <label className="small fw-bold text-primary">Amount to pay</label>
+                                        <input type="number" min="0.01" max={getStudentOutstanding(selectedStudent, history)} step="0.01" className="form-control border-primary" value={payment.amount} onChange={e => setPayment({ ...payment, amount: e.target.value })} placeholder="0.00" />
                                     </div>
                                     <div className="col-12 mt-3">
-                                        <button className="btn btn-dark w-100 py-2 fw-bold rounded-pill d-flex align-items-center justify-content-center gap-2" onClick={handlePayment} disabled={actionLoading || !selectedStudent?.id}>
+                                        <button className="btn btn-dark w-100 py-2 fw-bold d-flex align-items-center justify-content-center gap-2" onClick={handlePayment} disabled={actionLoading || !selectedStudent?.id || getStudentOutstanding(selectedStudent, history) <= 0 || Number(payment.amount) <= 0 || Number(payment.amount) > getStudentOutstanding(selectedStudent, history)}>
                                             {actionLoading ? <Loader2 size={18} className="animate-spin" /> : <BadgeCheck size={18} />}
-                                            {actionLoading ? "Processing..." : "Record Payment"}
+                                            {actionLoading ? "Processing..." : "Record Cash Payment"}
                                         </button>
+                                        <button className="btn btn-outline-primary w-100 mt-2 py-2 fw-bold d-flex align-items-center justify-content-center gap-2" onClick={startOnlinePayment} disabled={actionLoading || paystackConfigured === null || !paystackConfigured || getStudentOutstanding(selectedStudent, history) <= 0 || Number(payment.amount) <= 0 || Number(payment.amount) > getStudentOutstanding(selectedStudent, history)} title={!paystackConfigured ? 'Configure PAYSTACK_SECRET_KEY on the backend to enable online payments' : 'Start secure Paystack checkout'}>
+                                            {actionLoading ? <Loader2 size={18} className="animate-spin" /> : <CreditCard size={18} />} {paystackConfigured === null ? 'Checking online payment...' : paystackConfigured ? 'Pay Online with Paystack' : 'Paystack Not Configured'}
+                                        </button>
+                                        <small className="text-muted d-block mt-2">Cash is recorded by the bursar. Online payment is confirmed by Paystack before it appears in transaction history.{paystackConfigured === false ? ' The administrator must configure PAYSTACK_SECRET_KEY on the backend.' : ''}</small>
                                     </div>
                                 </div>
                             </div>

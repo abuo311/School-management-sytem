@@ -11,6 +11,7 @@ const DebtorsList = () => {
     const [debtors, setDebtors] = useState([]);
     const [schoolSettings, setSchoolSettings] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [loadError, setLoadError] = useState('');
     const [nameSearch, setNameSearch] = useState('');
     const [selectedIds, setSelectedIds] = useState([]);
     const [contactedIds, setContactedIds] = useState([]);
@@ -43,8 +44,10 @@ const DebtorsList = () => {
         try {
             const res = await API.get('/fees/debtors');
             setDebtors(res.data || []);
+            setLoadError('');
         } catch (err) {
             console.error("Fetch Error:", err);
+            setLoadError(err.response?.data?.message || 'Unable to load fee balances. Check your connection and staff access.');
         } finally {
             setLoading(false);
         }
@@ -54,8 +57,7 @@ const DebtorsList = () => {
         if (!editingStudent) return;
         setIsUpdating(true);
         try {
-            const payload = { ...editingStudent, parentContact: newContact, enabled: true };
-            await API.put(`/students/${editingStudent.id}`, payload);
+            await API.patch(`/students/${editingStudent.id}/contact`, { parentContact: newContact });
             await fetchData(); 
             setIsEditModalOpen(false);
         } catch (err) {
@@ -216,7 +218,12 @@ const DebtorsList = () => {
                             <h5 className="mb-0 fw-bold text-uppercase d-inline-block me-3" style={{fontSize: '14px', letterSpacing: '1px'}}>Financial Delinquency List</h5>
                             {selectedIds.length > 0 && <span className="text-primary small fw-bold">{selectedIds.length} selected</span>}
                         </div>
-                        <span className="badge bg-danger px-3">Date: {new Date().toLocaleDateString()}</span>
+                        <div className="d-flex align-items-center gap-2">
+                            {loadError && <button type="button" className="btn btn-sm btn-outline-danger d-flex align-items-center gap-1" onClick={fetchData} disabled={loading}>
+                                <RefreshCw size={14} /> Retry
+                            </button>}
+                            <span className="badge bg-danger px-3">Date: {new Date().toLocaleDateString()}</span>
+                        </div>
                     </div>
                     <table className="table table-hover align-middle mb-0 print-table">
                         <thead className="bg-black text-white">
@@ -228,16 +235,21 @@ const DebtorsList = () => {
                                 </th>
                                 <th>Student Details</th>
                                 <th>Class</th>
-                                <th className="text-end">Outstanding Balance</th>
+                                <th>Term / Year</th>
+                                <th className="text-end">Assessed</th>
+                                <th className="text-end">Paid</th>
+                                <th className="text-end">Outstanding</th>
                                 <th className="text-center d-print-none">Reminder</th>
                                 <th className="text-center d-print-none">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             {loading ? (
-                                <tr><td colSpan="6" className="text-center py-5"><Loader2 className="animate-spin mx-auto" style={{ color: goldColor }} /></td></tr>
+                                <tr><td colSpan="9" className="text-center py-5"><Loader2 className="animate-spin mx-auto" style={{ color: goldColor }} /></td></tr>
+                            ) : loadError ? (
+                                <tr><td colSpan="9" className="text-center py-5 text-danger">{loadError}</td></tr>
                             ) : filteredDebtors.length === 0 ? (
-                                <tr><td colSpan="6" className="text-center py-5 text-muted">No debtors found matching your search.</td></tr>
+                                <tr><td colSpan="9" className="text-center py-5 text-muted">No debtors found matching your search.</td></tr>
                             ) : filteredDebtors.map((item, i) => (
                                 <tr key={item.student?.id || i}>
                                     <td className="px-4 d-print-none">
@@ -250,7 +262,10 @@ const DebtorsList = () => {
                                         <div className="text-muted extra-small">ID: {item.student?.admissionNumber} | <Phone size={10}/> {item.student?.parentContact || 'No Contact'}</div>
                                     </td>
                                     <td><span className="badge bg-light text-dark border">{item.student?.gradeLevel}</span></td>
-                                    <td className="text-end fw-black text-danger">₵{item.balance?.toLocaleString()}</td>
+                                    <td>{item.term} / {item.academicYear}</td>
+                                    <td className="text-end">₵{Number(item.assessedAmount || 0).toLocaleString()}</td>
+                                    <td className="text-end text-success">₵{Number(item.totalPaid || 0).toLocaleString()}</td>
+                                    <td className="text-end fw-black text-danger">₵{Number(item.balance || 0).toLocaleString()}</td>
                                     <td className="text-center d-print-none">
                                         {contactedIds.includes(item.student?.id) ? (
                                             <span className="badge bg-success-subtle text-success border border-success px-3 rounded-pill">Sent</span>

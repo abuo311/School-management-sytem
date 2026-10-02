@@ -4,8 +4,9 @@ import com.school.entities.SchoolSettings;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
+
 @Repository
 public interface SettingsRepository extends JpaRepository<SchoolSettings, Long> {
-    // No extra methods needed!
-    // JpaRepository provides .findById() and .save() which we use in the Controller.
+    Optional<SchoolSettings> findFirstByOrderByIdAsc();
 }

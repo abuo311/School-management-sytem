@@ -11,20 +11,23 @@ import java.util.List;
 @Service
 public class ResultDeliveryService {
 
-    @Autowired private StudentRepository studentRepository;
-    @Autowired private ExamResultRepository resultRepository;
-    @Autowired private EmailService emailService;
-    @Autowired private SmsService smsService;
+    @Autowired
+    private StudentRepository studentRepository;
+    @Autowired
+    private ExamResultRepository resultRepository;
+    @Autowired
+    private EmailService emailService;
+    @Autowired
+    private SmsService smsService;
 
     public void sendBulkReports(String className, String term) {
         String currentYear = "2025/2026";
-        List<Student> students = studentRepository.findByClassName(className);
+        List<Student> students = studentRepository.findByClassNameAndEnabledTrue(className);
 
         for (Student student : students) {
             // Updated to fetch results for the specific student and term
             List<ExamResult> results = resultRepository.findByStudent_IdAndTerm(
-                    student.getId(), term
-            );
+                    student.getId(), term);
 
             if (!results.isEmpty()) {
                 // Typically we use the first record or a summary record for the message
@@ -40,8 +43,7 @@ public class ResultDeliveryService {
                                 "Total Score: %.1f. Position: %d of %d. " +
                                 "Visit the portal for details. - EXCELSIOR ACADEMY",
                         term, student.getFirstName(), student.getLastName(),
-                        res.getTotalScore(), res.getPosition(), res.getClassSize()
-                );
+                        res.getTotalScore(), res.getPosition(), res.getClassSize());
 
                 // Send Email
                 if (parentEmail != null && !parentEmail.isEmpty()) {
