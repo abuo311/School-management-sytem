@@ -51,9 +51,9 @@ Go to your Render service dashboard:
 1. Click "Environment" tab
 2. Add these environment variables:
 
-SPRING_DATASOURCE_URL=jdbc:mysql://<RAILWAY_PUBLIC_HOST>:<RAILWAY_PUBLIC_PORT>/<MYSQL_DATABASE>?serverTimezone=UTC
-SPRING_DATASOURCE_USERNAME=<MYSQL_USER>
-SPRING_DATASOURCE_PASSWORD=<MYSQL_PASSWORD>
+DB_URL=jdbc:mysql://mysql-22af9249-abuobernard-2afb.d.aivencloud.com:16535/school_manager_v2?sslMode=REQUIRED
+DB_USERNAME=avnadmin
+DB_PASSWORD=<AIVEN_DATABASE_PASSWORD>
 SPRING_JPA_HIBERNATE_DDL_AUTO=update
 SERVER_PORT=8080
 

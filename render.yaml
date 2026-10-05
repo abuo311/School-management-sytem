@@ -10,11 +10,11 @@ services:
     buildCommand: cd School-backend && mvn clean package -DskipTests
     startCommand: java -jar target/School-management-sytem-0.0.1-SNAPSHOT.jar
     envVars:
-      - key: SPRING_DATASOURCE_URL
-        sync: false
-      - key: SPRING_DATASOURCE_USERNAME
-        sync: false
-      - key: SPRING_DATASOURCE_PASSWORD
+      - key: DB_URL
+        value: jdbc:mysql://mysql-22af9249-abuobernard-2afb.d.aivencloud.com:16535/school_manager_v2?sslMode=REQUIRED
+      - key: DB_USERNAME
+        value: avnadmin
+      - key: DB_PASSWORD
         sync: false
       - key: SERVER_PORT
         value: 8080
