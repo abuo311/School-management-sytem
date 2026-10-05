@@ -1,11 +1,8 @@
 # Deployment Guide: School Management System
 
 ## Railway MySQL Connection Details
-- Database: school_management
-- User: root
-- Host: ${{RAILWAY_PRIVATE_DOMAIN}} (internal)
-- Port: 3306
-- Password: ${{MYSQL_ROOT_PASSWORD}} (Railway managed)
+
+Render cannot connect to Railway's private hostname. In Railway, enable the MySQL service's TCP Proxy and use its public host and port with the database name, username, and password shown in Railway's connection details.
 
 ## Deployment Steps
 
@@ -54,9 +51,9 @@ Go to your Render service dashboard:
 1. Click "Environment" tab
 2. Add these environment variables:
 
-SPRING_DATASOURCE_URL=jdbc:mysql://${{RAILWAY_PRIVATE_DOMAIN}}:3306/school_management?useSSL=false&serverTimezone=UTC
-SPRING_DATASOURCE_USERNAME=root
-SPRING_DATASOURCE_PASSWORD=${{MYSQL_ROOT_PASSWORD}}
+SPRING_DATASOURCE_URL=jdbc:mysql://<RAILWAY_PUBLIC_HOST>:<RAILWAY_PUBLIC_PORT>/<MYSQL_DATABASE>?serverTimezone=UTC
+SPRING_DATASOURCE_USERNAME=<MYSQL_USER>
+SPRING_DATASOURCE_PASSWORD=<MYSQL_PASSWORD>
 SPRING_JPA_HIBERNATE_DDL_AUTO=update
 SERVER_PORT=8080
 
