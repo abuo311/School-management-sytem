@@ -20,6 +20,7 @@ const StudentList = () => {
     const [importing, setImporting] = useState(false);
     const [importMessage, setImportMessage] = useState('');
     const fileInputRef = useRef(null);
+    const idSliderRef = useRef(null);
     const [schoolConfig, setSchoolConfig] = useState({
         schoolName: 'ASONKWAA M/A BASIC SCHOOL',
         logoUrl: '',
@@ -350,10 +351,136 @@ const StudentList = () => {
         return students.filter(s => selectedIDs.includes(s.id));
     };
 
+    const scrollIdSlider = (direction) => {
+        if (!idSliderRef.current) return;
+        const amount = 360;
+        idSliderRef.current.scrollBy({
+            left: direction === 'next' ? amount : -amount,
+            behavior: 'smooth'
+        });
+    };
+
     return (
         <div className="container-fluid py-4 text-start bg-light min-vh-100">
             <style>
                 {`
+                .student-id-slider {
+                    display: flex;
+                    gap: 18px;
+                    overflow-x: auto;
+                    scroll-snap-type: x proximity;
+                    padding: 8px 4px 16px;
+                    scrollbar-width: thin;
+                    scrollbar-color: rgba(13, 110, 253, 0.45) transparent;
+                }
+                .student-id-slider::-webkit-scrollbar {
+                    height: 8px;
+                }
+                .student-id-slider::-webkit-scrollbar-thumb {
+                    background: rgba(13, 110, 253, 0.35);
+                    border-radius: 999px;
+                }
+                .theme-id-card {
+                    min-width: 330px;
+                    max-width: 330px;
+                    height: 210px;
+                    border-radius: 18px;
+                    overflow: hidden;
+                    background: linear-gradient(135deg, #0f172a 0%, #111827 32%, #1f2937 100%);
+                    color: #f8fafc;
+                    border: 1px solid rgba(148, 163, 184, 0.35);
+                    box-shadow: 0 14px 28px rgba(15, 23, 42, 0.18);
+                    scroll-snap-align: start;
+                    position: relative;
+                }
+                .theme-id-card::before {
+                    content: "";
+                    position: absolute;
+                    inset: 0;
+                    background: linear-gradient(120deg, rgba(59, 130, 246, 0.18), transparent 52%, rgba(148, 163, 184, 0.12));
+                    pointer-events: none;
+                }
+                .theme-id-card-header {
+                    background: linear-gradient(135deg, rgba(13, 110, 253, 0.9), rgba(15, 118, 110, 0.85));
+                    padding: 10px 12px;
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                    position: relative;
+                    z-index: 1;
+                }
+                .theme-id-card-body {
+                    display: flex;
+                    gap: 12px;
+                    padding: 14px 12px 8px;
+                    position: relative;
+                    z-index: 1;
+                }
+                .theme-id-photo {
+                    width: 88px;
+                    height: 104px;
+                    border-radius: 12px;
+                    overflow: hidden;
+                    background: rgba(255,255,255,0.08);
+                    border: 1px solid rgba(255,255,255,0.22);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    flex-shrink: 0;
+                }
+                .theme-id-meta {
+                    flex: 1;
+                    min-width: 0;
+                    padding-right: 90px;
+                    color: #e2e8f0;
+                }
+                .theme-id-name {
+                    margin: 0 0 6px;
+                    font-size: 13px;
+                    font-weight: 700;
+                    letter-spacing: 0.3px;
+                    text-transform: uppercase;
+                    color: #f8fafc;
+                }
+                .theme-id-row {
+                    font-size: 9.5px;
+                    margin: 3px 0;
+                    color: #dbeafe;
+                }
+                .theme-id-label {
+                    font-weight: 700;
+                    color: #93c5fd;
+                    text-transform: uppercase;
+                    letter-spacing: 0.4px;
+                }
+                .theme-id-signature {
+                    position: absolute;
+                    right: 16px;
+                    bottom: 26px;
+                    width: 86px;
+                    text-align: center;
+                }
+                .theme-signature-line {
+                    border-top: 1px solid rgba(255,255,255,0.8);
+                    width: 70px;
+                    margin: 4px auto 0;
+                }
+                .theme-card-footer {
+                    position: absolute;
+                    bottom: 0;
+                    left: 0;
+                    right: 0;
+                    padding: 6px 8px;
+                    text-align: center;
+                    background: rgba(2, 6, 23, 0.85);
+                    color: #bfdbfe;
+                    font-size: 8px;
+                    letter-spacing: 0.8px;
+                    text-transform: uppercase;
+                    border-top: 1px solid rgba(148, 163, 184, 0.35);
+                    z-index: 1;
+                }
+
                 @media print {
                     body * { visibility: hidden; }
                     .print-area, .print-area * { visibility: visible; }
@@ -364,15 +491,15 @@ const StudentList = () => {
                     }
                     .no-print { display: none !important; }
                     .id-card-item {
-                        width: 340px; height: 220px; border: 2px solid #D4AF37;
-                        border-radius: 16px; overflow: hidden; background: linear-gradient(180deg, #fff 0%, #fffdf6 100%);
+                        width: 340px; height: 220px; border: 1px solid rgba(148,163,184,0.7);
+                        border-radius: 16px; overflow: hidden; background: linear-gradient(135deg, #0f172a 0%, #111827 35%, #1f2937 100%);
                         position: relative; -webkit-print-color-adjust: exact;
                         font-family: 'Segoe UI', sans-serif; margin-bottom: 15px;
-                        box-shadow: 0 8px 18px rgba(26, 26, 26, 0.08);
+                        box-shadow: 0 8px 18px rgba(15, 23, 42, 0.15);
                     }
                     .card-header-gold {
-                        background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
-                        color: #D4AF37; padding: 8px 10px;
+                        background: linear-gradient(135deg, rgba(13,110,253,0.9), rgba(15,118,110,0.8));
+                        color: #f8fafc; padding: 8px 10px;
                         text-align: center; border-bottom: 2px solid #D4AF37;
                         display: flex; align-items: center; justify-content: center; gap: 10px;
                     }
@@ -381,31 +508,31 @@ const StudentList = () => {
                         border-radius: 10px; overflow: hidden; background: #f8f9fa;
                         box-shadow: inset 0 0 0 1px rgba(212, 175, 55, 0.4);
                     }
-                    .gold-text { color: #AA8A2E; font-weight: 800; font-size: 9px; text-transform: uppercase; letter-spacing: 0.5px; }
+                    .gold-text { color: #93c5fd; font-weight: 800; font-size: 9px; text-transform: uppercase; letter-spacing: 0.5px; }
                     .card-footer-gold {
                         position: absolute; bottom: 0; width: 100%;
-                        background: linear-gradient(180deg, #1a1a1a 0%, #141414 100%);
-                        color: #D4AF37; font-size: 8px; letter-spacing: 0.8px;
+                        background: rgba(2, 6, 23, 0.85);
+                        color: #bfdbfe; font-size: 8px; letter-spacing: 0.8px;
                         text-align: center; padding: 5px 0; border-top: 1px solid #D4AF37;
                     }
                     .signature-box {
                         position: absolute; bottom: 26px; right: 16px; text-align: center; width: 90px;
                     }
                     .signature-line {
-                        border-top: 1px solid #1a1a1a; width: 82px; margin: 2px auto 0 auto;
+                        border-top: 1px solid rgba(255,255,255,0.7); width: 82px; margin: 2px auto 0 auto;
                     }
                     .student-name {
                         margin: 0 0 4px 0;
                         font-size: 13px;
                         font-weight: 800;
-                        color: #1a1a1a;
+                        color: #f8fafc;
                         text-transform: uppercase;
                         letter-spacing: 0.3px;
                     }
                     .info-row {
                         font-size: 9px;
                         margin: 2px 0;
-                        color: #1f1f1f;
+                        color: #dbeafe;
                     }
                 }
                 `}
@@ -450,6 +577,69 @@ const StudentList = () => {
             {importMessage && (
                 <div className="alert alert-info py-2 px-3 mb-3 small no-print">{importMessage}</div>
             )}
+
+            <div className="card border-0 shadow-sm rounded-4 p-3 mb-4 no-print">
+                <div className="d-flex align-items-center justify-content-between mb-3">
+                    <div>
+                        <h5 className="fw-bold mb-0">Student ID Cards</h5>
+                        <small className="text-muted">Swipe or drag across to view cards</small>
+                    </div>
+                    <div className="d-flex gap-2">
+                        <button type="button" className="btn btn-sm btn-outline-secondary" onClick={() => scrollIdSlider('prev')} aria-label="Previous ID card">←</button>
+                        <button type="button" className="btn btn-sm btn-outline-primary" onClick={() => scrollIdSlider('next')} aria-label="Next ID card">→</button>
+                    </div>
+                </div>
+
+                <div ref={idSliderRef} className="student-id-slider">
+                    {getPrintData().length > 0 ? (
+                        getPrintData().map(s => (
+                            <div key={s.id} className="theme-id-card">
+                                <div className="theme-id-card-header">
+                                    {schoolConfig.logoUrl ? (
+                                        <img src={schoolConfig.logoUrl} alt="school logo" style={{ width: '28px', height: '28px', objectFit: 'contain' }} />
+                                    ) : null}
+                                    <div className="text-start">
+                                        <div style={{ fontSize: '9.5px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{schoolConfig.schoolName}</div>
+                                        <div style={{ fontSize: '6px', opacity: 0.9, letterSpacing: '1px' }}>STUDENT IDENTITY CARD</div>
+                                    </div>
+                                </div>
+
+                                <div className="theme-id-card-body">
+                                    <div className="theme-id-photo">
+                                        {s.studentPhoto ? (
+                                            <img src={s.studentPhoto} alt="student" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                        ) : (
+                                            <User size={26} className="text-white-50" />
+                                        )}
+                                    </div>
+
+                                    <div className="theme-id-meta">
+                                        <h6 className="theme-id-name">{s.firstName} {s.lastName}</h6>
+                                        <div className="theme-id-row"><span className="theme-id-label">ID:</span> {s.admissionNumber}</div>
+                                        <div className="theme-id-row"><span className="theme-id-label">Class:</span> {s.className || s.gradeLevel}</div>
+                                        <div className="theme-id-row"><span className="theme-id-label">Gender:</span> {s.gender || 'N/A'}</div>
+                                        <div className="theme-id-row"><span className="theme-id-label">DOB:</span> {s.dateOfBirth || 'N/A'}</div>
+                                    </div>
+
+                                    <div className="theme-id-signature">
+                                        {(schoolConfig.headTeacherSign || schoolConfig.signatureUrl) ? (
+                                            <img src={schoolConfig.headTeacherSign || schoolConfig.signatureUrl} alt="signature" style={{ height: '23px', width: 'auto', display: 'block', margin: '0 auto' }} />
+                                        ) : null}
+                                        <div className="theme-signature-line"></div>
+                                        <div style={{ fontSize: '6px', fontWeight: 700, marginTop: '3px', letterSpacing: '0.5px', textTransform: 'uppercase', color: '#e2e8f0' }}>
+                                            {schoolConfig.headMasterName || 'Headmaster'}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="theme-card-footer">{schoolConfig.motto}</div>
+                            </div>
+                        ))
+                    ) : (
+                        <div className="text-muted small px-3 py-4">Select students to preview ID cards.</div>
+                    )}
+                </div>
+            </div>
 
             <div className="card border-0 shadow-sm rounded-4 overflow-hidden no-print">
                 {loading ? (

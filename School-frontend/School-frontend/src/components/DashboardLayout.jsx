@@ -6,7 +6,7 @@ import {
     Settings, LogOut, Home, CalendarCheck,
     FileText, PenTool, Wallet, AlertTriangle, BarChart3, Menu, X,
     ShieldPlus, UserCircle, User, LayoutGrid, TrendingUp, Database, Download, ClipboardCheck,
-    CalendarClock, NotebookPen, Palette
+    CalendarClock, NotebookPen, Palette, PanelLeftClose, PanelLeftOpen
 } from 'lucide-react';
 import '../styles/Dashboard.css';
 import { getSchoolTheme, SCHOOL_THEMES } from '../theme';
@@ -17,6 +17,7 @@ const DashboardLayout = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
     const [isProfileOpen, setIsProfileOpen] = useState(false);
     const [schoolInfo, setSchoolInfo] = useState({ name: 'EduManager', logo: null });
     const [profilePhoto, setProfilePhoto] = useState(sessionStorage.getItem('profilePhoto'));
@@ -144,7 +145,8 @@ const DashboardLayout = () => {
             }}
         >
             <style>{`
-                .sidebar { background: ${darkBg} !important; border-right: 2px solid ${goldColor}33; }
+                .sidebar { background: ${darkBg} !important; border-right: 2px solid ${goldColor}33; transition: margin-left 0.3s ease, left 0.3s ease; }
+                @media (min-width: 992px) { .sidebar.desktop-collapsed { margin-left: -280px; } }
                 .sidebar-menu { flex: 1; overflow-y: auto; padding-right: 5px; }
                 .sidebar-menu::-webkit-scrollbar { width: 5px; }
                 .sidebar-menu::-webkit-scrollbar-thumb { background: ${goldColor}44; border-radius: 10px; }
@@ -163,7 +165,7 @@ const DashboardLayout = () => {
                 </div>
             )}
 
-            <aside className={`sidebar d-flex flex-column ${isMobileMenuOpen ? 'mobile-open' : ''}`}
+                 <aside className={`sidebar d-flex flex-column ${isMobileMenuOpen ? 'mobile-open' : ''} ${isSidebarCollapsed ? 'desktop-collapsed' : ''}`}
                    style={{ width: '280px', height: '100vh', color: '#fff' }}>
 
                 <div className="sidebar-header p-4 d-flex justify-content-between align-items-center border-bottom border-secondary border-opacity-25">
@@ -278,6 +280,15 @@ const DashboardLayout = () => {
                 <header className="top-navbar bg-white shadow-sm d-flex align-items-center justify-content-between px-4" style={{ height: '70px' }}>
                     <div className="d-flex align-items-center text-muted">
                         <button className="btn btn-link text-muted d-lg-none me-2 p-0" onClick={toggleMobileMenu}><Menu size={24} /></button>
+                        <button
+                            type="button"
+                            className="btn btn-link text-muted d-none d-lg-inline-flex me-2 p-1"
+                            onClick={() => setIsSidebarCollapsed(prev => !prev)}
+                            aria-label={isSidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+                            title={isSidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+                        >
+                            {isSidebarCollapsed ? <PanelLeftOpen size={20} /> : <PanelLeftClose size={20} />}
+                        </button>
                         <Home size={18} className="me-2 d-none d-md-block" style={{ color: goldColor }} />
                         <span className="small text-uppercase d-none d-sm-inline opacity-75 fw-black" style={{ letterSpacing: '0.5px' }}>
                             {getPageTitle()}
