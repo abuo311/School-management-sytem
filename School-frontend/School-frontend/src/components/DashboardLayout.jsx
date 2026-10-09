@@ -147,6 +147,15 @@ const DashboardLayout = () => {
             <style>{`
                 .sidebar { background: ${darkBg} !important; border-right: 2px solid ${goldColor}33; transition: margin-left 0.3s ease, left 0.3s ease; }
                 @media (min-width: 992px) { .sidebar.desktop-collapsed { margin-left: -280px; } }
+                .desktop-sidebar-toggle {
+                    position: fixed; top: 50%; z-index: 1060; transform: translateY(-50%);
+                    width: 34px; height: 54px; border: 0; border-radius: 0 10px 10px 0;
+                    display: flex; align-items: center; justify-content: center;
+                    color: #fff; background: ${goldColor}; box-shadow: 0 3px 12px rgba(0,0,0,0.24);
+                    transition: left 0.3s ease, background-color 0.2s ease;
+                }
+                .desktop-sidebar-toggle:hover { background: color-mix(in srgb, ${goldColor} 82%, #000); color: #fff; }
+                @media (max-width: 991px) { .desktop-sidebar-toggle { display: none; } }
                 .sidebar-menu { flex: 1; overflow-y: auto; padding-right: 5px; }
                 .sidebar-menu::-webkit-scrollbar { width: 5px; }
                 .sidebar-menu::-webkit-scrollbar-thumb { background: ${goldColor}44; border-radius: 10px; }
@@ -276,19 +285,21 @@ const DashboardLayout = () => {
                 </div>
             </aside>
 
+            <button
+                type="button"
+                className="desktop-sidebar-toggle"
+                style={{ left: isSidebarCollapsed ? '0' : '280px' }}
+                onClick={() => setIsSidebarCollapsed(prev => !prev)}
+                aria-label={isSidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+                title={isSidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            >
+                {isSidebarCollapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}
+            </button>
+
             <main className="main-content flex-grow-1">
                 <header className="top-navbar bg-white shadow-sm d-flex align-items-center justify-content-between px-4" style={{ height: '70px' }}>
                     <div className="d-flex align-items-center text-muted">
                         <button className="btn btn-link text-muted d-lg-none me-2 p-0" onClick={toggleMobileMenu}><Menu size={24} /></button>
-                        <button
-                            type="button"
-                            className="btn btn-link text-muted d-none d-lg-inline-flex me-2 p-1"
-                            onClick={() => setIsSidebarCollapsed(prev => !prev)}
-                            aria-label={isSidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-                            title={isSidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-                        >
-                            {isSidebarCollapsed ? <PanelLeftOpen size={20} /> : <PanelLeftClose size={20} />}
-                        </button>
                         <Home size={18} className="me-2 d-none d-md-block" style={{ color: goldColor }} />
                         <span className="small text-uppercase d-none d-sm-inline opacity-75 fw-black" style={{ letterSpacing: '0.5px' }}>
                             {getPageTitle()}
