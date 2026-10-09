@@ -26,6 +26,9 @@ public class User {
 
     private String fullName;
 
+    @Column(name = "profile_photo", columnDefinition = "LONGTEXT")
+    private String profilePhoto;
+
     @Enumerated(EnumType.STRING)
     private Role role;
 

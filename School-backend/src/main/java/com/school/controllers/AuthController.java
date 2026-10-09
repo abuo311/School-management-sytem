@@ -48,10 +48,12 @@ public class AuthController {
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
 
         // --- NEW: UPDATE LAST LOGIN TIMESTAMP ---
-        userRepository.findByUsername(userDetails.getUsername()).ifPresent(user -> {
+        User authenticatedUser = userRepository.findByUsername(userDetails.getUsername()).orElse(null);
+        if (authenticatedUser != null) {
+            var user = authenticatedUser;
             user.setLastLogin(LocalDateTime.now());
             userRepository.save(user);
-        });
+        }
         // ----------------------------------------
 
         // 4. Generate the JWT Token
@@ -65,6 +67,11 @@ public class AuthController {
                 .findFirst()
                 .orElse("USER");
 
-        return ResponseEntity.ok(new JwtResponse(jwt, userDetails.getUsername(), role));
+        return ResponseEntity.ok(new JwtResponse(
+                jwt,
+                userDetails.getUsername(),
+                role,
+                authenticatedUser == null ? null : authenticatedUser.getFullName(),
+                authenticatedUser == null ? null : authenticatedUser.getProfilePhoto()));
     }
 }

@@ -6,9 +6,12 @@ import {
     Settings, LogOut, Home, CalendarCheck,
     FileText, PenTool, Wallet, AlertTriangle, BarChart3, Menu, X,
     ShieldPlus, UserCircle, User, LayoutGrid, TrendingUp, Database, Download, ClipboardCheck,
-    CalendarClock, NotebookPen
+    CalendarClock, NotebookPen, Palette
 } from 'lucide-react';
 import '../styles/Dashboard.css';
+import { getSchoolTheme, SCHOOL_THEMES } from '../theme';
+
+const THEME_STORAGE_KEY = 'schoolTheme';
 
 const DashboardLayout = () => {
     const navigate = useNavigate();
@@ -16,14 +19,38 @@ const DashboardLayout = () => {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isProfileOpen, setIsProfileOpen] = useState(false);
     const [schoolInfo, setSchoolInfo] = useState({ name: 'EduManager', logo: null });
+    const [profilePhoto, setProfilePhoto] = useState(sessionStorage.getItem('profilePhoto'));
     const [isBackingUp, setIsBackingUp] = useState(false);
+    const [themeId, setThemeId] = useState(() => {
+        try {
+            return getSchoolTheme(localStorage.getItem(THEME_STORAGE_KEY)).id;
+        } catch (error) {
+            console.error('Unable to load saved color theme:', error);
+            return getSchoolTheme().id;
+        }
+    });
 
-    const goldColor = '#d4af37';
+    const selectedTheme = getSchoolTheme(themeId);
+    const goldColor = selectedTheme.color;
     const darkBg = '#1a1a1a';
 
-    const userName = sessionStorage.getItem('fullName') || sessionStorage.getItem('userName') || 'User';
+    const [userName, setUserName] = useState(sessionStorage.getItem('fullName') || sessionStorage.getItem('userName') || 'User');
     const userRole = sessionStorage.getItem('userRole') || 'TEACHER';
     const loginID = sessionStorage.getItem('userName');
+
+    const handleThemeChange = (id) => {
+        setThemeId(id);
+        try {
+            localStorage.setItem(THEME_STORAGE_KEY, id);
+        } catch (error) {
+            console.error('Unable to save color theme:', error);
+        }
+    };
+
+    useEffect(() => {
+        document.documentElement.style.setProperty('--theme-accent', selectedTheme.color);
+        document.documentElement.style.setProperty('--theme-accent-soft', selectedTheme.soft);
+    }, [selectedTheme]);
 
     useEffect(() => {
         const fetchBranding = async () => {
@@ -46,6 +73,21 @@ const DashboardLayout = () => {
         sessionStorage.clear();
         navigate('/login');
     };
+
+    useEffect(() => {
+        const syncProfile = () => {
+            setProfilePhoto(sessionStorage.getItem('profilePhoto'));
+            setUserName(sessionStorage.getItem('fullName') || sessionStorage.getItem('userName') || 'User');
+        };
+        window.addEventListener('storage', syncProfile);
+        window.addEventListener('profile-photo-updated', syncProfile);
+        window.addEventListener('user-profile-updated', syncProfile);
+        return () => {
+            window.removeEventListener('storage', syncProfile);
+            window.removeEventListener('profile-photo-updated', syncProfile);
+            window.removeEventListener('user-profile-updated', syncProfile);
+        };
+    }, []);
 
     const toggleMobileMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen);
     const closeMobileMenu = () => {
@@ -94,15 +136,21 @@ const DashboardLayout = () => {
     };
 
     return (
-        <div className="dashboard-wrapper">
+        <div
+            className="dashboard-wrapper"
+            style={{
+                '--theme-accent': selectedTheme.color,
+                '--theme-accent-soft': selectedTheme.soft
+            }}
+        >
             <style>{`
                 .sidebar { background: ${darkBg} !important; border-right: 2px solid ${goldColor}33; }
                 .sidebar-menu { flex: 1; overflow-y: auto; padding-right: 5px; }
                 .sidebar-menu::-webkit-scrollbar { width: 5px; }
                 .sidebar-menu::-webkit-scrollbar-thumb { background: ${goldColor}44; border-radius: 10px; }
                 .menu-item { transition: all 0.2s ease; border-left: 3px solid transparent; margin-bottom: 2px; color: rgba(255,255,255,0.6) !important; }
-                .menu-item:hover { background: rgba(212, 175, 55, 0.1); color: ${goldColor} !important; }
-                .menu-item.active { background: rgba(212, 175, 55, 0.15); color: ${goldColor} !important; border-left: 3px solid ${goldColor}; font-weight: 600; }
+                .menu-item:hover { background: color-mix(in srgb, ${goldColor} 10%, transparent); color: ${goldColor} !important; }
+                .menu-item.active { background: color-mix(in srgb, ${goldColor} 15%, transparent); color: ${goldColor} !important; border-left: 3px solid ${goldColor}; font-weight: 600; }
                 .menu-item.active svg { color: ${goldColor} !important; }
                 .main-content { height: 100vh; overflow-y: auto; display: flex; flex-direction: column; background-color: #f8f9fa; }
                 .top-navbar { border-bottom: 2px solid ${goldColor}22; }
@@ -236,18 +284,49 @@ const DashboardLayout = () => {
                         </span>
                     </div>
 
-                    <div className="position-relative">
+                    <div className="d-flex align-items-center gap-3">
+                        <div className="d-flex align-items-center gap-1" role="group" aria-label="System color theme">
+                            <Palette size={16} className="text-muted me-1" aria-hidden="true" />
+                            {SCHOOL_THEMES.map(theme => (
+                                <button
+                                    key={theme.id}
+                                    type="button"
+                                    className="theme-swatch"
+                                    onClick={() => handleThemeChange(theme.id)}
+                                    aria-label={`${theme.label} system theme`}
+                                    aria-pressed={selectedTheme.id === theme.id}
+                                    title={`${theme.label} theme`}
+                                    style={{
+                                        '--swatch-color': theme.color,
+                                        outline: selectedTheme.id === theme.id ? `2px solid ${theme.color}` : 'none'
+                                    }}
+                                />
+                            ))}
+                        </div>
+                        <div className="position-relative">
                         <div className="d-flex align-items-center gap-2" onClick={() => setIsProfileOpen(!isProfileOpen)} style={{ cursor: 'pointer' }}>
                             <div className="text-end d-none d-sm-block">
                                 <div className="fw-bold text-dark small mb-0">{userName}</div>
                                 <span className="badge border border-warning-subtle text-dark x-small" style={{ fontSize: '10px', backgroundColor: `${goldColor}22` }}>{userRole}</span>
                             </div>
-                            <div className="rounded-circle p-1 border border-2 border-warning-subtle"><UserCircle size={30} style={{ color: darkBg }} /></div>
+                            <div className="rounded-circle border border-2 border-warning-subtle overflow-hidden d-flex align-items-center justify-content-center"
+                                 style={{ width: 42, height: 42, background: `${goldColor}11` }}>
+                                {profilePhoto ? (
+                                    <img src={profilePhoto} alt={`${userName} profile`} className="w-100 h-100" style={{ objectFit: 'cover' }}
+                                         onError={() => setProfilePhoto(null)} />
+                                ) : <UserCircle size={30} style={{ color: darkBg }} />}
+                            </div>
                         </div>
                         {isProfileOpen && (
                             <div className="card shadow-lg border-0 rounded-4 position-absolute end-0 mt-2 p-3" style={{ width: '240px', zIndex: 1100, borderTop: `4px solid ${goldColor}` }}>
                                 <div className="text-center mb-3">
-                                    <div className="d-inline-block p-2 rounded-circle mb-2" style={{ backgroundColor: `${goldColor}11` }}><User size={24} style={{ color: goldColor }} /></div>
+                                    <div className="d-inline-flex align-items-center justify-content-center rounded-circle mb-2 overflow-hidden border"
+                                         style={{ width: 72, height: 72, backgroundColor: `${goldColor}11` }}>
+                                        {profilePhoto ? (
+                                            <img src={profilePhoto} alt={`${userName} profile`} className="w-100 h-100" style={{ objectFit: 'cover' }}
+                                                 onError={() => setProfilePhoto(null)} />
+                                        ) : <User size={30} style={{ color: goldColor }} />}
+                                    </div>
                                     <h6 className="fw-bold mb-0 small">{userName}</h6>
                                     <div className="text-muted" style={{ fontSize: '11px' }}>@{loginID}</div>
                                 </div>
@@ -255,6 +334,7 @@ const DashboardLayout = () => {
                                 <button onClick={handleLogout} className="btn btn-sm btn-dark w-100 rounded-pill py-2"><LogOut size={14} className="me-1 text-warning"/> Sign Out</button>
                             </div>
                         )}
+                        </div>
                     </div>
                 </header>
                 <div className="content-body"><Outlet /></div>

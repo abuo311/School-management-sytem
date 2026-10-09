@@ -22,7 +22,7 @@ const DebtorsList = () => {
     const [newContact, setNewContact] = useState('');
     const [isUpdating, setIsUpdating] = useState(false);
 
-    const goldColor = '#d4af37';
+    const goldColor = 'var(--theme-accent, #1d4ed8)';
     const blackColor = '#1a1a1a';
 
     useEffect(() => { 

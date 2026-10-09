@@ -6,6 +6,8 @@ import com.school.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -51,14 +53,36 @@ public class UserController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateUser(@PathVariable Long id, @RequestBody User userDetails) {
+    public ResponseEntity<?> updateUser(
+            @PathVariable Long id,
+            @RequestBody User userDetails,
+            @AuthenticationPrincipal UserDetails currentUser) {
         return userRepository.findById(id).map(user -> {
             if (user.getRole() == Role.ADMIN && "INACTIVE".equalsIgnoreCase(userDetails.getStatus())) {
                 return ResponseEntity.badRequest()
                         .body("Security Protection: Administrator accounts cannot be disabled.");
             }
-            user.setStatus(userDetails.getStatus());
-            user.setEnabled("ACTIVE".equalsIgnoreCase(userDetails.getStatus()));
+            if (userDetails.getFullName() != null) {
+                if (userDetails.getFullName().isBlank()) {
+                    return ResponseEntity.badRequest().body("Full name cannot be blank.");
+                }
+                user.setFullName(userDetails.getFullName().trim());
+            }
+            if (userDetails.getRole() != null) {
+                if (currentUser != null && currentUser.getUsername().equals(user.getUsername())
+                        && userDetails.getRole() != user.getRole()) {
+                    return ResponseEntity.badRequest()
+                            .body("You cannot change your own account role.");
+                }
+                user.setRole(userDetails.getRole());
+            }
+            if (userDetails.getStatus() != null) {
+                user.setStatus(userDetails.getStatus());
+                user.setEnabled("ACTIVE".equalsIgnoreCase(userDetails.getStatus()));
+            }
+            if (userDetails.getProfilePhoto() != null) {
+                user.setProfilePhoto(userDetails.getProfilePhoto());
+            }
             userRepository.save(user);
             return ResponseEntity.ok(user);
         }).orElse(ResponseEntity.notFound().build());

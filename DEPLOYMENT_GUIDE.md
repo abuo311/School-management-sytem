@@ -68,9 +68,11 @@ Once deployed:
 
 ## Local Testing (Optional)
 To test with Railway MySQL locally:
-1. Get your Railway MySQL public URL from Variables tab
-2. Update application.properties with public URL
-3. Run: mvn spring-boot:run
+1. Set `DB_URL`, `DB_USERNAME`, and `DB_PASSWORD` in `School-backend/.env` using your Railway MySQL public connection details.
+2. Set `PAYSTACK_SECRET_KEY` in `School-backend/.env` to your Paystack test secret key. Keep secret keys out of source control.
+3. Set `PAYSTACK_CURRENCY=GHS` and `PAYSTACK_CALLBACK_URL=http://localhost:5173/dashboard/fees` in that file for local checkout. The backend loads `.env` automatically when started from `School-backend`.
+4. In one terminal, run `mvn spring-boot:run` from `School-backend`. In another, run `npm run dev` from `School-frontend/School-frontend`.
+5. Sign in as an administrator or bursar, issue fees if needed, and select a learner with a valid guardian email or Ghana phone number to test **Pay Online with Paystack**. Phone-only checkout uses a non-deliverable `@example.com` placeholder email because Paystack requires an email in its transaction initialization request; the phone is also sent for checkout. The hosted checkout flow uses the secret key server-side and does not require the public key in the frontend.
 
 ## Notes
 - Free tier services sleep after 15 minutes inactivity

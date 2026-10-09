@@ -26,6 +26,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.HexFormat;
 import java.util.Map;
 import java.util.UUID;
@@ -70,8 +71,11 @@ public class PaystackService {
                 .orElseThrow(() -> new IllegalArgumentException("School settings are not configured."));
         var student = studentRepository.findById(studentId)
                 .orElseThrow(() -> new IllegalArgumentException("Learner was not found."));
-        if (student.getParentEmail() == null || student.getParentEmail().isBlank()) {
-            throw new IllegalArgumentException("Add a parent or guardian email before starting online payment.");
+        String email = validEmailOrNull(student.getParentEmail());
+        String phone = normalizeGhanaPhoneNumber(student.getParentContact());
+        if (email == null && phone == null) {
+            throw new IllegalArgumentException(
+                    "Add a valid parent or guardian email or Ghana phone number before starting online payment.");
         }
         String term = settings.getCurrentTerm();
         String year = settings.getAcademicYear();
@@ -100,15 +104,19 @@ public class PaystackService {
         transactionRepository.save(transaction);
 
         long minorAmount = amount.movePointRight(2).longValueExact();
+        Map<String, Object> requestBody = new HashMap<>();
+        requestBody.put("email", paystackCustomerEmail(email, phone));
+        requestBody.put("amount", minorAmount);
+        requestBody.put("currency", currency);
+        requestBody.put("reference", reference);
+        requestBody.put("callback_url", callbackUrl);
+        if (phone != null) {
+            requestBody.put("phone", phone);
+        }
         JsonNode response = restClient.post()
                 .uri("/transaction/initialize")
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + secretKey)
-                .body(Map.of(
-                        "email", student.getParentEmail(),
-                        "amount", minorAmount,
-                        "currency", currency,
-                        "reference", reference,
-                        "callback_url", callbackUrl))
+                .body(requestBody)
                 .retrieve()
                 .body(JsonNode.class);
         if (response == null || !response.path("status").asBoolean(false)
@@ -201,6 +209,38 @@ public class PaystackService {
         transaction.setPaidAt(LocalDateTime.now());
         transactionRepository.save(transaction);
         return true;
+    }
+
+    static String validEmailOrNull(String email) {
+        if (email == null) {
+            return null;
+        }
+        String trimmed = email.trim();
+        return trimmed.matches("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$") ? trimmed : null;
+    }
+
+    static String normalizeGhanaPhoneNumber(String phone) {
+        if (phone == null || !phone.trim().matches("\\+?[0-9\\s().-]+")) {
+            return null;
+        }
+        String digits = phone.replaceAll("\\D", "");
+        if (digits.length() == 10 && digits.startsWith("0")) {
+            digits = "233" + digits.substring(1);
+        }
+        if (!digits.matches("233(?:2[0-9]|5[0-9])[0-9]{7}")) {
+            return null;
+        }
+        return "+" + digits;
+    }
+
+    static String paystackCustomerEmail(String email, String phone) {
+        if (email != null) {
+            return email;
+        }
+        if (phone == null) {
+            throw new IllegalArgumentException("A valid email or phone number is required.");
+        }
+        return "phone-" + phone.replace("+", "") + "@example.com";
     }
 
     private void requireConfigured() {

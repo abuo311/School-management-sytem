@@ -18,7 +18,7 @@ const Login = () => {
     const [schoolInfo, setSchoolInfo] = useState({ name: '', logo: null });
     const [isFetchingBranding, setIsFetchingBranding] = useState(true);
 
-    const goldColor = '#d4af37';
+    const goldColor = 'var(--theme-accent, #1d4ed8)';
     const darkBg = '#1a1a1a';
 
     useEffect(() => {
@@ -54,6 +54,8 @@ const Login = () => {
                 sessionStorage.setItem('token', res.data.token);
                 sessionStorage.setItem('userRole', res.data.role);
                 sessionStorage.setItem('userName', res.data.username);
+                if (res.data.fullName) sessionStorage.setItem('fullName', res.data.fullName);
+                if (res.data.profilePhoto) sessionStorage.setItem('profilePhoto', res.data.profilePhoto);
                 sessionStorage.setItem('isAuthenticated', 'true');
                 navigate('/dashboard', { replace: true });
             }
@@ -72,7 +74,7 @@ const Login = () => {
                     {/* LEFT SIDE: BRANDING */}
                     <div className="col-lg-6 d-none d-lg-flex flex-column align-items-center justify-content-center text-white p-5 position-relative"
                          style={{ backgroundColor: darkBg }}>
-                        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: `radial-gradient(circle at 0% 0%, ${goldColor}11 0%, transparent 50%)` }}></div>
+                        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: `radial-gradient(circle at 0% 0%, color-mix(in srgb, ${goldColor} 7%, transparent) 0%, transparent 50%)` }}></div>
 
                         {/* Logo with Loading Spinner */}
                         <div className={`mb-4 p-4 rounded-circle border border-2 shadow-lg d-flex align-items-center justify-content-center bg-white overflow-hidden transition-all ${isFetchingBranding ? 'opacity-50' : 'opacity-100'}`}

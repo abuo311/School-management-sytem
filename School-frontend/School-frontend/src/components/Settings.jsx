@@ -29,7 +29,7 @@ const Settings = () => {
     const [activeRemarkIndex, setActiveRemarkIndex] = useState(0);
     const [loading, setLoading] = useState(false);
 
-    const goldColor = '#d4af37';
+    const goldColor = 'var(--theme-accent, #1d4ed8)';
     const blackColor = '#1a1a1a';
 
     useEffect(() => {

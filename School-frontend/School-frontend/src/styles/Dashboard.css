@@ -2,7 +2,9 @@
 
 :root {
     --sidebar-width: 260px;
-    --primary-color: #4e73df;
+    --theme-accent: #1d4ed8;
+    --theme-accent-soft: #eff6ff;
+    --primary-color: var(--theme-accent);
     --dark-bg: #1a1c23;
 }
 
@@ -127,6 +129,112 @@
     margin: 20px 0 10px 20px;
     letter-spacing: 1px;
 }
+
+.theme-swatch {
+    width: 1.25rem;
+    height: 1.25rem;
+    padding: 0;
+    border: 2px solid #fff;
+    border-radius: 50%;
+    background-color: var(--swatch-color);
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.2);
+}
+
+.dashboard-wrapper .btn-primary,
+.dashboard-wrapper .btn-primary:hover,
+.dashboard-wrapper .btn-primary:focus,
+.dashboard-wrapper .btn-primary:active {
+    color: #fff !important;
+    border-color: var(--theme-accent) !important;
+    background-color: var(--theme-accent) !important;
+}
+
+.dashboard-wrapper .btn-dark,
+.dashboard-wrapper .btn-dark:hover,
+.dashboard-wrapper .btn-dark:focus,
+.dashboard-wrapper .btn-dark:active {
+    color: #fff !important;
+    border-color: var(--theme-accent) !important;
+    background-color: var(--theme-accent) !important;
+}
+
+.dashboard-wrapper .bg-primary {
+    background-color: var(--theme-accent) !important;
+}
+
+.dashboard-wrapper .badge.student-class-badge {
+    color: var(--theme-accent) !important;
+    background-color: var(--theme-accent-soft) !important;
+    border-color: var(--theme-accent) !important;
+}
+
+.dashboard-wrapper .bg-warning {
+    background-color: var(--theme-accent) !important;
+}
+
+.dashboard-wrapper .btn-warning {
+    color: #fff !important;
+    border-color: var(--theme-accent) !important;
+    background-color: var(--theme-accent) !important;
+}
+
+.dashboard-wrapper .btn-outline-warning {
+    color: var(--theme-accent) !important;
+    border-color: var(--theme-accent) !important;
+}
+
+.dashboard-wrapper .btn-outline-warning:hover,
+.dashboard-wrapper .btn-outline-warning:focus {
+    color: #fff !important;
+    background-color: var(--theme-accent) !important;
+}
+
+.dashboard-wrapper .text-warning {
+    color: var(--theme-accent) !important;
+}
+
+.dashboard-wrapper .border-warning,
+.dashboard-wrapper .border-warning-subtle {
+    border-color: var(--theme-accent) !important;
+}
+
+.dashboard-wrapper .text-gold {
+    color: var(--theme-accent) !important;
+}
+
+.dashboard-wrapper .border-gold {
+    border-color: var(--theme-accent) !important;
+}
+
+.dashboard-wrapper .text-primary,
+.dashboard-wrapper .link-primary {
+    color: var(--theme-accent) !important;
+}
+
+.dashboard-wrapper .border-primary,
+.dashboard-wrapper .page-link.active,
+.dashboard-wrapper .nav-pills .nav-link.active {
+    border-color: var(--theme-accent) !important;
+}
+
+.dashboard-wrapper .page-link.active,
+.dashboard-wrapper .nav-pills .nav-link.active {
+    color: #fff !important;
+    background-color: var(--theme-accent) !important;
+}
+
+.dashboard-wrapper .form-control:focus,
+.dashboard-wrapper .form-select:focus,
+.dashboard-wrapper .form-check-input:focus {
+    border-color: var(--theme-accent) !important;
+    box-shadow: 0 0 0 0.25rem color-mix(in srgb, var(--theme-accent) 25%, transparent) !important;
+}
+
+.dashboard-wrapper .form-check-input:checked {
+    border-color: var(--theme-accent) !important;
+    background-color: var(--theme-accent) !important;
+}
+
 @media print {
     /* Hide the sidebar and top navbar globally */
     .sidebar,

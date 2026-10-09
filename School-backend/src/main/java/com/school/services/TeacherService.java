@@ -38,6 +38,9 @@ public class TeacherService {
             teacher.setLastName(teacherDetails.getLastName());
             teacher.setEmail(teacherDetails.getEmail());
             teacher.setSpecialization(teacherDetails.getSpecialization());
+            if (teacherDetails.getProfilePhoto() != null) {
+                teacher.setProfilePhoto(teacherDetails.getProfilePhoto());
+            }
             
             // Handle User linking for updates
             if (teacherDetails.getUser() != null && teacherDetails.getUser().getId() != null) {

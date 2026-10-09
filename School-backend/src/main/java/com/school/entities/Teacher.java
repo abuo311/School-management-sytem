@@ -21,8 +21,11 @@ public class Teacher {
     private String email;
     private String specialization;
 
-@JsonIgnoreProperties("teacher") // Prevents infinite recursion if User has a teacher field
-@OneToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
-@JoinColumn(name = "user_id", referencedColumnName = "id")
-private User user;
+    @Column(name = "profile_photo", columnDefinition = "LONGTEXT")
+    private String profilePhoto;
+
+    @JsonIgnoreProperties("teacher") // Prevents infinite recursion if User has a teacher field
+    @OneToOne(cascade = { CascadeType.PERSIST, CascadeType.MERGE })
+    @JoinColumn(name = "user_id", referencedColumnName = "id")
+    private User user;
 }

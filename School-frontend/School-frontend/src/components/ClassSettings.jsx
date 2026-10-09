@@ -12,7 +12,7 @@ const ClassSettings = () => {
     const [loading, setLoading] = useState(false);
     const [actionLoading, setActionLoading] = useState(false);
 
-    const goldColor = '#d4af37';
+    const goldColor = 'var(--theme-accent, #1d4ed8)';
 
     useEffect(() => {
         fetchClasses();

@@ -461,7 +461,7 @@ const StudentList = () => {
                                         <td className="fw-bold text-dark">{s.admissionNumber}</td>
                                         <td>{s.firstName} {s.lastName}</td>
                                         <td>
-                                            <span className={`badge ${getBadgeClass(s.className || s.gradeLevel)} bg-opacity-10 text-${getBadgeClass(s.className || s.gradeLevel).replace('bg-', '')} border border-${getBadgeClass(s.className || s.gradeLevel).replace('bg-', '')}`}>
+                                            <span className={`badge student-class-badge ${getBadgeClass(s.className || s.gradeLevel)} bg-opacity-10 text-${getBadgeClass(s.className || s.gradeLevel).replace('bg-', '')} border border-${getBadgeClass(s.className || s.gradeLevel).replace('bg-', '')}`}>
                                                 {s.className || s.gradeLevel}
                                             </span>
                                         </td>
@@ -497,7 +497,7 @@ const StudentList = () => {
                         </div>
                         <div style={{display:'flex', padding:'10px', gap:'10px'}}>
                             <div className="photo-box-gold">
-                                {s.studentPhoto ? <img src={s.studentPhoto} style={{width:'100%', height:'100%', objectFit:'cover'}} alt="card-photo" /> : <User size={30} style={{margin:'30px 25px', color:'#d4af37'}} />}
+                                {s.studentPhoto ? <img src={s.studentPhoto} style={{width:'100%', height:'100%', objectFit:'cover'}} alt="card-photo" /> : <User size={30} style={{margin:'30px 25px', color:'var(--theme-accent, #1d4ed8)'}} />}
                             </div>
                             <div style={{flex:1, textAlign:'left'}}>
                                 <h5 style={{fontSize:'14px', fontWeight:'800', margin:'0 0 3px 0', color:'#1a1a1a', textTransform:'uppercase'}}>{s.firstName} {s.lastName}</h5>

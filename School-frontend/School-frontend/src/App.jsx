@@ -76,7 +76,7 @@ const DashboardHome = () => {
     const userRole = sessionStorage.getItem('userRole');
     const canViewFinance = userRole === 'ADMIN' || userRole === 'BURSAR';
 
-    const goldColor = '#d4af37';
+    const goldColor = 'var(--theme-accent)';
     const darkColor = '#1a1a1a';
 
     useEffect(() => {
@@ -109,10 +109,10 @@ const DashboardHome = () => {
     }, [canViewFinance]);
 
     const stats = [
-        { label: 'Total Pupils', value: data.totalStudents, icon: <Users size={22}/>, bg: '#fdfcf0', border: goldColor },
+        { label: 'Total Pupils', value: data.totalStudents, icon: <Users size={22}/>, bg: 'var(--theme-accent-soft)', border: goldColor },
         { label: 'Staff Count', value: data.totalTeachers, icon: <UserCog size={22}/>, bg: '#f8f9fa', border: darkColor },
         ...(canViewFinance ? [
-            { label: 'Fees Collected', value: `₵${data.totalCollected.toLocaleString()}`, icon: <Wallet size={22}/>, bg: '#fdfcf0', border: goldColor },
+            { label: 'Fees Collected', value: `₵${data.totalCollected.toLocaleString()}`, icon: <Wallet size={22}/>, bg: 'var(--theme-accent-soft)', border: goldColor },
             { label: 'Outstanding', value: `₵${data.totalDebt.toLocaleString()}`, icon: <AlertTriangle size={22}/>, bg: '#fff5f5', border: '#e74a3b' }
         ] : [])
     ];

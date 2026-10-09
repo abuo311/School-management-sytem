@@ -5,6 +5,20 @@ import {
     Wallet, Search, History, BadgeCheck, Loader2, Trash2, Printer, CreditCard, FileText
 } from 'lucide-react';
 
+const hasValidPaymentContact = student => {
+    const email = String(student?.parentEmail || '').trim();
+    const phone = String(student?.parentContact || '').trim();
+    const validEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    const validPhoneCharacters = /^\+?[0-9\s().-]+$/.test(phone);
+    const digits = phone.replace(/\D/g, '');
+    const normalizedPhone = digits.length === 10 && digits.startsWith('0')
+        ? `233${digits.slice(1)}`
+        : digits;
+    const validGhanaPhone = validPhoneCharacters && /^233(?:2\d|5\d)\d{7}$/.test(normalizedPhone);
+
+    return validEmail || validGhanaPhone;
+};
+
 const Fees = () => {
     const [students, setStudents] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
@@ -197,6 +211,9 @@ const Fees = () => {
     const startOnlinePayment = async () => {
         if (!paystackConfigured) {
             return showToast('Online payments are not configured. Contact the system administrator.', 'danger');
+        }
+        if (!hasValidPaymentContact(selectedStudent)) {
+            return showToast('Add a valid guardian email or Ghana phone number to the learner record before paying online.', 'danger');
         }
         const amount = Number(payment.amount);
         const outstanding = getStudentOutstanding(selectedStudent, history);
@@ -444,10 +461,10 @@ const Fees = () => {
                                             {actionLoading ? <Loader2 size={18} className="animate-spin" /> : <BadgeCheck size={18} />}
                                             {actionLoading ? "Processing..." : "Record Cash Payment"}
                                         </button>
-                                        <button className="btn btn-outline-primary w-100 mt-2 py-2 fw-bold d-flex align-items-center justify-content-center gap-2" onClick={startOnlinePayment} disabled={actionLoading || paystackConfigured === null || !paystackConfigured || getStudentOutstanding(selectedStudent, history) <= 0 || Number(payment.amount) <= 0 || Number(payment.amount) > getStudentOutstanding(selectedStudent, history)} title={!paystackConfigured ? 'Configure PAYSTACK_SECRET_KEY on the backend to enable online payments' : 'Start secure Paystack checkout'}>
+                                        <button className="btn btn-outline-primary w-100 mt-2 py-2 fw-bold d-flex align-items-center justify-content-center gap-2" onClick={startOnlinePayment} disabled={actionLoading || paystackConfigured === null || !paystackConfigured || !hasValidPaymentContact(selectedStudent) || getStudentOutstanding(selectedStudent, history) <= 0 || Number(payment.amount) <= 0 || Number(payment.amount) > getStudentOutstanding(selectedStudent, history)} title={!paystackConfigured ? 'Configure PAYSTACK_SECRET_KEY on the backend to enable online payments' : !hasValidPaymentContact(selectedStudent) ? 'Add a valid guardian email or Ghana phone number to the learner record' : 'Start secure Paystack checkout'}>
                                             {actionLoading ? <Loader2 size={18} className="animate-spin" /> : <CreditCard size={18} />} {paystackConfigured === null ? 'Checking online payment...' : paystackConfigured ? 'Pay Online with Paystack' : 'Paystack Not Configured'}
                                         </button>
-                                        <small className="text-muted d-block mt-2">Cash is recorded by the bursar. Online payment is confirmed by Paystack before it appears in transaction history.{paystackConfigured === false ? ' The administrator must configure PAYSTACK_SECRET_KEY on the backend.' : ''}</small>
+                                        <small className="text-muted d-block mt-2">Cash is recorded by the bursar. Online payment is confirmed by Paystack before it appears in transaction history.{!hasValidPaymentContact(selectedStudent) ? ' Add a valid guardian email or Ghana phone number to the learner record for online payment.' : ''}{paystackConfigured === false ? ' The administrator must configure PAYSTACK_SECRET_KEY on the backend.' : ''}</small>
                                     </div>
                                 </div>
                             </div>

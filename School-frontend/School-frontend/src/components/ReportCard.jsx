@@ -123,6 +123,26 @@ const ReportCard = () => {
         return `GHS ${amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
     };
 
+    const addCanvasToA4 = (pdf, canvas) => {
+        const pageWidth = 210;
+        const pageHeight = 297;
+        const margin = 8;
+        const scale = Math.min(
+            (pageWidth - margin * 2) / canvas.width,
+            (pageHeight - margin * 2) / canvas.height
+        );
+        const width = canvas.width * scale;
+        const height = canvas.height * scale;
+        pdf.addImage(
+            canvas.toDataURL('image/png'),
+            'PNG',
+            (pageWidth - width) / 2,
+            (pageHeight - height) / 2,
+            width,
+            height
+        );
+    };
+
     const loadFeeSummary = async (report) => {
         try {
             const res = await API.get(`/fees/student/${report.studentId}`);
@@ -172,9 +192,8 @@ const ReportCard = () => {
         const element = document.getElementById(`report-page-${studentId}`);
         if (!element) throw new Error("Report element not found");
         const canvas = await html2canvas(element, { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
-        const imgData = canvas.toDataURL('image/png');
         const pdf = new jsPDF('p', 'mm', 'a4');
-        pdf.addImage(imgData, 'PNG', 0, 0, 210, 297);
+        addCanvasToA4(pdf, canvas);
         return pdf.output('blob');
     };
 
@@ -243,9 +262,8 @@ const ReportCard = () => {
             for (let i = 0; i < reportElements.length; i++) {
                 const element = reportElements[i];
                 const canvas = await html2canvas(element, { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
-                const imgData = canvas.toDataURL('image/png');
                 if (i > 0) pdf.addPage();
-                pdf.addImage(imgData, 'PNG', 0, 0, 210, 297);
+                addCanvasToA4(pdf, canvas);
             }
             pdf.save(`${selectedClass}_Reports.pdf`);
             showToast("PDF downloaded!");
@@ -260,93 +278,115 @@ const ReportCard = () => {
         <div className="container-fluid py-4 bg-light min-vh-100 text-start">
             <style>
                 {`
-                    /* Base Desktop Styling */
-                    .report-wrapper { 
-                        width: 100%; 
-                        padding-bottom: 1rem;
+                    @page { size: A4 portrait; margin: 0; }
+                    .report-wrapper {
                         display: flex;
                         justify-content: center;
-                    }
-                    .report-page { 
-                        display: flex; 
-                        flex-direction: column; 
-                        width: 210mm; 
-                        height: 297mm;
                         max-width: 100%;
-                        background: white; 
-                        border: 1px solid #ddd; 
-                        overflow: hidden; 
-                        position: relative; 
+                        overflow-x: auto;
+                        margin: 0 auto 2rem;
+                        box-shadow: none !important;
+                    }
+                    .report-page {
+                        display: flex;
+                        flex-direction: column;
+                        width: 210mm;
+                        min-height: 297mm;
+                        height: auto;
+                        max-width: none;
+                        flex-shrink: 0;
+                        padding: 8mm;
                         box-sizing: border-box;
+                        position: relative;
+                        overflow: visible;
+                        background: #fff;
+                        border: 0;
+                        color: #000;
+                        font-family: Arial, Helvetica, sans-serif;
+                        font-size: 9pt;
+                        line-height: 1.2;
                     }
-
-                    /* Responsive Scale Down for Mobile & Tablet Viewports */
-                    @media (max-width: 830px) {
-                        .report-wrapper { 
-                            display: flex;
-                            justify-content: center;
-                            overflow-x: hidden;
-                            padding: 0;
-                        }
-                        .report-page {
-                            width: 100%;
-                            height: auto;
-                            aspect-ratio: 210 / 297;
-                            transform: none;
-                            transform-origin: top center;
-                            margin: 0 !important;
-                            flex-shrink: 0;
-                            font-size: clamp(0.7rem, 1.8vw, 0.9rem);
-                        }
-                        .report-page .report-header {
-                            flex-direction: column;
-                            gap: 0.5rem;
-                            text-align: center;
-                        }
-                        .report-page .report-header .text-start {
-                            text-align: center;
-                        }
-                        .report-page .report-header img {
-                            height: 40px;
-                        }
-                        .report-page .p-2 {
-                            padding: 0.5rem !important;
-                        }
-                        .report-page .col-3 {
-                            flex: 0 0 50%;
-                            max-width: 50%;
-                        }
-                        .report-page .table {
-                            font-size: clamp(0.6rem, 1.8vw, 0.75rem);
-                        }
+                    .report-page *,
+                    .report-page *::before,
+                    .report-page *::after {
+                        color: #000 !important;
+                        background-color: transparent !important;
+                        box-shadow: none !important;
+                        border-radius: 0 !important;
+                        text-shadow: none !important;
                     }
-
+                    .report-page { --report-accent: var(--theme-accent, #1d4ed8); }
+                    .report-page .report-header {
+                        border: 0 !important;
+                        border-bottom: 1px solid var(--report-accent) !important;
+                        padding: 0 0 3mm !important;
+                    }
+                    .report-page .report-header h2 { font-size: 16pt !important; font-weight: 700 !important; }
+                    .report-page .report-header p { font-size: 8pt !important; }
+                    .report-page .report-accent-text { color: var(--report-accent) !important; }
+                    .report-page .report-accent-border { border-color: var(--report-accent) !important; }
+                    .report-page .report-accent-outline { border: 0.3mm solid var(--report-accent) !important; }
+                    .report-page .p-2 { padding: 2mm !important; }
+                    .report-page .table {
+                        width: 100%;
+                        margin-bottom: 2mm;
+                        border-collapse: collapse;
+                        font-size: 8pt !important;
+                    }
+                    .report-page .table th,
+                    .report-page .table td {
+                        padding: 1mm 1.5mm !important;
+                        border: 0 !important;
+                        border-bottom: 0.2mm solid #777 !important;
+                    }
+                    .report-page .table thead th {
+                        color: var(--report-accent) !important;
+                        border-bottom: 0.5mm solid var(--report-accent) !important;
+                    }
+                    .report-page .badge { padding: 0 !important; font-weight: 700 !important; }
+                    .report-page .fw-black { font-weight: 700 !important; }
+                    .report-page .text-center { text-align: center !important; }
+                    .report-page .text-end { text-align: right !important; }
+                    .report-page .no-print { display: none !important; }
+                    .report-page .border,
+                    .report-page .border-top,
+                    .report-page .border-bottom,
+                    .report-page .border-start {
+                        border-color: #000 !important;
+                    }
+                    .report-page .border-start.report-accent-border,
+                    .report-page .border.report-accent-border {
+                        border-color: var(--report-accent) !important;
+                    }
+                    .report-page img { max-width: 35mm; object-fit: contain; }
                     @media print {
                         body * { visibility: hidden; }
                         #report-container, #report-container * { visibility: visible; }
-                        #report-container { position: absolute; left: 0; top: 0; width: 100% !important; }
+                        #report-container { position: absolute; inset: 0; width: 100% !important; }
                         .no-print { display: none !important; }
-                        .report-wrapper { overflow: visible !important; height: auto !important; }
-                        .report-page { 
-                            transform: none !important; 
-                            height: 296mm !important; 
-                            page-break-after: always !important; 
-                            border: none !important; 
-                            margin: 0 !important; 
+                        .report-wrapper {
+                            display: block;
+                            width: 210mm;
+                            margin: 0;
+                            page-break-after: always;
+                            break-after: page;
                         }
-                        /* Ensure remarks section stays horizontal in print */
-                        .report-page .border-top .row {
-                            display: flex !important;
-                            flex-wrap: wrap !important;
+                        .report-wrapper:last-child {
+                            page-break-after: auto;
+                            break-after: auto;
                         }
-                        .report-page .border-top .col-md-4 {
-                            flex: 0 0 33.333% !important;
-                            max-width: 33.333% !important;
-                            page-break-inside: avoid !important;
+                        .report-page {
+                            width: 210mm !important;
+                            min-height: 297mm !important;
+                            height: auto !important;
+                            max-width: none !important;
+                            padding: 8mm !important;
+                            margin: 0 !important;
+                            overflow: visible !important;
+                            page-break-inside: avoid;
+                            break-inside: avoid;
                         }
                     }
-                    .fw-black { font-weight: 900; }
-                    .report-footer-actions { border-top: 1px solid #eee; padding: 15px; background: #f8f9fa; }
                     .spin { animation: spin 1s linear infinite; }
                     @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
                 `}
@@ -379,14 +419,14 @@ const ReportCard = () => {
                             <option value="Term 3">Term 3</option>
                         </select>
                     </div>
-                    <div className="col-12 col-md-6 col-lg-3">
+                    <div className="col-12 col-md-6 col-lg-2">
                         <label className="form-label small fw-bold">STUDENT</label>
                         <select className="form-select" value={selectedStudentId} onChange={(e) => setSelectedStudentId(e.target.value)} disabled={!selectedClass}>
                             <option value="">Entire Class</option>
                             {students.map(s => <option key={s.id} value={s.id}>{s.firstName} {s.lastName}</option>)}
                         </select>
                     </div>
-                    <div className="col-12 col-md-6 col-lg-5 d-flex flex-wrap gap-2">
+                    <div className="col-12 col-md-12 col-lg-6 d-flex flex-wrap gap-2">
                         <button className="btn btn-dark fw-bold flex-grow-1" onClick={fetchBulkReports} disabled={loading}>
                             {loading ? <Loader2 className="spin" size={18} /> : "LOAD"}
                         </button>
@@ -405,30 +445,33 @@ const ReportCard = () => {
             {/* Report Display Section */}
             <div id="report-container" className="mx-auto" >
                 {reports.map((report, index) => (
-                    <div key={index} className="report-wrapper mb-5 shadow rounded-3">
-                        <div id={`report-page-${report.studentId}`} className="report-page">
+                    <div key={index} className="report-wrapper">
+                        <div
+                            id={`report-page-${report.studentId}`}
+                            className="report-page"
+                        >
                             
                             {/* Header */}
-                            <div className="bg-black text-white p-2 text-center border-bottom border-dark border-5 report-header">
+                            <div className="p-2 text-center report-header">
                                 <div className="d-flex align-items-center justify-content-center gap-2">
                                     {settings?.logoUrl && <img src={settings.logoUrl} alt="Logo" style={{ height: '50px' }} />}
                                     <div className="text-start">
-                                        <h2 className="fw-300 text-uppercase m-0 text-dark text-lg" style={{ fontSize: '1.3rem'  }}>{settings.schoolName}</h2>
+                                        <h2 className="fw-300 text-uppercase m-0 text-lg report-accent-text" style={{ fontSize: '1.3rem' }}>{settings.schoolName}</h2>
                                         <p className="mb-0 x-small fw-bold text-white" style={{ fontSize: '0.7rem' }}>{settings?.motto}</p>
                                         <p className="x-small mb-0 text-white" style={{ fontSize: '0.65rem' }}>{settings?.address} | {settings?.phone}</p>
                                     </div>
                                 </div>
                             </div>
 
-                            <div className="p-2 flex-grow-1 d-flex flex-column justify-content-between" style={{ fontSize: '0.9rem', overflowY: 'hidden' }}>
+                            <div className="p-2 flex-grow-1 d-flex flex-column justify-content-between" style={{ fontSize: '0.9rem' }}>
                                 {/* Student Info */}
-                                <div className="row mb-2 bg-light p-2 rounded-2 mx-0 border-start border-dark border-5 align-items-center">
+                                <div className="row mb-2 bg-light p-2 rounded-2 mx-0 border-start border-dark border-5 report-accent-border align-items-center">
                                     <div className="col-7">
-                                        <small className="text-dark d-block text-uppercase fw-bold" style={{ fontSize: '0.6rem' }}>Pupil Name</small>
+                                        <small className="text-dark d-block text-uppercase fw-bold report-accent-text" style={{ fontSize: '0.6rem' }}>Pupil Name</small>
                                         <h5 className="mb-0 text-uppercase fw-black" style={{ fontSize: '0.9rem', color: '#1a1a1a' }}>{report.studentName}</h5>
                                     </div>
                                     <div className="col-5 text-end">
-                                        <span className="badge bg-dark text-white px-2 py-1 mb-1" style={{ fontSize: '0.6rem' }}>{term.toUpperCase()}</span>
+                                        <span className="badge bg-dark text-white px-2 py-1 mb-1 report-accent-text report-accent-outline" style={{ fontSize: '0.6rem' }}>{term.toUpperCase()}</span>
                                         <p className="mb-0 x-small fw-bold text-dark" style={{ fontSize: '0.65rem' }}>Class: {selectedClass} | {report.academicYear}</p>
                                     </div>
                                 </div>
@@ -442,7 +485,7 @@ const ReportCard = () => {
                                         { label: 'Class Size', value: report.classSize }
                                     ].map((stat, i) => (
                                         <div className="col-3" key={i}>
-                                            <div className={`p-1 border rounded shadow-sm ${stat.highlight ? 'border-dark bg-light' : 'bg-white'}`}>
+                                            <div className={`p-1 border rounded shadow-sm ${stat.highlight ? 'border-dark bg-light report-accent-border' : 'bg-white'}`}>
                                                 <small className="text-dark d-block fw-bold" style={{fontSize: '0.55rem', color: '#333'}}>{stat.label}</small>
                                                 <h5 className="fw-black mb-0 text-dark" style={{ fontSize: '0.85rem', color: '#1a1a1a' }}>{stat.value}</h5>
                                             </div>
@@ -451,7 +494,7 @@ const ReportCard = () => {
                                 </div>
 
                                 {/* Subjects Table */}
-                                <div className="table-responsive" style={{ overflow: 'hidden' }}>
+                                <div className="table-responsive">
                                     <table className="table table-bordered border-dark align-middle mb-2" style={{ fontSize: '0.75rem', marginBottom: '0' }}>
                                         <thead className="bg-dark text-white">
                                             <tr>

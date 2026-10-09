@@ -94,6 +94,8 @@ public class WebSecurityConfig {
 
                         // Teacher/Staff Management: Only ADMIN
                         .requestMatchers("/api/teachers/**").hasRole("ADMIN")
+                        .requestMatchers("/api/non-teaching-staff/**").hasRole("ADMIN")
+                        .requestMatchers("/api/users/**").hasRole("ADMIN")
 
                         // --- PROTECT ALL OTHER ROUTES ---
                         .requestMatchers("/api/**").authenticated()

@@ -11,7 +11,7 @@ const PromotionManager = () => {
     const [history, setHistory] = useState([]);
     const [serverError, setServerError] = useState(false);
 
-    const goldColor = '#d4af37';
+    const goldColor = 'var(--theme-accent, #1d4ed8)';
     const darkBg = '#1a1a1a';
 
     useEffect(() => {
@@ -123,7 +123,7 @@ const PromotionManager = () => {
                 <div className="col-md-5">
                     <div className="card border-0 shadow-sm p-4 rounded-4 bg-white h-100" style={{ borderTop: `6px solid ${darkBg}` }}>
                         <div className="d-flex align-items-center gap-3 mb-4">
-                            <div className="p-3 rounded-4" style={{ backgroundColor: `${goldColor}15`, color: darkBg }}>
+                            <div className="p-3 rounded-4" style={{ backgroundColor: 'var(--theme-accent-soft)', color: darkBg }}>
                                 <TrendingUp size={30} />
                             </div>
                             <div>
@@ -180,7 +180,7 @@ const PromotionManager = () => {
                                         <td className="px-3"><Calendar size={14} className="me-2 text-muted"/> {new Date(log.promotionDate).toLocaleDateString()}</td>
                                         <td className="fw-bold">{log.academicYear}</td>
                                         <td className="text-center">
-                                                <span className="badge rounded-pill px-3" style={{ backgroundColor: `${goldColor}20`, color: darkBg }}>
+                                                <span className="badge rounded-pill px-3" style={{ backgroundColor: 'var(--theme-accent-soft)', color: darkBg }}>
                                                     {log.studentCount}
                                                 </span>
                                         </td>

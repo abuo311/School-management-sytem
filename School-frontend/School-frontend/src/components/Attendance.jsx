@@ -4,10 +4,11 @@ import autoTable from 'jspdf-autotable';
 import * as bootstrap from 'bootstrap'; 
 import API from '../services/api';
 import {
-    CheckCircle, XCircle, Save, Calendar, Search,
+    CheckCircle, XCircle, Save, Calendar, Search, Camera, User,
     GraduationCap, ClipboardCheck, History,
     Loader2, Download
 } from 'lucide-react';
+import WebcamVerification from './WebcamVerification';
 
 const Attendance = () => {
     const [students, setStudents] = useState([]);
@@ -18,6 +19,9 @@ const Attendance = () => {
     const [loading, setLoading] = useState(false);
     const [submitting, setSubmitting] = useState(false);
     const [viewMode, setViewMode] = useState('mark');
+    const [successMessage, setSuccessMessage] = useState('Attendance records saved successfully!');
+    const [verificationTarget, setVerificationTarget] = useState(null);
+    const [verifiedStudents, setVerifiedStudents] = useState({});
     
     // NEW: State for School Details
     const [schoolInfo, setSchoolInfo] = useState({
@@ -50,6 +54,11 @@ const Attendance = () => {
             fetchHistory();
         }
     }, [viewMode, selectedDate]);
+
+    useEffect(() => {
+        setVerifiedStudents({});
+        setVerificationTarget(null);
+    }, [selectedDate, viewMode]);
 
     // NEW: Fetch School Settings
     const fetchSchoolSettings = async () => {
@@ -107,6 +116,7 @@ const Attendance = () => {
         if (targetStudents.length === 0) return alert("No students found.");
 
         setSubmitting(true);
+        setSuccessMessage('Attendance records saved successfully!');
         const payload = targetStudents.map(s => ({
             student: { id: s.id },
             status: attendanceMap[s.id] || "PRESENT",
@@ -121,7 +131,40 @@ const Attendance = () => {
                 const toast = new bootstrap.Toast(toastElement);
                 toast.show();
             }
+            setVerifiedStudents({});
             setViewMode('view');
+        } catch (err) {
+            alert("Failed to save data.");
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+    const handleMarkAllPresent = async () => {
+        const targetStudents = filteredStudents;
+        if (targetStudents.length === 0) return alert("No students found.");
+
+        setSubmitting(true);
+        const payload = targetStudents.map(s => ({
+            student: { id: s.id },
+            status: "PRESENT",
+            reason: '',
+            attendanceDate: selectedDate
+        }));
+        try {
+            await API.post('/attendance/bulk', payload);
+            setAttendanceMap(current => ({
+                ...current,
+                ...Object.fromEntries(targetStudents.map(student => [student.id, 'PRESENT']))
+            }));
+            setAttendanceReasons(current => ({
+                ...current,
+                ...Object.fromEntries(targetStudents.map(student => [student.id, '']))
+            }));
+            setSuccessMessage(`All ${targetStudents.length} students marked present for ${selectedDate}.`);
+            const toastElement = document.getElementById('successToast');
+            if (toastElement) new bootstrap.Toast(toastElement).show();
+            setVerifiedStudents({});
         } catch (err) {
             alert("Failed to save data.");
         } finally {
@@ -221,6 +264,16 @@ const Attendance = () => {
 
     return (
         <div className="container-fluid py-4 text-start">
+            {verificationTarget && (
+                <WebcamVerification
+                    person={verificationTarget}
+                    onCapture={() => {
+                        setVerifiedStudents(current => ({ ...current, [verificationTarget.id]: true }));
+                        setVerificationTarget(null);
+                    }}
+                    onClose={() => setVerificationTarget(null)}
+                />
+            )}
              {/* Header with dynamic School Name */}
              <header className="d-flex justify-content-between align-items-center mb-4">
                 <div>
@@ -242,7 +295,7 @@ const Attendance = () => {
             <div className="toast-container position-fixed top-0 end-0 p-3" style={{ zIndex: 1100 }}>
                 <div id="successToast" className="toast align-items-center text-white bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
                     <div className="d-flex">
-                        <div className="toast-body">Attendance records saved successfully!</div>
+                        <div className="toast-body">{successMessage}</div>
                         <button type="button" className="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
                     </div>
                 </div>
@@ -265,16 +318,25 @@ const Attendance = () => {
                         <label className="small fw-bold mb-2">Search</label>
                         <input type="text" className="form-control" placeholder="Search pupil..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
                     </div>
-                    {viewMode === 'mark' && (
-                        <div className="col-md-2 d-grid align-items-end">
-                            <button className="btn btn-success fw-bold d-flex align-items-center justify-content-center gap-2"
-                                    onClick={handleSubmit}
-                                    disabled={submitting}>
-                                {submitting ? <Loader2 size={18} className="animate-spin" /> : "Save Data"}
-                            </button>
-                        </div>
-                    )}
                 </div>
+                {viewMode === 'mark' && (
+                    <div className="d-flex justify-content-end gap-2 mt-3">
+                        <button
+                            className="btn btn-outline-success fw-bold d-flex align-items-center justify-content-center gap-2"
+                            onClick={handleMarkAllPresent}
+                            disabled={submitting || loading || filteredStudents.length === 0}
+                        >
+                            <CheckCircle size={18} /> Mark all present
+                        </button>
+                        <button
+                            className="btn btn-success fw-bold d-flex align-items-center justify-content-center gap-2"
+                            onClick={handleSubmit}
+                            disabled={submitting}
+                        >
+                            {submitting ? <Loader2 size={18} className="animate-spin" /> : "Save Data"}
+                        </button>
+                    </div>
+                )}
             </div>
 
             {/* Table */}
@@ -282,7 +344,8 @@ const Attendance = () => {
                 <table className="table table-hover align-middle mb-0">
                     <thead className="bg-dark text-warning small">
                         <tr>
-                            <th className="px-4 py-3">Student Name</th>
+                            <th className="px-4 py-3">Student</th>
+                            <th className="text-center">Photo check</th>
                             <th>Class</th>
                             <th className="text-center">Status</th>
                             <th>Reason</th>
@@ -290,11 +353,22 @@ const Attendance = () => {
                     </thead>
                     <tbody>
                         {loading ? (
-                            <tr><td colSpan="4" className="text-center py-5"><Loader2 className="animate-spin text-primary mx-auto" /> Loading...</td></tr>
+                            <tr><td colSpan="5" className="text-center py-5"><Loader2 className="animate-spin text-primary mx-auto" /> Loading...</td></tr>
                         ) : viewMode === 'mark' ? (
                             filteredStudents.map(s => (
                                 <tr key={s.id}>
-                                    <td className="px-4 fw-bold">{s.firstName} {s.lastName}</td>
+                                    <td className="px-4 fw-bold">
+                                        <span className="d-inline-flex align-items-center gap-2">
+                                            {s.studentPhoto ? <img src={s.studentPhoto} alt="" className="rounded-circle" style={{ width: 38, height: 38, objectFit: 'cover' }} /> : <span className="rounded-circle bg-light border d-flex align-items-center justify-content-center" style={{ width: 38, height: 38 }}><User size={17} /></span>}
+                                            {s.firstName} {s.lastName}
+                                        </span>
+                                    </td>
+                                    <td className="text-center">
+                                        <button type="button" className={`btn btn-sm ${verifiedStudents[s.id] ? 'btn-outline-success' : 'btn-outline-secondary'}`}
+                                                onClick={() => setVerificationTarget({ id: s.id, name: `${s.firstName} ${s.lastName}`, profilePhoto: s.studentPhoto })}>
+                                            <Camera size={15} className="me-1" />{verifiedStudents[s.id] ? 'Checked' : 'Verify'}
+                                        </button>
+                                    </td>
                                     <td>{s.gradeLevel}</td>
                                     <td className="text-center">
                                         <select className="form-select form-select-sm" value={attendanceMap[s.id] || 'PRESENT'} onChange={e => updateAttendanceStatus(s.id, e.target.value)}>
@@ -309,10 +383,10 @@ const Attendance = () => {
                         ) : (
                             Object.keys(groupedHistory).map(date => (
                                 <React.Fragment key={date}>
-                                    <tr className="bg-light"><td colSpan="4" className="px-4 fw-bold">{date}</td></tr>
+                                    <tr className="bg-light"><td colSpan="5" className="px-4 fw-bold">{date}</td></tr>
                                     {groupedHistory[date].filter(h => selectedGrade === 'All' || h.student.gradeLevel === selectedGrade).map(h => (
                                         <tr key={h.id}>
-                                            <td className="px-5">{h.student.firstName} {h.student.lastName}</td>
+                                            <td className="px-5" colSpan="2">{h.student.firstName} {h.student.lastName}</td>
                                             <td>{h.student.gradeLevel}</td>
                                             <td className="text-center">
                                                 <span className={`badge px-3 ${h.status === 'PRESENT' ? 'bg-success' : 'bg-danger'}`}>{h.status}</span>

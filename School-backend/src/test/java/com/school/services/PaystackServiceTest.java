@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
@@ -60,6 +61,22 @@ class PaystackServiceTest {
 
         assertTrue(service.hasValidSignature(body, signature));
         org.junit.jupiter.api.Assertions.assertFalse(service.hasValidSignature(body, "invalid"));
+    }
+
+    @Test
+    void acceptsValidEmailOrNormalizesGhanaianPhoneForCheckout() {
+        String phone = PaystackService.normalizeGhanaPhoneNumber("024 123-4567");
+
+        assertEquals("guardian@example.com", PaystackService.validEmailOrNull(" guardian@example.com "));
+        assertNull(PaystackService.validEmailOrNull("not-an-email"));
+        assertEquals("+233241234567", phone);
+        assertEquals("+233541234567", PaystackService.normalizeGhanaPhoneNumber("+233 54 123 4567"));
+        assertNull(PaystackService.normalizeGhanaPhoneNumber("024 123"));
+        assertNull(PaystackService.normalizeGhanaPhoneNumber("024 123 4567x"));
+        assertEquals("phone-233241234567@example.com",
+                PaystackService.paystackCustomerEmail(null, phone));
+        assertEquals("guardian@example.com",
+                PaystackService.paystackCustomerEmail("guardian@example.com", phone));
     }
 
     @Test
