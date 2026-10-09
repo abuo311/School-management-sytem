@@ -24,7 +24,9 @@ const StudentList = () => {
         schoolName: 'ASONKWAA M/A BASIC SCHOOL',
         logoUrl: '',
         motto: 'Knowledge is Power',
-        signatureUrl: '' // Added for signature support
+        signatureUrl: '',
+        headTeacherSign: '',
+        headMasterName: 'The Headmaster'
     });
 
     const [photoPreview, setPhotoPreview] = useState(null);
@@ -49,7 +51,16 @@ const StudentList = () => {
             const classes = classRes.data.map(c => typeof c === 'string' ? c : c.className);
             setClassCategories(classes || []);
 
-            if (setRes.data) setSchoolConfig(setRes.data);
+            if (setRes.data) {
+                setSchoolConfig(prev => ({
+                    ...prev,
+                    ...setRes.data,
+                    signatureUrl: setRes.data.headTeacherSign || setRes.data.signatureUrl || prev.signatureUrl,
+                    headTeacherSign: setRes.data.headTeacherSign || setRes.data.signatureUrl || prev.headTeacherSign,
+                    headMasterName: setRes.data.headMasterName || prev.headMasterName,
+                    motto: setRes.data.motto || prev.motto
+                }));
+            }
         } catch (err) {
             console.error("Initialization error:", err);
         } finally {
@@ -353,31 +364,48 @@ const StudentList = () => {
                     }
                     .no-print { display: none !important; }
                     .id-card-item {
-                        width: 325px; height: 210px; border: 2px solid #D4AF37;
-                        border-radius: 12px; overflow: hidden; background: #fff;
+                        width: 340px; height: 220px; border: 2px solid #D4AF37;
+                        border-radius: 16px; overflow: hidden; background: linear-gradient(180deg, #fff 0%, #fffdf6 100%);
                         position: relative; -webkit-print-color-adjust: exact;
                         font-family: 'Segoe UI', sans-serif; margin-bottom: 15px;
+                        box-shadow: 0 8px 18px rgba(26, 26, 26, 0.08);
                     }
                     .card-header-gold {
-                        background: #1a1a1a; color: #D4AF37; padding: 6px;
+                        background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+                        color: #D4AF37; padding: 8px 10px;
                         text-align: center; border-bottom: 2px solid #D4AF37;
                         display: flex; align-items: center; justify-content: center; gap: 10px;
                     }
                     .photo-box-gold {
-                        width: 85px; height: 105px; border: 2px solid #D4AF37;
-                        border-radius: 6px; overflow: hidden; background: #f8f9fa;
+                        width: 88px; height: 108px; border: 2px solid #D4AF37;
+                        border-radius: 10px; overflow: hidden; background: #f8f9fa;
+                        box-shadow: inset 0 0 0 1px rgba(212, 175, 55, 0.4);
                     }
-                    .gold-text { color: #AA8A2E; font-weight: bold; font-size: 10px; text-transform: uppercase; }
+                    .gold-text { color: #AA8A2E; font-weight: 800; font-size: 9px; text-transform: uppercase; letter-spacing: 0.5px; }
                     .card-footer-gold {
                         position: absolute; bottom: 0; width: 100%;
-                        background: #1a1a1a; color: #D4AF37; font-size: 9px;
-                        text-align: center; padding: 4px 0; border-top: 1px solid #D4AF37;
+                        background: linear-gradient(180deg, #1a1a1a 0%, #141414 100%);
+                        color: #D4AF37; font-size: 8px; letter-spacing: 0.8px;
+                        text-align: center; padding: 5px 0; border-top: 1px solid #D4AF37;
                     }
                     .signature-box {
-                        position: absolute; bottom: 25px; right: 15px; text-align: center;
+                        position: absolute; bottom: 26px; right: 16px; text-align: center; width: 90px;
                     }
                     .signature-line {
-                        border-top: 1px solid #1a1a1a; width: 80px; margin-top: 2px;
+                        border-top: 1px solid #1a1a1a; width: 82px; margin: 2px auto 0 auto;
+                    }
+                    .student-name {
+                        margin: 0 0 4px 0;
+                        font-size: 13px;
+                        font-weight: 800;
+                        color: #1a1a1a;
+                        text-transform: uppercase;
+                        letter-spacing: 0.3px;
+                    }
+                    .info-row {
+                        font-size: 9px;
+                        margin: 2px 0;
+                        color: #1f1f1f;
                     }
                 }
                 `}
@@ -488,32 +516,33 @@ const StudentList = () => {
                     <div key={s.id} className="id-card-item">
                         <div className="card-header-gold">
                             {schoolConfig.logoUrl && (
-                                <img src={schoolConfig.logoUrl} alt="logo" style={{width:'28px', height:'28px', objectFit:'contain'}} />
+                                <img src={schoolConfig.logoUrl} alt="logo" style={{width:'30px', height:'30px', objectFit:'contain'}} />
                             )}
                             <div className="text-center">
-                                <div style={{fontSize:'10px', fontWeight:'bold', textTransform:'uppercase'}}>{schoolConfig.schoolName}</div>
+                                <div style={{fontSize:'10px', fontWeight:'800', textTransform:'uppercase', letterSpacing:'0.6px'}}>{schoolConfig.schoolName}</div>
                                 <div style={{fontSize:'6px', letterSpacing:'1px', opacity: 0.9}}>STUDENT IDENTITY CARD</div>
                             </div>
                         </div>
-                        <div style={{display:'flex', padding:'10px', gap:'10px'}}>
+                        <div style={{display:'flex', padding:'10px 10px 12px', gap:'10px', position:'relative'}}>
                             <div className="photo-box-gold">
-                                {s.studentPhoto ? <img src={s.studentPhoto} style={{width:'100%', height:'100%', objectFit:'cover'}} alt="card-photo" /> : <User size={30} style={{margin:'30px 25px', color:'var(--theme-accent, #1d4ed8)'}} />}
+                                {s.studentPhoto ? <img src={s.studentPhoto} style={{width:'100%', height:'100%', objectFit:'cover'}} alt="card-photo" /> : <User size={28} style={{margin:'38px 28px', color:'#7a7a7a'}} />}
                             </div>
-                            <div style={{flex:1, textAlign:'left'}}>
-                                <h5 style={{fontSize:'14px', fontWeight:'800', margin:'0 0 3px 0', color:'#1a1a1a', textTransform:'uppercase'}}>{s.firstName} {s.lastName}</h5>
-                                <div style={{fontSize:'9px'}}><span className="gold-text">ID:</span> {s.admissionNumber}</div>
-                                <div style={{fontSize:'9px'}}><span className="gold-text">CLASS:</span> {s.className || s.gradeLevel}</div>
-                                <div style={{fontSize:'9px'}}><span className="gold-text">GENDER:</span> {s.gender || 'N/A'}</div>
-                                
-                                <div className="signature-box">
-                                    {schoolConfig.signatureUrl ? (
-                                        <img src={schoolConfig.signatureUrl} alt="sig" style={{height:'20px', width:'auto', display:'block', margin:'0 auto'}} />
-                                    ) : (
-                                        <div style={{height:'20px'}}></div>
-                                    )}
-                                    <div className="signature-line"></div>
-                                    <div style={{fontSize:'6px', fontWeight:'bold', marginTop:'2px'}}>PRINCIPAL</div>
-                                </div>
+                            <div style={{flex:1, textAlign:'left', paddingRight:'88px'}}>
+                                <h5 className="student-name">{s.firstName} {s.lastName}</h5>
+                                <div className="info-row"><span className="gold-text">ID:</span> {s.admissionNumber}</div>
+                                <div className="info-row"><span className="gold-text">CLASS:</span> {s.className || s.gradeLevel}</div>
+                                <div className="info-row"><span className="gold-text">GENDER:</span> {s.gender || 'N/A'}</div>
+                                <div className="info-row"><span className="gold-text">DOB:</span> {s.dateOfBirth || 'N/A'}</div>
+                            </div>
+
+                            <div className="signature-box">
+                                {(schoolConfig.headTeacherSign || schoolConfig.signatureUrl) ? (
+                                    <img src={schoolConfig.headTeacherSign || schoolConfig.signatureUrl} alt="headmaster-signature" style={{height:'28px', width:'auto', display:'block', margin:'0 auto', filter:'drop-shadow(0 2px 2px rgba(0,0,0,0.08))'}} />
+                                ) : (
+                                    <div style={{height:'28px'}}></div>
+                                )}
+                                <div className="signature-line"></div>
+                                <div style={{fontSize:'6px', fontWeight:'bold', marginTop:'2px', color:'#1a1a1a', textTransform:'uppercase'}}>{schoolConfig.headMasterName || 'Headmaster'}</div>
                             </div>
                         </div>
                         <div className="card-footer-gold">{schoolConfig.motto}</div>
