@@ -2,6 +2,7 @@ package com.school.dto;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.List;
 
 public record LessonNoteDto(
         Long id,
@@ -17,5 +18,6 @@ public record LessonNoteDto(
         String learningObjectives,
         String lessonActivities,
         String teachingResources,
-        String homework) {
+        String homework,
+        List<LessonNoteAttachmentDto> attachments) {
 }

@@ -238,7 +238,7 @@ public class PaystackService {
             return email;
         }
         if (phone == null) {
-            throw new IllegalArgumentException("A valid email or phone number is required.");
+            throw new IllegalArgumentException("A valid email or Ghana phone number is required.");
         }
         return "phone-" + phone.replace("+", "") + "@example.com";
     }
