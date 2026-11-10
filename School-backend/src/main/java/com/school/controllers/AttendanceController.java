@@ -2,6 +2,7 @@ package com.school.controllers;
 
 import com.school.entities.Attendance;
 import com.school.repositories.AttendanceRepository;
+import com.school.services.AttendanceNotificationService;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -18,10 +19,12 @@ import java.util.HashMap;
 public class AttendanceController {
 
     private final AttendanceRepository attendanceRepository;
+    private final AttendanceNotificationService attendanceNotificationService;
 
-    // Use only Constructor injection (Best practice)
-    public AttendanceController(AttendanceRepository attendanceRepository) {
+    public AttendanceController(AttendanceRepository attendanceRepository,
+            AttendanceNotificationService attendanceNotificationService) {
         this.attendanceRepository = attendanceRepository;
+        this.attendanceNotificationService = attendanceNotificationService;
     }
 
     // FIXES the 404: Provides a base GET for the dashboard
@@ -38,7 +41,9 @@ public class AttendanceController {
 
     @PostMapping("/bulk")
     public List<Attendance> saveBulk(@RequestBody List<Attendance> list) {
-        return attendanceRepository.saveAll(list);
+        List<Attendance> saved = attendanceRepository.saveAll(list);
+        attendanceNotificationService.notifyParents(saved);
+        return saved;
     }
 
     @DeleteMapping("/clear-all")

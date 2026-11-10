@@ -54,6 +54,12 @@ public class SettingsController {
             existing.setNextTermBegins(settings.getNextTermBegins());
             existing.setNextTermFees(settings.getNextTermFees());
             existing.setReportSmsTemplate(settings.getReportSmsTemplate());
+            if (settings.getCanteenFeeAmount() != null) {
+                existing.setCanteenFeeAmount(settings.getCanteenFeeAmount());
+            }
+            if (settings.getCanteenFeeFrequency() != null) {
+                existing.setCanteenFeeFrequency(settings.getCanteenFeeFrequency());
+            }
 
             // 3. Update Global Images
             existing.setLogoUrl(settings.getLogoUrl());

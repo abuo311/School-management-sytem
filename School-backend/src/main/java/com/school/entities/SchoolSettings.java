@@ -27,6 +27,9 @@ public class SchoolSettings {
     private String headMasterRemark;
     private String teacherRemark;
 
+    private Double canteenFeeAmount = 0d;
+    private String canteenFeeFrequency = "TERMLY";
+
     @Column(columnDefinition = "TEXT")
     private String nextTermBegins;
 

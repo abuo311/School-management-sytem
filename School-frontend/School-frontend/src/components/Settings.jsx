@@ -17,6 +17,8 @@ const Settings = () => {
         teacherRemark: '',
         nextTermBegins: '',
         nextTermFees: 0,
+        canteenFeeAmount: 0,
+        canteenFeeFrequency: 'TERMLY',
         headTeacherSign: '',
         schoolStamp: '',
         formMasters: [],
@@ -448,6 +450,30 @@ const Settings = () => {
                     </div>
 
                     {/* Section 6: SMS Template */}
+                    <div className="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
+                        <h5 className="fw-bold mb-4 d-flex align-items-center gap-2">
+                            <MessageSquare size={20} style={{ color: goldColor }}/> Canteen Fees
+                        </h5>
+                        <div className="mb-3">
+                            <label className="small fw-bold mb-1">Canteen fee amount (GHS)</label>
+                            <input type="number" min="0" step="0.01" className="form-control bg-light border-0"
+                                   value={config.canteenFeeAmount ?? 0}
+                                   onChange={e => setConfig({ ...config, canteenFeeAmount: Number(e.target.value) || 0 })} />
+                        </div>
+                        <div>
+                            <label className="small fw-bold mb-1">Billing frequency</label>
+                            <select className="form-select bg-light border-0"
+                                    value={config.canteenFeeFrequency || 'TERMLY'}
+                                    onChange={e => setConfig({ ...config, canteenFeeFrequency: e.target.value })}>
+                                <option value="DAILY">Daily</option>
+                                <option value="WEEKLY">Weekly</option>
+                                <option value="MONTHLY">Monthly</option>
+                                <option value="TERMLY">Termly</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    {/* Section 7: SMS Template */}
                     <div className="card border-0 shadow-sm rounded-4 p-4 bg-white">
                         <h5 className="fw-bold mb-4 d-flex align-items-center gap-2">
                             <MessageSquare size={20} style={{ color: goldColor }}/> Report SMS
