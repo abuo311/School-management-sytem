@@ -7,6 +7,14 @@ import { getSchoolTheme } from './theme';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 
+if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/service-worker.js').catch((error) => {
+      console.error('Unable to register the app service worker:', error);
+    });
+  });
+}
+
 try {
   const theme = getSchoolTheme(localStorage.getItem('schoolTheme'));
   document.documentElement.style.setProperty('--theme-accent', theme.color);

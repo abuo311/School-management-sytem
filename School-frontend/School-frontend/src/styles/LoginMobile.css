@@ -1,0 +1,24 @@
+.login-page-card {
+    max-width: 950px;
+    width: 100%;
+    min-height: 550px;
+}
+
+.mobile-login-logo {
+    display: block;
+    width: min(100%, 220px);
+    max-height: 110px;
+    margin: 0 auto;
+    object-fit: contain;
+}
+
+@media (max-width: 575.98px) {
+    .login-page-container {
+        justify-content: flex-start !important;
+        padding: 1rem !important;
+    }
+
+    .login-page-card {
+        min-height: 0;
+    }
+}

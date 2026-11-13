@@ -5,6 +5,7 @@ import {
     Lock, User, ShieldAlert, LogIn, GraduationCap,
     Eye, EyeOff, Mail, Phone, HelpCircle, X
 } from 'lucide-react';
+import '../styles/LoginMobile.css';
 
 const Login = () => {
     const navigate = useNavigate();
@@ -67,8 +68,8 @@ const Login = () => {
     };
 
     return (
-        <div className="min-vh-100 d-flex flex-column align-items-center justify-content-center p-3 position-relative" style={{ backgroundColor: '#f4f4f4' }}>
-            <div className="card border-0 shadow-lg rounded-4 overflow-hidden" style={{ maxWidth: '950px', width: '100%', minHeight: '550px' }}>
+        <div className="login-page-container min-vh-100 d-flex flex-column align-items-center justify-content-center p-3 position-relative" style={{ backgroundColor: '#f4f4f4' }}>
+            <div className="login-page-card card border-0 shadow-lg rounded-4 overflow-hidden">
                 <div className="row g-0 h-100">
 
                     {/* LEFT SIDE: BRANDING */}
@@ -109,6 +110,20 @@ const Login = () => {
 
                     {/* RIGHT SIDE: FORM */}
                     <div className="col-lg-6 bg-white p-4 p-md-5 d-flex flex-column justify-content-center">
+                        <div className="mobile-login-branding d-lg-none text-center mb-4">
+                            <img
+                                src={schoolInfo.logo || '/school-logo-v1.jpg'}
+                                alt={`${schoolInfo.name || 'EDUMANAGER'} logo`}
+                                className="mobile-login-logo"
+                                onError={(event) => {
+                                    if (schoolInfo.logo) {
+                                        setSchoolInfo(previous => ({ ...previous, logo: null }));
+                                    } else {
+                                        event.currentTarget.hidden = true;
+                                    }
+                                }}
+                            />
+                        </div>
                         <div className="mb-4 text-center text-lg-start">
                             <h3 className="fw-black text-dark mb-1 text-uppercase" style={{ fontSize: '1.5rem' }}>Account Login</h3>
                             <p className="text-muted small fw-bold">Enter authorized credentials to continue</p>
