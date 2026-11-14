@@ -4,7 +4,7 @@ services:
     env: docker
     region: oregon
     plan: free
-    repo: https://github.com/abuobernard/School-management-sytem
+    repo: https://github.com/abuo311/School-management-sytem
     branch: main
     dockerfile: Dockerfile
     buildCommand: cd School-backend && mvn clean package -DskipTests
