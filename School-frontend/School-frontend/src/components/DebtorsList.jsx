@@ -154,7 +154,7 @@ const DebtorsList = () => {
                     #print-section, #print-section * { visibility: visible; }
                     #print-section { position: absolute; left: 0; top: 0; width: 100%; }
                     .no-print { display: none !important; }
-                    .print-table { width: 100% !important; border: 1px solid #000 !important; }
+                    .print-table { width: 100% !important; min-width: 0 !important; border: 1px solid #000 !important; }
                     .print-table th { background-color: #f0f0f0 !important; color: black !important; border: 1px solid #000 !important; }
                     .print-table td { border: 1px solid #000 !important; }
                 }
@@ -225,7 +225,8 @@ const DebtorsList = () => {
                             <span className="badge bg-danger px-3">Date: {new Date().toLocaleDateString()}</span>
                         </div>
                     </div>
-                    <table className="table table-hover align-middle mb-0 print-table">
+                    <div className="table-responsive">
+                    <table className="table table-hover align-middle mb-0 print-table" style={{ minWidth: '900px' }}>
                         <thead className="bg-black text-white">
                             <tr className="small text-uppercase">
                                 <th className="px-4 d-print-none" style={{width: '50px'}}>
@@ -288,6 +289,7 @@ const DebtorsList = () => {
                             ))}
                         </tbody>
                     </table>
+                    </div>
                 </div>
 
                 <div className="d-none d-print-block mt-5">

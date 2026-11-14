@@ -14,6 +14,7 @@ import ReportCard from './components/ReportCard';
 import Fees from './components/Fees';
 import DebtorsList from './components/DebtorsList';
 import FinanceSummary from './components/FinanceSummary';
+import CanteenManagement from './components/CanteenManagement';
 import Settings from './components/Settings';
 import PromotionManager from './components/PromotionManager';
 import ClassSettings from './components/ClassSettings';
@@ -209,6 +210,7 @@ function App() {
                     <Route path="fees" element={<ProtectedRoute allowedRoles={['ADMIN', 'BURSAR']}><Fees /></ProtectedRoute>} />
                     <Route path="debtors" element={<ProtectedRoute allowedRoles={['ADMIN', 'BURSAR']}><DebtorsList /></ProtectedRoute>} />
                     <Route path="finance-summary" element={<ProtectedRoute allowedRoles={['ADMIN', 'BURSAR']}><FinanceSummary /></ProtectedRoute>} />
+                    <Route path="canteen" element={<ProtectedRoute allowedRoles={['ADMIN', 'BURSAR']}><CanteenManagement /></ProtectedRoute>} />
                     <Route path="teachers" element={<ProtectedRoute allowedRoles={['ADMIN']}><TeacherList /></ProtectedRoute>} />
                     <Route path="users" element={<ProtectedRoute allowedRoles={['ADMIN']}><UserManagement /></ProtectedRoute>} />
                     <Route path="settings" element={<ProtectedRoute allowedRoles={['ADMIN']}><Settings /></ProtectedRoute>} />

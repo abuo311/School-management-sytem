@@ -78,6 +78,7 @@ public class WebSecurityConfig {
                         .requestMatchers("/api/students/**").hasAnyRole("ADMIN", "TEACHER", "BURSAR")
                         .requestMatchers("/api/attendance/**").hasAnyRole("ADMIN", "TEACHER")
                         .requestMatchers("/api/staff-attendance/**").hasRole("ADMIN")
+                        .requestMatchers("/api/canteen/**").hasAnyRole("ADMIN", "BURSAR")
 
                         // Academic Management: ADMIN and TEACHER
                         .requestMatchers("/api/subjects/**").hasAnyRole("ADMIN", "TEACHER")
