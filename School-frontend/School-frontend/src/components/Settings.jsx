@@ -145,7 +145,7 @@ const Settings = () => {
             const response = await API.post('/settings', config);
             if (response.data) {
                 setConfig(previous => ({ ...previous, ...response.data }));
-                alert(`Settings saved. Termly fee saved: ₵${Number(response.data.nextTermFees || 0).toLocaleString()}`);
+                alert(`Settings saved. Termly fee: ₵${Number(response.data.nextTermFees || 0).toLocaleString()}. Canteen fee: GHS ${Number(response.data.canteenFeeAmount || 0).toLocaleString()} (${response.data.canteenFeeFrequency || 'TERMLY'}).`);
             } else {
                 alert("Settings saved, but the server did not return the saved values. Reload Settings to verify the term fee.");
             }

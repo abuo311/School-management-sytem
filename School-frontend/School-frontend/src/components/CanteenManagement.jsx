@@ -23,30 +23,53 @@ const CanteenManagement = () => {
     const [paymentAmount, setPaymentAmount] = useState('');
     const [paymentMethod, setPaymentMethod] = useState('Cash');
     const [loading, setLoading] = useState(true);
+    const [settingsLoading, setSettingsLoading] = useState(true);
     const [historyLoading, setHistoryLoading] = useState(false);
     const [saving, setSaving] = useState(false);
+    const [balanceError, setBalanceError] = useState('');
+    const [settingsError, setSettingsError] = useState('');
     const [error, setError] = useState('');
     const [notice, setNotice] = useState('');
 
     const loadData = useCallback(async () => {
         setLoading(true);
-        setError('');
-        try {
-            const [balancesResponse, settingsResponse] = await Promise.all([
-                API.get('/canteen/balances'),
-                API.get('/settings')
-            ]);
-            const nextBalances = balancesResponse.data || [];
+        setSettingsLoading(true);
+        setBalanceError('');
+        setSettingsError('');
+
+        const [balancesResult, settingsResult] = await Promise.allSettled([
+            API.get('/canteen/balances'),
+            API.get('/settings')
+        ]);
+
+        let nextBalances = null;
+        if (balancesResult.status === 'fulfilled') {
+            nextBalances = balancesResult.value.data || [];
             setBalances(nextBalances);
-            setSettings(settingsResponse.data || null);
-            return nextBalances;
-        } catch (requestError) {
-            console.error('Canteen management load error:', requestError);
-            setError(requestError.response?.data?.message || 'Unable to load canteen balances. Please try again.');
-            return [];
-        } finally {
-            setLoading(false);
+        } else {
+            const requestError = balancesResult.reason;
+            console.error('Canteen balances load error:', requestError);
+            const status = requestError.response?.status;
+            const message = status === 404
+                ? 'Canteen service is not available on the server yet. Deploy the backend canteen updates and try again.'
+                : status === 403
+                    ? 'Your account does not have permission to view canteen balances. Sign in as an admin or bursar.'
+                    : requestError.response?.data?.message || 'Unable to load canteen balances. Check the server connection and try again.';
+            setBalanceError(message);
         }
+
+        if (settingsResult.status === 'fulfilled') {
+            setSettings(settingsResult.value.data || null);
+        } else {
+            const requestError = settingsResult.reason;
+            console.error('Canteen settings load error:', requestError);
+            setSettingsError(requestError.response?.data?.message
+                || 'Unable to load the saved canteen settings. Please retry.');
+        }
+
+        setLoading(false);
+        setSettingsLoading(false);
+        return nextBalances;
     }, []);
 
     useEffect(() => {
@@ -100,9 +123,11 @@ const CanteenManagement = () => {
             setNotice('Canteen payment recorded.');
             setPaymentAmount('');
             const refreshedBalances = await loadData();
-            setSelectedStudent(refreshedBalances.find(
-                item => item.student.id === selectedStudent.student.id
-            ) || null);
+            if (refreshedBalances) {
+                setSelectedStudent(refreshedBalances.find(
+                    item => item.student.id === selectedStudent.student.id
+                ) || null);
+            }
             await loadPaymentHistory(selectedStudent.student.id);
         } catch (requestError) {
             console.error('Canteen payment save error:', requestError);
@@ -127,7 +152,7 @@ const CanteenManagement = () => {
         outstanding: totals.outstanding + Number(item.balance || 0)
     }), { assessed: 0, paid: 0, outstanding: 0 }), [balances]);
 
-    const configuredAmount = Number(settings?.canteenFeeAmount || 0);
+    const configuredAmount = Number(settings?.canteenFeeAmount ?? 0);
     const configuredFrequency = formatFrequency(settings?.canteenFeeFrequency);
     const currentPeriod = balances[0]?.billingPeriod || (
         settings?.canteenFeeFrequency?.toUpperCase() === 'TERMLY'
@@ -144,19 +169,29 @@ const CanteenManagement = () => {
                 </div>
                 <div className="rounded-3 bg-white border shadow-sm px-3 py-2">
                     <span className="text-muted small d-block">Configured charge</span>
-                    <strong>{formatCurrency(configuredAmount)} · {configuredFrequency}</strong>
+                    <strong>{settingsLoading ? 'Loading saved settings…' : `${formatCurrency(configuredAmount)} · ${configuredFrequency}`}</strong>
                 </div>
             </header>
 
-            {error && <div className="alert alert-danger d-flex align-items-center gap-2" role="alert">
-                <AlertCircle size={18} />{error}
-                <button type="button" className="btn-close ms-auto" aria-label="Dismiss error" onClick={() => setError('')} />
+            {(settingsError || balanceError || error) && <div className="alert alert-danger d-flex align-items-center gap-2" role="alert">
+                <AlertCircle size={18} />
+                <span>{[settingsError, balanceError, error].filter(Boolean).join(' ')}</span>
+                <button type="button" className="btn-close ms-auto" aria-label="Dismiss error" onClick={() => {
+                    setSettingsError('');
+                    setBalanceError('');
+                    setError('');
+                }} />
             </div>}
             {notice && <div className="alert alert-success" role="status">{notice}</div>}
-            {configuredAmount <= 0 && (
+            {!settingsLoading && settings && configuredAmount <= 0 && (
                 <div className="alert alert-warning">
                     A positive canteen fee is not configured. Update the canteen fee amount in Settings to begin recording payments.
                 </div>
+            )}
+            {!settingsLoading && settingsError && (
+                <button type="button" className="btn btn-outline-primary btn-sm mb-3" onClick={loadData} disabled={loading}>
+                    Retry loading canteen settings and balances
+                </button>
             )}
 
             <div className="row g-3 mb-4">
@@ -168,7 +203,7 @@ const CanteenManagement = () => {
                     <div className="col-md-4" key={item.label}>
                         <div className="card border-0 shadow-sm rounded-4 p-3 h-100">
                             <span className="small text-muted text-uppercase fw-semibold">{item.label}</span>
-                            <strong className="fs-4 mt-1">{formatCurrency(item.value)}</strong>
+                            <strong className="fs-4 mt-1">{balanceError ? '—' : formatCurrency(item.value)}</strong>
                         </div>
                     </div>
                 ))}
@@ -180,7 +215,9 @@ const CanteenManagement = () => {
                         <div className="p-3 border-bottom d-flex flex-wrap justify-content-between align-items-center gap-3">
                             <div>
                                 <h2 className="h5 fw-bold mb-1">Student canteen balances</h2>
-                                <span className="small text-muted">{currentPeriod} · {balances.length} active students</span>
+                                <span className="small text-muted">
+                                    {balanceError ? 'Balance data unavailable' : `${currentPeriod} · ${balances.length} active students`}
+                                </span>
                             </div>
                             <label className="input-group input-group-sm" style={{ maxWidth: '280px' }}>
                                 <span className="input-group-text bg-white"><Search size={16} /></span>
@@ -196,6 +233,13 @@ const CanteenManagement = () => {
                         </div>
                         {loading ? (
                             <div className="text-center py-5"><Loader2 className="animate-spin text-primary" size={28} /></div>
+                        ) : balanceError ? (
+                            <div className="text-center text-muted py-5">
+                                <p className="mb-3">Student balances are unavailable until the canteen service responds.</p>
+                                <button type="button" className="btn btn-outline-primary btn-sm" onClick={loadData}>
+                                    Retry
+                                </button>
+                            </div>
                         ) : (
                             <div className="table-responsive">
                                 <table className="table table-hover align-middle mb-0">
