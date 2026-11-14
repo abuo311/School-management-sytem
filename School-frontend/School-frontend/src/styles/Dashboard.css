@@ -253,6 +253,26 @@
     .content-body {
         padding: 0 !important;
     }
+
+    body * {
+        visibility: hidden !important;
+    }
+
+    .attendance-summary-print,
+    .attendance-summary-print * {
+        visibility: visible !important;
+    }
+
+    .attendance-summary-print {
+        position: absolute !important;
+        inset: 0 !important;
+        width: 100% !important;
+        box-shadow: none !important;
+    }
+
+    .attendance-summary-print .no-print {
+        display: none !important;
+    }
 }
 /* Responsive Sidebar Logic */
 .dashboard-wrapper {

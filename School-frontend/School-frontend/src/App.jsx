@@ -18,6 +18,7 @@ import Settings from './components/Settings';
 import PromotionManager from './components/PromotionManager';
 import ClassSettings from './components/ClassSettings';
 import AttendanceDashboard from './components/AttendanceDashboard';
+import AttendanceSummary from './components/AttendanceSummary';
 import SubjectManagement from './components/SubjectManagement';
 import API from './services/api';
 
@@ -178,6 +179,11 @@ const DashboardHome = () => {
                     </div>
                 </div>
             </div>
+            {['ADMIN', 'TEACHER'].includes(userRole) && (
+                <div className="mt-4">
+                    <AttendanceSummary />
+                </div>
+            )}
         </div>
     );
 };
@@ -194,6 +200,7 @@ function App() {
                     <Route index element={<DashboardHome />} />
                     <Route path="students" element={<ProtectedRoute allowedRoles={['ADMIN', 'TEACHER']}><StudentList /></ProtectedRoute>} />
                     <Route path="attendance" element={<ProtectedRoute allowedRoles={['ADMIN', 'TEACHER']}><Attendance /></ProtectedRoute>} />
+                    <Route path="attendance-summary" element={<ProtectedRoute allowedRoles={['ADMIN', 'TEACHER']}><AttendanceSummary /></ProtectedRoute>} />
                     <Route path="timetable" element={<ProtectedRoute allowedRoles={['ADMIN', 'TEACHER']}><Timetable /></ProtectedRoute>} />
                     <Route path="lesson-notes" element={<ProtectedRoute allowedRoles={['ADMIN', 'TEACHER']}><LessonNotes /></ProtectedRoute>} />
                     <Route path="staff-attendance" element={<ProtectedRoute allowedRoles={['ADMIN']}><StaffAttendance /></ProtectedRoute>} />
