@@ -158,7 +158,7 @@ const CanteenManagement = () => {
         }
     };
 
-    const filteredBalances = useMemo(() => {
+    const filteredStudents = useMemo(() => {
         const searchTerm = search.trim().toLowerCase();
         if (!searchTerm) return students;
         return students.filter(student =>
@@ -232,22 +232,24 @@ const CanteenManagement = () => {
             </div>
 
             <div className="row g-4 align-items-start">
-                <div className={selectedStudent ? 'col-xl-8' : 'col-12'}>
+                <div className={selectedStudent ? 'col-lg-4' : 'col-12'}>
                     <section className="card border-0 shadow-sm rounded-4">
-                        <div className="p-3 border-bottom d-flex flex-wrap justify-content-between align-items-center gap-3">
+                        <div className="p-3 border-bottom">
                             <div>
-                                <h2 className="h5 fw-bold mb-1">Student canteen balances</h2>
+                                <h2 className="h5 fw-bold mb-1">Select a student</h2>
                                 <span className="small text-muted">
-                                    {balanceError ? `Payment balances unavailable · ${students.length} students` : `${currentPeriod} · ${students.length} active students`}
+                                    {balanceError
+                                        ? `${students.length} students · payment balances unavailable`
+                                        : `${currentPeriod} · ${students.length} active students`}
                                 </span>
                             </div>
-                            <label className="input-group input-group-sm" style={{ maxWidth: '280px' }}>
+                            <label className="input-group input-group-sm mt-3">
                                 <span className="input-group-text bg-white"><Search size={16} /></span>
                                 <input
                                     type="search"
                                     className="form-control"
-                                    aria-label="Search students"
-                                    placeholder="Search name, ID, or class"
+                                    aria-label="Search students to pay canteen fees"
+                                    placeholder="Search students..."
                                     value={search}
                                     onChange={event => setSearch(event.target.value)}
                                 />
@@ -256,63 +258,39 @@ const CanteenManagement = () => {
                         {studentsLoading ? (
                             <div className="text-center py-5"><Loader2 className="animate-spin text-primary" size={28} /></div>
                         ) : (
-                            <div className="table-responsive">
-                                <table className="table table-hover align-middle mb-0">
-                                    <thead>
-                                        <tr>
-                                            <th scope="col">Student</th>
-                                            <th scope="col">Class</th>
-                                            <th scope="col">Assessed</th>
-                                            <th scope="col">Paid</th>
-                                            <th scope="col">Balance</th>
-                                            <th scope="col">Action</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {filteredBalances.length === 0 ? (
-                                            <tr><td colSpan="6" className="text-center text-muted py-5">
-                                                {studentsError ? 'Student list is unavailable.' : students.length ? 'No students match your search.' : 'No active students found.'}
-                                            </td></tr>
-                                        ) : filteredBalances.map(student => {
-                                            const balance = balances.find(item => item.student.id === student.id);
-                                            return (
-                                            <tr key={student.id} className={selectedStudent?.id === student.id ? 'table-primary' : ''}>
-                                                <td>
-                                                    <strong>{student.firstName} {student.lastName}</strong>
-                                                    <small className="d-block text-muted">{student.admissionNumber}</small>
-                                                </td>
-                                                <td>{student.gradeLevel || '-'}</td>
-                                                <td>{balance ? formatCurrency(balance.assessedAmount) : '—'}</td>
-                                                <td className={balance ? 'text-success' : 'text-muted'}>
-                                                    {balance ? formatCurrency(balance.totalPaid) : '—'}
-                                                </td>
-                                                <td className={balance && Number(balance.balance) > 0 ? 'text-danger fw-semibold' : 'text-success fw-semibold'}>
-                                                    {balance ? formatCurrency(balance.balance) : '—'}
-                                                </td>
-                                                <td>
-                                                    <button
-                                                        type="button"
-                                                        className={`btn btn-sm ${selectedStudent?.id === student.id ? 'btn-primary' : 'btn-outline-primary'}`}
-                                                        onClick={() => selectStudent(student)}
-                                                    >
-                                                        <Wallet size={15} className="me-1" />
-                                                        {selectedStudent?.id === student.id ? 'Selected' : 'Select student'}
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                        )})}
-                                    </tbody>
-                                </table>
+                            <div className="list-group list-group-flush" style={{ maxHeight: '65vh', overflowY: 'auto' }}>
+                                {filteredStudents.length === 0 ? (
+                                    <p className="text-center text-muted py-5 mb-0">
+                                        {studentsError ? 'Student list is unavailable.' : students.length ? 'No students match your search.' : 'No active students found.'}
+                                    </p>
+                                ) : filteredStudents.map(student => (
+                                    <button
+                                        type="button"
+                                        key={student.id}
+                                        onClick={() => selectStudent(student)}
+                                        className={`list-group-item list-group-item-action border-0 p-3 ${selectedStudent?.id === student.id ? 'active' : ''}`}
+                                    >
+                                        <span className="d-flex justify-content-between align-items-center gap-2">
+                                            <span className="text-start">
+                                                <strong className="d-block">{student.firstName} {student.lastName}</strong>
+                                                <small className={selectedStudent?.id === student.id ? '' : 'text-muted'}>
+                                                    {student.admissionNumber} · {student.gradeLevel || 'Unassigned'}
+                                                </small>
+                                            </span>
+                                            <Wallet size={17} />
+                                        </span>
+                                    </button>
+                                ))}
                             </div>
                         )}
                     </section>
                 </div>
 
                 {selectedStudent && (
-                    <div className="col-xl-4">
+                    <div className="col-lg-8">
                         <section className="card border-0 shadow-sm rounded-4 mb-4">
                             <div className="p-3 border-bottom">
-                                <h2 className="h5 fw-bold mb-1">Record payment</h2>
+                                <h2 className="h5 fw-bold mb-1">Record canteen payment</h2>
                                 <p className="small text-muted mb-0">
                                     {selectedStudent.firstName} {selectedStudent.lastName}
                                     {selectedBalance
