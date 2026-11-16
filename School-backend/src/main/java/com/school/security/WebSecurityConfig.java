@@ -119,6 +119,8 @@ public class WebSecurityConfig {
                 "https://school-management-sytem-*.vercel.app", // Wildcard to match ALL your Vercel deployment
                                                                 // variations!
                 "http://localhost:5173", // Local Vite environment
+                "http://localhost:4173", // Local Vite preview environment
+                "http://127.0.0.1:4173", // Local Vite preview via loopback address
                 "http://localhost:3000", // Local CRA environment
                 "http://localhost:8080", // Local CRA environment
                 "http://127.0.0.1:8080"

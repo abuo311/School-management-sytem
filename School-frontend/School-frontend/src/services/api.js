@@ -9,7 +9,7 @@ const isLocalhost =
 // 1. If running on localhost, use the current host's address (e.g., http://localhost:8080/api)
 // 2. Otherwise, fall back to your live Render API URL
 const baseURL = isLocalhost
-    ? `${window.location.origin}/api`
+    ? `http://${window.location.hostname}:8080/api`
     : 'https://school-management-sytem.onrender.com/api';
 
 const API = axios.create({
