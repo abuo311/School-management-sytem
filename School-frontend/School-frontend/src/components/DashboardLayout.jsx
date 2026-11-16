@@ -6,7 +6,7 @@ import {
     Settings, LogOut, Home, CalendarCheck,
     FileText, PenTool, Wallet, AlertTriangle, BarChart3, Menu, X,
     ShieldPlus, UserCircle, User, LayoutGrid, TrendingUp, Database, Download, ClipboardCheck,
-    CalendarClock, NotebookPen, Palette, PanelLeftClose, PanelLeftOpen, Utensils
+    CalendarClock, NotebookPen, Palette, PanelLeftClose, PanelLeftOpen, Utensils, Banknote
 } from 'lucide-react';
 import '../styles/Dashboard.css';
 import { getSchoolTheme, SCHOOL_THEMES } from '../theme';
@@ -239,6 +239,9 @@ const DashboardLayout = () => {
                             </Link>
                             <Link to="/dashboard/canteen" className={`menu-item d-flex align-items-center gap-2 p-2 rounded text-decoration-none ${isActive('/dashboard/canteen') ? 'active' : ''}`} onClick={closeMobileMenu}>
                                 <Utensils size={20} /><span>Canteen Management</span>
+                            </Link>
+                            <Link to="/dashboard/payroll" className={`menu-item d-flex align-items-center gap-2 p-2 rounded text-decoration-none ${isActive('/dashboard/payroll') ? 'active' : ''}`} onClick={closeMobileMenu}>
+                                <Banknote size={20} /><span>Payroll</span>
                             </Link>
                         </>
                     )}
