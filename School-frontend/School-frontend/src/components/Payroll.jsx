@@ -21,6 +21,20 @@ const money = new Intl.NumberFormat('en-GH', {
     minimumFractionDigits: 2
 });
 
+const payrollLoadError = (requestError, endpoint) => {
+    const status = requestError.response?.status;
+    if (status === 404) {
+        return `Payroll endpoint ${endpoint} was not found. Deploy the latest backend, then refresh.`;
+    }
+    if (status === 401 || status === 403) {
+        return `Access denied for ${endpoint} (HTTP ${status}). Sign in with an Admin or Bursar account.`;
+    }
+    if (!requestError.response) {
+        return `Could not reach the backend for ${endpoint}. Check that the backend is running and accessible.`;
+    }
+    return requestError.response.data?.message || `Payroll request ${endpoint} failed (HTTP ${status}).`;
+};
+
 const Payroll = () => {
     const [period, setPeriod] = useState(currentPeriod);
     const [employees, setEmployees] = useState([]);
@@ -36,18 +50,25 @@ const Payroll = () => {
     const loadPayroll = useCallback(async () => {
         setLoading(true);
         setError('');
-        try {
-            const [employeeResponse, payrollResponse] = await Promise.all([
-                API.get('/payroll/employees'),
-                API.get('/payroll', { params: { year: Number(period.slice(0, 4)), month: Number(period.slice(5, 7)) } })
-            ]);
-            setEmployees(employeeResponse.data || []);
-            setRecords(payrollResponse.data || []);
-        } catch (requestError) {
-            setError(requestError.response?.data?.message || 'Unable to load payroll.');
-        } finally {
-            setLoading(false);
+        setEmployees([]);
+        setRecords([]);
+        const [employeeResult, payrollResult] = await Promise.allSettled([
+            API.get('/payroll/employees'),
+            API.get('/payroll', { params: { year: Number(period.slice(0, 4)), month: Number(period.slice(5, 7)) } })
+        ]);
+        const errors = [];
+        if (employeeResult.status === 'fulfilled') {
+            setEmployees(employeeResult.value.data || []);
+        } else {
+            errors.push(payrollLoadError(employeeResult.reason, '/payroll/employees'));
         }
+        if (payrollResult.status === 'fulfilled') {
+            setRecords(payrollResult.value.data || []);
+        } else {
+            errors.push(payrollLoadError(payrollResult.reason, '/payroll'));
+        }
+        setError(errors.join(' '));
+        setLoading(false);
     }, [period]);
 
     useEffect(() => {
