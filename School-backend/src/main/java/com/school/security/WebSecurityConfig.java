@@ -66,6 +66,7 @@ public class WebSecurityConfig {
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/paystack/webhook").permitAll()
+                        .requestMatchers("/api/paystack/status").hasAnyRole("ADMIN", "BURSAR")
                         .requestMatchers(HttpMethod.GET, "/api/settings", "/api/settings/branding").permitAll()
 
                         // --- ROLE-BASED ACCESS CONTROL ---
@@ -78,6 +79,11 @@ public class WebSecurityConfig {
                         .requestMatchers("/api/students/**").hasAnyRole("ADMIN", "TEACHER", "BURSAR")
                         .requestMatchers("/api/attendance/**").hasAnyRole("ADMIN", "TEACHER")
                         .requestMatchers("/api/staff-attendance/**").hasRole("ADMIN")
+                        .requestMatchers("/api/lms/**").authenticated()
+                        .requestMatchers("/api/dashboard/**").hasAnyRole("ADMIN", "TEACHER", "BURSAR")
+                        .requestMatchers("/api/classes/**", "/api/results/**", "/api/notifications/**")
+                        .hasAnyRole("ADMIN", "TEACHER")
+                        .requestMatchers("/api/promotion/**", "/api/debug/**").hasRole("ADMIN")
                         .requestMatchers("/api/canteen/**").hasAnyRole("ADMIN", "BURSAR")
                         .requestMatchers("/api/payroll/**").hasAnyRole("ADMIN", "BURSAR")
 

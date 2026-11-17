@@ -1,5 +1,11 @@
 # React + Vite
 
+## Learning Hub (LMS and e-learning)
+
+Administrators and teachers can open **Learning Hub** from the dashboard to create courses for a class, add lesson notes, and share YouTube/Vimeo videos or reading links. Publish a course when its lessons are ready; only students in the selected class will see it. Students can sign in from the regular login page, open **My Learning**, and mark lessons complete to track their progress.
+
+Administrators can create student learning accounts from the Student learning accounts panel in Learning Hub. Each account is linked to an active student record; share the username and initial password with the student securely.
+
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
 Currently, two official plugins are available:

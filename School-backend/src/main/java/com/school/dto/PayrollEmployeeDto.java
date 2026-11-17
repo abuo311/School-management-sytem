@@ -6,5 +6,6 @@ public record PayrollEmployeeDto(
         PayrollEmployeeType employeeType,
         Long employeeId,
         String fullName,
-        String position) {
+        String position,
+        String profilePhoto) {
 }

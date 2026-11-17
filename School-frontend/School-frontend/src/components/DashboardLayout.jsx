@@ -6,7 +6,8 @@ import {
     Settings, LogOut, Home, CalendarCheck,
     FileText, PenTool, Wallet, AlertTriangle, BarChart3, Menu, X,
     ShieldPlus, UserCircle, User, LayoutGrid, TrendingUp, Database, Download, ClipboardCheck,
-    CalendarClock, NotebookPen, Palette, PanelLeftClose, PanelLeftOpen, Utensils, Banknote
+    CalendarClock, NotebookPen, Palette, PanelLeftClose, PanelLeftOpen, Utensils, Banknote,
+    GraduationCap
 } from 'lucide-react';
 import '../styles/Dashboard.css';
 import { getSchoolTheme, SCHOOL_THEMES } from '../theme';
@@ -200,6 +201,11 @@ const DashboardLayout = () => {
                     <Link to="/dashboard" className={`menu-item d-flex align-items-center gap-2 p-2 rounded text-decoration-none ${location.pathname === '/dashboard' ? 'active' : ''}`} onClick={closeMobileMenu}>
                         <LayoutDashboard size={20} /><span>Dashboard</span>
                     </Link>
+                    {['ADMIN', 'TEACHER', 'STUDENT'].includes(userRole) && (
+                        <Link to="/dashboard/learning" className={`menu-item d-flex align-items-center gap-2 p-2 rounded text-decoration-none ${isActive('/dashboard/learning') ? 'active' : ''}`} onClick={closeMobileMenu}>
+                            <GraduationCap size={20} /><span>{userRole === 'STUDENT' ? 'My Learning' : 'Learning Hub'}</span>
+                        </Link>
+                    )}
 
                     {(userRole === 'ADMIN' || userRole === 'TEACHER') && (
                         <>

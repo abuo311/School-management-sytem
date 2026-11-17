@@ -69,6 +69,10 @@ public class UserController {
                 user.setFullName(userDetails.getFullName().trim());
             }
             if (userDetails.getRole() != null) {
+                if (user.getRole() == Role.STUDENT && userDetails.getRole() != Role.STUDENT) {
+                    return ResponseEntity.badRequest()
+                            .body("Student learning accounts must remain linked to their student record.");
+                }
                 if (currentUser != null && currentUser.getUsername().equals(user.getUsername())
                         && userDetails.getRole() != user.getRole()) {
                     return ResponseEntity.badRequest()

@@ -8,9 +8,11 @@ import com.school.entities.NonTeachingStaff;
 import com.school.entities.PayrollEmployeeType;
 import com.school.entities.PayrollRecord;
 import com.school.entities.PayrollStatus;
+import com.school.entities.Teacher;
 import com.school.entities.User;
 import com.school.repositories.NonTeachingStaffRepository;
 import com.school.repositories.PayrollRecordRepository;
+import com.school.repositories.TeacherRepository;
 import com.school.repositories.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,6 +21,9 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 public class PayrollService {
@@ -26,29 +31,48 @@ public class PayrollService {
     private final PayrollRecordRepository payrollRepository;
     private final UserRepository userRepository;
     private final NonTeachingStaffRepository nonTeachingStaffRepository;
+    private final TeacherRepository teacherRepository;
 
     public PayrollService(
             PayrollRecordRepository payrollRepository,
             UserRepository userRepository,
-            NonTeachingStaffRepository nonTeachingStaffRepository) {
+            NonTeachingStaffRepository nonTeachingStaffRepository,
+            TeacherRepository teacherRepository) {
         this.payrollRepository = payrollRepository;
         this.userRepository = userRepository;
         this.nonTeachingStaffRepository = nonTeachingStaffRepository;
+        this.teacherRepository = teacherRepository;
     }
 
     @Transactional(readOnly = true)
     public List<PayrollEmployeeDto> getEmployees() {
         List<PayrollEmployeeDto> employees = new ArrayList<>();
-        for (User user : userRepository.findByEnabledTrueOrderByFullNameAsc()) {
+        List<User> activeUsers = userRepository.findByEnabledTrueOrderByFullNameAsc();
+        List<Long> activeUserIds = activeUsers.stream().map(User::getId).toList();
+        Map<Long, String> teacherPhotos = activeUserIds.isEmpty()
+                ? Map.of()
+                : teacherRepository.findByUser_IdIn(activeUserIds).stream()
+                        .filter(teacher -> teacher.getUser() != null)
+                        .filter(teacher -> teacher.getProfilePhoto() != null && !teacher.getProfilePhoto().isBlank())
+                        .collect(Collectors.toMap(
+                                teacher -> teacher.getUser().getId(),
+                                Teacher::getProfilePhoto,
+                                (first, second) -> first));
+        for (User user : activeUsers) {
             String name = user.getFullName() == null || user.getFullName().isBlank()
                     ? user.getUsername()
                     : user.getFullName();
+            String profilePhoto = teacherPhotos.get(user.getId());
+            if (profilePhoto == null || profilePhoto.isBlank()) {
+                profilePhoto = user.getProfilePhoto();
+            }
             employees.add(new PayrollEmployeeDto(
-                    PayrollEmployeeType.USER, user.getId(), name, user.getRoleName()));
+                    PayrollEmployeeType.USER, user.getId(), name, user.getRoleName(), profilePhoto));
         }
         for (NonTeachingStaff staff : nonTeachingStaffRepository.findByActiveTrueOrderByFullNameAsc()) {
             employees.add(new PayrollEmployeeDto(
-                    PayrollEmployeeType.NON_TEACHING, staff.getId(), staff.getFullName(), staff.getPosition()));
+                    PayrollEmployeeType.NON_TEACHING, staff.getId(), staff.getFullName(), staff.getPosition(),
+                    staff.getProfilePhoto()));
         }
         return employees;
     }

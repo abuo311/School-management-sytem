@@ -4,6 +4,7 @@ import com.school.entities.SchoolClass;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface ClassRepository extends JpaRepository<SchoolClass, Long> {
@@ -19,4 +20,6 @@ public interface ClassRepository extends JpaRepository<SchoolClass, Long> {
      * before saving to avoid duplicates.
      */
     boolean existsByClassName(String className);
+
+    Optional<SchoolClass> findByClassNameIgnoreCase(String className);
 }

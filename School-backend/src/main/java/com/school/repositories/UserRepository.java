@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 import java.util.Optional;
 import java.util.List;
+import java.util.Set;
 
 @Repository
 public interface UserRepository extends JpaRepository<User, Long> {
@@ -13,6 +14,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByUsername(String username);
 
     boolean existsByUsername(String username);
+
+    boolean existsByStudentId(Long studentId);
 
     List<User> findByEnabledTrueOrderByFullNameAsc();
 
@@ -23,4 +26,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
      */
     @Query("SELECT u FROM User u WHERE u.id NOT IN (SELECT t.user.id FROM Teacher t WHERE t.user.id IS NOT NULL)")
     List<User> findUnassignedUsers();
+
+    @Query("SELECT u.student.id FROM User u WHERE u.student IS NOT NULL")
+    Set<Long> findStudentIdsWithAccounts();
 }

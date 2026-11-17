@@ -22,6 +22,7 @@ import ClassSettings from './components/ClassSettings';
 import AttendanceDashboard from './components/AttendanceDashboard';
 import AttendanceSummary from './components/AttendanceSummary';
 import SubjectManagement from './components/SubjectManagement';
+import LearningHub from './components/LearningHub';
 import API from './services/api';
 
 import {
@@ -190,6 +191,11 @@ const DashboardHome = () => {
     );
 };
 
+const StudentDashboardRedirect = () => {
+    const userRole = sessionStorage.getItem('userRole');
+    return userRole === 'STUDENT' ? <Navigate to="/dashboard/learning" replace /> : <DashboardHome />;
+};
+
 // --- MAIN APP COMPONENT ---
 function App() {
     return (
@@ -199,7 +205,8 @@ function App() {
                 <Route path="/login" element={<Login />} />
 
                 <Route path="/dashboard" element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
-                    <Route index element={<DashboardHome />} />
+                    <Route index element={<StudentDashboardRedirect />} />
+                    <Route path="learning" element={<ProtectedRoute allowedRoles={['ADMIN', 'TEACHER', 'STUDENT']}><LearningHub /></ProtectedRoute>} />
                     <Route path="students" element={<ProtectedRoute allowedRoles={['ADMIN', 'TEACHER']}><StudentList /></ProtectedRoute>} />
                     <Route path="attendance" element={<ProtectedRoute allowedRoles={['ADMIN', 'TEACHER']}><Attendance /></ProtectedRoute>} />
                     <Route path="attendance-summary" element={<ProtectedRoute allowedRoles={['ADMIN', 'TEACHER']}><AttendanceSummary /></ProtectedRoute>} />

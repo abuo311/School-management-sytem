@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Banknote, Check, CircleDollarSign, Loader2, Pencil, Plus, Save, X } from 'lucide-react';
+import { Banknote, Check, CircleDollarSign, Loader2, Pencil, Plus, Printer, Save, X } from 'lucide-react';
 import API from '../services/api';
 
 const currentPeriod = () => {
@@ -46,6 +46,8 @@ const Payroll = () => {
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
+    const [schoolInfo, setSchoolInfo] = useState({ schoolName: 'School', logoUrl: null });
+    const [printingRecord, setPrintingRecord] = useState(null);
 
     const loadPayroll = useCallback(async () => {
         setLoading(true);
@@ -74,6 +76,33 @@ const Payroll = () => {
     useEffect(() => {
         loadPayroll();
     }, [loadPayroll]);
+
+    useEffect(() => {
+        let isCurrent = true;
+        API.get('/settings')
+            .then(response => {
+                if (!isCurrent) return;
+                setSchoolInfo({
+                    schoolName: response.data?.schoolName || 'School',
+                    logoUrl: response.data?.logoUrl || null
+                });
+            })
+            .catch(requestError => console.error('Unable to load school branding for payslip:', requestError));
+        return () => {
+            isCurrent = false;
+        };
+    }, []);
+
+    useEffect(() => {
+        if (!printingRecord) return undefined;
+        const handleAfterPrint = () => setPrintingRecord(null);
+        window.addEventListener('afterprint', handleAfterPrint);
+        const printTimer = window.setTimeout(() => window.print(), 150);
+        return () => {
+            window.clearTimeout(printTimer);
+            window.removeEventListener('afterprint', handleAfterPrint);
+        };
+    }, [printingRecord]);
 
     const totals = useMemo(() => records.reduce((result, record) => ({
         basic: result.basic + Number(record.basicSalary),
@@ -170,11 +199,51 @@ const Payroll = () => {
         }
     };
 
+    const printPayslip = record => {
+        const employee = employees.find(item => item.employeeType === record.employeeType
+            && item.employeeId === record.employeeId);
+        setPrintingRecord({
+            record,
+            profilePhoto: employee?.profilePhoto || null
+        });
+    };
+
     const selectedPeriod = new Date(`${period}-01T00:00:00`);
     const periodLabel = selectedPeriod.toLocaleDateString('en-GH', { month: 'long', year: 'numeric' });
+    const slipPeriodLabel = printingRecord
+        ? new Date(`${printingRecord.record.year}-${String(printingRecord.record.month).padStart(2, '0')}-01T00:00:00`)
+            .toLocaleDateString('en-GH', { month: 'long', year: 'numeric' })
+        : '';
+    const grossPay = printingRecord
+        ? Number(printingRecord.record.basicSalary) + Number(printingRecord.record.allowances)
+        : 0;
+    const initials = printingRecord?.record.staffName
+        ?.split(/\s+/)
+        .filter(Boolean)
+        .slice(0, 2)
+        .map(name => name[0].toUpperCase())
+        .join('');
 
     return (
         <div className="container-fluid py-4 text-start">
+            <style>{`
+                .payroll-slip-print { display: none; }
+                @media print {
+                    @page { size: A4; margin: 14mm; }
+                    body, .main-content { background: #fff !important; height: auto !important; overflow: visible !important; }
+                    body * { visibility: hidden !important; }
+                    .payroll-slip-print, .payroll-slip-print * { visibility: visible !important; }
+                    .payroll-slip-print {
+                        display: block !important; position: fixed !important; inset: 0 !important;
+                        width: 100% !important; padding: 0 !important; background: #fff !important; z-index: 99999 !important;
+                    }
+                    .payroll-slip-paper {
+                        width: 180mm; min-height: 250mm; margin: 0 auto; padding: 8mm 4mm;
+                        color: #171717 !important; box-shadow: none !important;
+                    }
+                    .payroll-slip-paper img { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+                }
+            `}</style>
             <header className="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
                 <div>
                     <h3 className="fw-bold mb-1"><Banknote size={25} className="me-2 text-success" />Payroll</h3>
@@ -319,19 +388,25 @@ const Payroll = () => {
                                             )}
                                         </td>
                                         <td className="text-end pe-3">
-                                            {record.status === 'PENDING' ? (
-                                                <div className="d-flex justify-content-end gap-2">
-                                                    <button type="button" className="btn btn-sm btn-outline-secondary"
-                                                            onClick={() => editRecord(record)} disabled={saving}>
-                                                        <Pencil size={15} className="me-1" />Edit
-                                                    </button>
-                                                    <button type="button" className="btn btn-sm btn-success"
-                                                            onClick={() => markAsPaid(record.id)} disabled={saving}>
-                                                        <Check size={15} className="me-1" />Mark paid
-                                                    </button>
+                                            <div className="d-flex justify-content-end gap-2">
+                                                <button type="button" className="btn btn-sm btn-outline-primary"
+                                                        onClick={() => printPayslip(record)}>
+                                                    <Printer size={15} className="me-1" />Print slip
+                                                </button>
+                                                {record.status === 'PENDING' ? (
+                                                    <>
+                                                            <button type="button" className="btn btn-sm btn-outline-secondary"
+                                                                    onClick={() => editRecord(record)} disabled={saving}>
+                                                                <Pencil size={15} className="me-1" />Edit
+                                                            </button>
+                                                            <button type="button" className="btn btn-sm btn-success"
+                                                                    onClick={() => markAsPaid(record.id)} disabled={saving}>
+                                                                <Check size={15} className="me-1" />Mark paid
+                                                            </button>
+                                                        </>
+                                                ) : <span className="small text-muted align-self-center">Complete</span>}
                                                 </div>
-                                            ) : <span className="small text-muted">Complete</span>}
-                                        </td>
+                                            </td>
                                     </tr>
                                 ))}
                             </tbody>
@@ -349,6 +424,74 @@ const Payroll = () => {
                     </div>
                 )}
             </section>
+            {printingRecord && (
+                <section className="payroll-slip-print" aria-label="Employee payslip">
+                    <div className="payroll-slip-paper">
+                        <header className="d-flex align-items-center gap-3 border-bottom border-3 border-dark pb-3 mb-4">
+                            {schoolInfo.logoUrl && (
+                                <img src={schoolInfo.logoUrl} alt="" style={{ width: 64, height: 64, objectFit: 'contain' }} />
+                            )}
+                            <div className="flex-grow-1 text-center">
+                                <h2 className="text-uppercase fw-bold mb-1">{schoolInfo.schoolName}</h2>
+                                <div className="text-muted fw-semibold">EMPLOYEE PAYSLIP</div>
+                            </div>
+                        </header>
+
+                        <div className="d-flex align-items-center gap-4 mb-4">
+                            {printingRecord.profilePhoto ? (
+                                <img src={printingRecord.profilePhoto} alt={`${printingRecord.record.staffName} profile`}
+                                     className="rounded border" style={{ width: 92, height: 92, objectFit: 'cover' }} />
+                            ) : (
+                                <div className="rounded-circle border d-flex align-items-center justify-content-center fw-bold fs-3"
+                                     style={{ width: 92, height: 92, flex: '0 0 92px' }}>
+                                    {initials}
+                                </div>
+                            )}
+                            <div className="flex-grow-1">
+                                <h3 className="fw-bold mb-1">{printingRecord.record.staffName}</h3>
+                                <div className="text-muted">{printingRecord.record.position}</div>
+                                <div className="mt-2"><strong>Pay period:</strong> {slipPeriodLabel}</div>
+                            </div>
+                            <div className="text-end">
+                                <div className="small text-muted">PAYMENT STATUS</div>
+                                <div className="fw-bold">{printingRecord.record.status}</div>
+                            </div>
+                        </div>
+
+                        <table className="table table-bordered align-middle mb-4">
+                            <thead className="table-light">
+                                <tr><th>Salary breakdown</th><th className="text-end">Amount (GHS)</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr><td>Basic salary</td><td className="text-end">{money.format(Number(printingRecord.record.basicSalary))}</td></tr>
+                                <tr><td>Allowances</td><td className="text-end">{money.format(Number(printingRecord.record.allowances))}</td></tr>
+                                <tr className="fw-semibold"><td>Gross pay</td><td className="text-end">{money.format(grossPay)}</td></tr>
+                                <tr><td>Deductions</td><td className="text-end">-{money.format(Number(printingRecord.record.deductions))}</td></tr>
+                                <tr className="fw-bold table-light">
+                                    <td>NET PAY</td>
+                                    <td className="text-end">{money.format(Number(printingRecord.record.netPay))}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        {printingRecord.record.note && (
+                            <div className="border rounded p-3 mb-4">
+                                <strong>Note:</strong> {printingRecord.record.note}
+                            </div>
+                        )}
+                        <div className="mb-5">
+                            <strong>Payment details:</strong>{' '}
+                            {printingRecord.record.status === 'PAID'
+                                ? `${printingRecord.record.paymentMethod || 'Payment recorded'} on ${printingRecord.record.paymentDate}`
+                                : 'Payment is pending.'}
+                        </div>
+                        <footer className="d-flex justify-content-between gap-5 pt-4 mt-5">
+                            <div className="border-top pt-2 flex-fill text-center">Employee signature</div>
+                            <div className="border-top pt-2 flex-fill text-center">Authorized by</div>
+                        </footer>
+                    </div>
+                </section>
+            )}
         </div>
     );
 };

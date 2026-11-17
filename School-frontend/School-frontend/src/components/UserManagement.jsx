@@ -238,14 +238,17 @@ const UserManagement = () => {
                                         className="form-select bg-light border-0 py-2 gold-border-focus"
                                         value={editForm.role}
                                         onChange={event => setEditForm(current => ({ ...current, role: event.target.value }))}
-                                        disabled={editingUser.username === sessionStorage.getItem('userName')}
+                                        disabled={editingUser.username === sessionStorage.getItem('userName') || editingUser.role === 'STUDENT'}
                                     >
                                         <option value="TEACHER">Teacher / Faculty</option>
                                         <option value="BURSAR">Bursar / Accounts</option>
                                         <option value="ADMIN">System Administrator</option>
+                                        {editingUser.role === 'STUDENT' && <option value="STUDENT">Student learner</option>}
                                     </select>
-                                    {editingUser.username === sessionStorage.getItem('userName') && (
-                                        <div className="form-text">Your own role cannot be changed here.</div>
+                                    {(editingUser.username === sessionStorage.getItem('userName') || editingUser.role === 'STUDENT') && (
+                                        <div className="form-text">{editingUser.role === 'STUDENT'
+                                            ? 'Student accounts remain linked to the student record.'
+                                            : 'Your own role cannot be changed here.'}</div>
                                     )}
                                 </div>
                             </div>

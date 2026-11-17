@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "users")
 @Data
-@ToString(exclude = "teacher") 
+@ToString(exclude = { "teacher", "student" })
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -41,6 +41,11 @@ public class User {
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonIgnore 
     private Teacher teacher;
+
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "student_id", unique = true)
+    @JsonIgnore
+    private Student student;
 
     public String getRoleName() {
         // Return the actual role name, or default to "USER" if null
