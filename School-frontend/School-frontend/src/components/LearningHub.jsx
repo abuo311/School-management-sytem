@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import API from '../services/api';
 import LessonContentEditor, { sanitizeLessonContent } from './LessonContentEditor';
+import LessonImageGallery from './LessonImageGallery';
 import '../styles/LearningHub.css';
 
 const emptyCourse = { title: '', description: '', className: '', subjectId: '', published: false };
@@ -61,6 +62,7 @@ const LearningHub = () => {
     const [lessonForm, setLessonForm] = useState(emptyLesson);
     const [editingLesson, setEditingLesson] = useState(null);
     const [showLessonForm, setShowLessonForm] = useState(false);
+    const [selectedImages, setSelectedImages] = useState([]);
     const [accountForm, setAccountForm] = useState({ studentId: '', username: '', password: '' });
     const [busy, setBusy] = useState(false);
     const [loading, setLoading] = useState(true);
@@ -74,9 +76,13 @@ const LearningHub = () => {
 
     const loadCourses = async () => {
         const response = await API.get('/lms/courses');
-        setCourses(response.data || []);
+        const loadedCourses = response.data || [];
+        setCourses(loadedCourses);
         setSelectedCourse(current => current
-            ? (response.data || []).find(course => course.id === current.id) || null
+            ? loadedCourses.find(course => course.id === current.id) || null
+            : null);
+        setEditingLesson(current => current
+            ? loadedCourses.flatMap(course => course.lessons || []).find(lesson => lesson.id === current.id) || current
             : null);
     };
 
@@ -183,6 +189,16 @@ const LearningHub = () => {
     const handleLessonSubmit = async (event) => {
         event.preventDefault();
         if (!selectedCourse) return;
+        const supportedImageTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+        const invalidImage = selectedImages.find(file =>
+            !supportedImageTypes.includes(file.type) || file.size > 3 * 1024 * 1024
+        );
+        if (invalidImage) {
+            setError(!supportedImageTypes.includes(invalidImage.type)
+                ? 'Choose a JPEG, PNG, GIF or WebP image.'
+                : `${invalidImage.name} is too large. Lesson images are limited to 3 MiB each.`);
+            return;
+        }
         setBusy(true);
         setError('');
         try {
@@ -196,13 +212,36 @@ const LearningHub = () => {
                 setBusy(false);
                 return;
             }
+            let response;
             if (editingLesson) {
-                await API.put(`/lms/lessons/${editingLesson.id}`, request);
+                response = await API.put(`/lms/lessons/${editingLesson.id}`, request);
             } else {
-                await API.post(`/lms/courses/${selectedCourse.id}/lessons`, request);
+                response = await API.post(`/lms/courses/${selectedCourse.id}/lessons`, request);
+            }
+            const savedLesson = response.data;
+            setEditingLesson(savedLesson);
+            for (let index = 0; index < selectedImages.length; index += 1) {
+                const data = new FormData();
+                data.append('file', selectedImages[index]);
+                try {
+                    await API.post(`/lms/lessons/${savedLesson.id}/images`, data, {
+                        headers: { 'Content-Type': 'multipart/form-data' }
+                    });
+                } catch (uploadError) {
+                    setSelectedImages(current => current.slice(index));
+                    try {
+                        await loadCourses();
+                    } catch (refreshError) {
+                        setError(`Lesson saved, but an image upload failed and the lesson list could not be refreshed. ${getErrorMessage(uploadError, 'Upload failed.')}`);
+                        return;
+                    }
+                    setError(`Lesson saved, but an image upload failed. Edit the lesson to retry the remaining images. ${getErrorMessage(uploadError, 'Upload failed.')}`);
+                    return;
+                }
             }
             await loadCourses();
             setLessonForm(emptyLesson);
+            setSelectedImages([]);
             setEditingLesson(null);
             setShowLessonForm(false);
             setNotice(editingLesson ? 'Lesson updated.' : 'Lesson added.');
@@ -222,8 +261,20 @@ const LearningHub = () => {
             resourceUrl: lesson.resourceUrl || '',
             position: lesson.position
         } : { ...emptyLesson, position: (selectedCourse?.lessons?.length || 0) + 1 });
+        setSelectedImages([]);
         setShowLessonForm(true);
         setError('');
+    };
+
+    const handleDeleteLessonImage = async (lessonId, image) => {
+        setError('');
+        try {
+            await API.delete(`/lms/lessons/${lessonId}/images/${image.id}`);
+            await loadCourses();
+            setNotice('Lesson image deleted.');
+        } catch (requestError) {
+            setError(getErrorMessage(requestError, 'Could not delete this lesson image.'));
+        }
     };
 
     const handleDeleteLesson = async (lesson) => {
@@ -524,6 +575,28 @@ const LearningHub = () => {
                                     <LessonContentEditor
                                         value={lessonForm.content}
                                         onChange={content => setLessonForm(current => ({ ...current, content }))} />
+                                    {editingLesson && (
+                                        <LessonImageGallery lessonId={editingLesson.id} images={editingLesson.images}
+                                            onDelete={handleDeleteLessonImage} />
+                                    )}
+                                    <div className="mb-3">
+                                        <label className="form-label" htmlFor="lesson-images">Lesson images</label>
+                                        <input id="lesson-images" className="form-control" type="file" multiple
+                                            accept="image/jpeg,image/png,image/gif,image/webp"
+                                            onChange={event => setSelectedImages(Array.from(event.target.files || []))} />
+                                        <small className="form-text text-muted">
+                                            Upload JPEG, PNG, GIF or WebP images, up to 3 MiB each. Images appear in the lesson for students.
+                                        </small>
+                                        {selectedImages.length > 0 && (
+                                            <ul className="small mt-2 mb-0">
+                                                {selectedImages.map(file => (
+                                                    <li key={`${file.name}-${file.lastModified}`}>
+                                                        {file.name} ({(file.size / (1024 * 1024)).toFixed(2)} MiB)
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        )}
+                                    </div>
                                     <div className="row g-2">
                                         <div className="col-md-8">
                                             <label className="form-label" htmlFor="lesson-video">Video URL (YouTube, Vimeo, or direct video)</label>
@@ -593,6 +666,7 @@ const LearningHub = () => {
                                             <div className="learning-lesson-content"
                                                 dangerouslySetInnerHTML={{ __html: sanitizeLessonContent(selectedLesson.content) }} />
                                         )}
+                                        <LessonImageGallery lessonId={selectedLesson.id} images={selectedLesson.images} />
                                         {renderLessonMedia(selectedLesson)}
                                         {selectedLesson.resourceUrl && (
                                             <a className="btn btn-outline-primary mt-3" href={selectedLesson.resourceUrl} target="_blank" rel="noreferrer">

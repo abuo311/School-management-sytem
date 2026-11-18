@@ -3,11 +3,13 @@ package com.school.services;
 import com.school.dto.LmsCourseDto;
 import com.school.dto.LmsCourseRequest;
 import com.school.dto.LmsLessonDto;
+import com.school.dto.LmsLessonImageDto;
 import com.school.dto.LmsLessonRequest;
 import com.school.dto.LmsStudentAccountRequest;
 import com.school.dto.LmsStudentDto;
 import com.school.entities.LmsCourse;
 import com.school.entities.LmsLesson;
+import com.school.entities.LmsLessonImage;
 import com.school.entities.LmsProgress;
 import com.school.entities.Role;
 import com.school.entities.SchoolClass;
@@ -16,6 +18,7 @@ import com.school.entities.Subject;
 import com.school.entities.User;
 import com.school.repositories.ClassRepository;
 import com.school.repositories.LmsCourseRepository;
+import com.school.repositories.LmsLessonImageRepository;
 import com.school.repositories.LmsLessonRepository;
 import com.school.repositories.LmsProgressRepository;
 import com.school.repositories.StudentRepository;
@@ -24,18 +27,24 @@ import com.school.repositories.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
 public class LmsService {
 
+    private static final long IMAGE_MAX_BYTES = 3L * 1024 * 1024;
     private final LmsCourseRepository courseRepository;
     private final LmsLessonRepository lessonRepository;
+    private final LmsLessonImageRepository lessonImageRepository;
     private final LmsProgressRepository progressRepository;
     private final StudentRepository studentRepository;
     private final SubjectRepository subjectRepository;
@@ -44,11 +53,13 @@ public class LmsService {
     private final PasswordEncoder passwordEncoder;
 
     public LmsService(LmsCourseRepository courseRepository, LmsLessonRepository lessonRepository,
+            LmsLessonImageRepository lessonImageRepository,
             LmsProgressRepository progressRepository, StudentRepository studentRepository,
             SubjectRepository subjectRepository, ClassRepository classRepository, UserRepository userRepository,
             PasswordEncoder passwordEncoder) {
         this.courseRepository = courseRepository;
         this.lessonRepository = lessonRepository;
+        this.lessonImageRepository = lessonImageRepository;
         this.progressRepository = progressRepository;
         this.studentRepository = studentRepository;
         this.subjectRepository = subjectRepository;
@@ -114,6 +125,7 @@ public class LmsService {
         LmsCourse course = findCourse(courseId);
         requireCanManage(course, user);
         progressRepository.deleteByLessonCourseId(courseId);
+        lessonImageRepository.deleteByLessonCourseId(courseId);
         lessonRepository.deleteByCourseId(courseId);
         courseRepository.delete(course);
     }
@@ -152,7 +164,49 @@ public class LmsService {
                 .orElseThrow(() -> new IllegalArgumentException("Lesson was not found."));
         requireCanManage(lesson.getCourse(), user);
         progressRepository.deleteByLessonId(lessonId);
+        lessonImageRepository.deleteByLessonId(lessonId);
         lessonRepository.delete(lesson);
+    }
+
+    @Transactional
+    public LmsLessonImageDto uploadLessonImage(Long lessonId, String username, MultipartFile file)
+            throws IOException {
+        User user = findUser(username);
+        LmsLesson lesson = findLesson(lessonId);
+        requireCanManage(lesson.getCourse(), user);
+        String contentType = validateLessonImage(file);
+        String fileName = safeImageFileName(file.getOriginalFilename());
+        byte[] fileData = file.getBytes();
+        if (!hasValidImageSignature(fileData, contentType)) {
+            throw new IllegalArgumentException("The selected file does not match its declared image type.");
+        }
+
+        LmsLessonImage image = new LmsLessonImage();
+        image.setLesson(lesson);
+        image.setFileName(fileName);
+        image.setContentType(contentType);
+        image.setFileSize(file.getSize());
+        image.setFileData(fileData);
+        return toLessonImageDto(lessonImageRepository.save(image));
+    }
+
+    @Transactional(readOnly = true)
+    public LmsLessonImage getLessonImage(Long lessonId, Long imageId, String username) {
+        User user = findUser(username);
+        LmsLesson lesson = findLesson(lessonId);
+        requireCourseAccess(lesson.getCourse(), user);
+        return lessonImageRepository.findByIdAndLessonId(imageId, lessonId)
+                .orElseThrow(() -> new IllegalArgumentException("Lesson image was not found."));
+    }
+
+    @Transactional
+    public void deleteLessonImage(Long lessonId, Long imageId, String username) {
+        User user = findUser(username);
+        LmsLesson lesson = findLesson(lessonId);
+        requireCanManage(lesson.getCourse(), user);
+        LmsLessonImage image = lessonImageRepository.findByIdAndLessonId(imageId, lessonId)
+                .orElseThrow(() -> new IllegalArgumentException("Lesson image was not found."));
+        lessonImageRepository.delete(image);
     }
 
     @Transactional
@@ -259,6 +313,78 @@ public class LmsService {
         }
     }
 
+    private String validateLessonImage(MultipartFile file) {
+        if (file == null || file.isEmpty()) {
+            throw new IllegalArgumentException("Choose a non-empty image file.");
+        }
+        String name = file.getOriginalFilename() == null
+                ? ""
+                : file.getOriginalFilename().toLowerCase(Locale.ROOT);
+        String contentType = file.getContentType() == null
+                ? ""
+                : file.getContentType().toLowerCase(Locale.ROOT);
+        boolean supported = (name.matches(".*\\.(jpg|jpeg)$") && "image/jpeg".equals(contentType))
+                || (name.endsWith(".png") && "image/png".equals(contentType))
+                || (name.endsWith(".gif") && "image/gif".equals(contentType))
+                || (name.endsWith(".webp") && "image/webp".equals(contentType));
+        if (!supported) {
+            throw new IllegalArgumentException("Only JPEG, PNG, GIF or WebP images are allowed.");
+        }
+        if (file.getSize() > IMAGE_MAX_BYTES) {
+            throw new IllegalArgumentException("Images must be 3 MiB or smaller.");
+        }
+        return contentType;
+    }
+
+    private boolean hasValidImageSignature(byte[] data, String contentType) {
+        return switch (contentType) {
+            case "image/jpeg" -> startsWith(data, 0xFF, 0xD8, 0xFF);
+            case "image/png" -> startsWith(data, 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A);
+            case "image/gif" -> startsWith(data, "GIF87a".getBytes(StandardCharsets.US_ASCII))
+                    || startsWith(data, "GIF89a".getBytes(StandardCharsets.US_ASCII));
+            case "image/webp" -> startsWith(data, "RIFF".getBytes(StandardCharsets.US_ASCII))
+                    && containsAt(data, "WEBP".getBytes(StandardCharsets.US_ASCII), 8);
+            default -> false;
+        };
+    }
+
+    private boolean startsWith(byte[] data, int... signature) {
+        if (data.length < signature.length) {
+            return false;
+        }
+        for (int index = 0; index < signature.length; index++) {
+            if ((data[index] & 0xFF) != signature[index]) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private boolean startsWith(byte[] data, byte[] signature) {
+        return containsAt(data, signature, 0);
+    }
+
+    private boolean containsAt(byte[] data, byte[] signature, int offset) {
+        if (data.length < offset + signature.length) {
+            return false;
+        }
+        for (int index = 0; index < signature.length; index++) {
+            if (data[offset + index] != signature[index]) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private String safeImageFileName(String originalFilename) {
+        String fileName = originalFilename == null ? "" : originalFilename.replace('\\', '/');
+        fileName = fileName.substring(fileName.lastIndexOf('/') + 1).trim();
+        if (fileName.isEmpty() || fileName.length() > 255) {
+            throw new IllegalArgumentException("The image file name must be between 1 and 255 characters.");
+        }
+        return fileName;
+    }
+
     private void applyCourse(LmsCourse course, LmsCourseRequest request) {
         course.setTitle(request.title().trim());
         course.setDescription(blankToNull(request.description()));
@@ -308,7 +434,13 @@ public class LmsService {
 
     private LmsLessonDto toLessonDto(LmsLesson lesson, boolean completed) {
         return new LmsLessonDto(lesson.getId(), lesson.getTitle(), lesson.getContent(), lesson.getVideoUrl(),
-                lesson.getResourceUrl(), lesson.getPosition(), completed);
+                lesson.getResourceUrl(), lesson.getPosition(), completed,
+                lessonImageRepository.findByLessonIdOrderByIdAsc(lesson.getId()).stream()
+                        .map(this::toLessonImageDto).toList());
+    }
+
+    private LmsLessonImageDto toLessonImageDto(LmsLessonImage image) {
+        return new LmsLessonImageDto(image.getId(), image.getFileName(), image.getContentType(), image.getFileSize());
     }
 
     private LmsStudentDto toStudentDto(Student student) {
@@ -361,5 +493,10 @@ public class LmsService {
     private LmsCourse findCourse(Long courseId) {
         return courseRepository.findById(courseId)
                 .orElseThrow(() -> new IllegalArgumentException("Course was not found."));
+    }
+
+    private LmsLesson findLesson(Long lessonId) {
+        return lessonRepository.findById(lessonId)
+                .orElseThrow(() -> new IllegalArgumentException("Lesson was not found."));
     }
 }

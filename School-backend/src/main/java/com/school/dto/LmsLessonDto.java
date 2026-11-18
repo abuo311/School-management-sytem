@@ -1,5 +1,7 @@
 package com.school.dto;
 
+import java.util.List;
+
 public record LmsLessonDto(
         Long id,
         String title,
@@ -7,5 +9,6 @@ public record LmsLessonDto(
         String videoUrl,
         String resourceUrl,
         int position,
-        boolean completed) {
+        boolean completed,
+        List<LmsLessonImageDto> images) {
 }

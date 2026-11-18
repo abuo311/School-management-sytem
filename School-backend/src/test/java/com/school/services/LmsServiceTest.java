@@ -4,11 +4,14 @@ import com.school.dto.LmsCourseRequest;
 import com.school.dto.LmsLessonRequest;
 import com.school.dto.LmsStudentAccountRequest;
 import com.school.entities.LmsCourse;
+import com.school.entities.LmsLesson;
+import com.school.entities.LmsLessonImage;
 import com.school.entities.Role;
 import com.school.entities.Student;
 import com.school.entities.User;
 import com.school.repositories.ClassRepository;
 import com.school.repositories.LmsCourseRepository;
+import com.school.repositories.LmsLessonImageRepository;
 import com.school.repositories.LmsLessonRepository;
 import com.school.repositories.LmsProgressRepository;
 import com.school.repositories.StudentRepository;
@@ -16,6 +19,7 @@ import com.school.repositories.SubjectRepository;
 import com.school.repositories.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.List;
@@ -33,6 +37,7 @@ class LmsServiceTest {
 
     private LmsCourseRepository courseRepository;
     private LmsLessonRepository lessonRepository;
+    private LmsLessonImageRepository lessonImageRepository;
     private LmsProgressRepository progressRepository;
     private StudentRepository studentRepository;
     private SubjectRepository subjectRepository;
@@ -45,14 +50,15 @@ class LmsServiceTest {
     void setUp() {
         courseRepository = mock(LmsCourseRepository.class);
         lessonRepository = mock(LmsLessonRepository.class);
+        lessonImageRepository = mock(LmsLessonImageRepository.class);
         progressRepository = mock(LmsProgressRepository.class);
         studentRepository = mock(StudentRepository.class);
         subjectRepository = mock(SubjectRepository.class);
         classRepository = mock(ClassRepository.class);
         userRepository = mock(UserRepository.class);
         passwordEncoder = mock(PasswordEncoder.class);
-        service = new LmsService(courseRepository, lessonRepository, progressRepository, studentRepository,
-                subjectRepository, classRepository, userRepository, passwordEncoder);
+        service = new LmsService(courseRepository, lessonRepository, lessonImageRepository, progressRepository,
+                studentRepository, subjectRepository, classRepository, userRepository, passwordEncoder);
     }
 
     @Test
@@ -110,6 +116,47 @@ class LmsServiceTest {
                 () -> service.addLesson(6L, "teacher",
                         new LmsLessonRequest("Unsafe video", "", "javascript:alert(1)", "", 1)));
         verify(lessonRepository, never()).save(any());
+    }
+
+    @Test
+    void rejectsLessonImageWithMismatchedFileSignature() {
+        User teacher = user("teacher", Role.TEACHER);
+        LmsCourse course = course(7L, "Primary 3", false, teacher);
+        LmsLesson lesson = new LmsLesson();
+        lesson.setId(8L);
+        lesson.setCourse(course);
+        when(userRepository.findByUsername("teacher")).thenReturn(Optional.of(teacher));
+        when(lessonRepository.findById(8L)).thenReturn(Optional.of(lesson));
+        MockMultipartFile file = new MockMultipartFile("file", "diagram.png", "image/png",
+                "not a png".getBytes());
+
+        assertThrows(IllegalArgumentException.class, () -> service.uploadLessonImage(8L, "teacher", file));
+        verify(lessonImageRepository, never()).save(any());
+    }
+
+    @Test
+    void uploadsLessonImageAfterCheckingItsSignature() throws Exception {
+        User teacher = user("teacher", Role.TEACHER);
+        LmsCourse course = course(9L, "Primary 3", false, teacher);
+        LmsLesson lesson = new LmsLesson();
+        lesson.setId(10L);
+        lesson.setCourse(course);
+        when(userRepository.findByUsername("teacher")).thenReturn(Optional.of(teacher));
+        when(lessonRepository.findById(10L)).thenReturn(Optional.of(lesson));
+        when(lessonImageRepository.save(any())).thenAnswer(invocation -> {
+            LmsLessonImage image = invocation.getArgument(0);
+            image.setId(11L);
+            return image;
+        });
+        byte[] pngSignature = {(byte) 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A};
+        MockMultipartFile file = new MockMultipartFile("file", "diagram.png", "image/png", pngSignature);
+
+        var image = service.uploadLessonImage(10L, "teacher", file);
+
+        assertEquals(11L, image.id());
+        assertEquals("diagram.png", image.fileName());
+        assertEquals("image/png", image.contentType());
+        verify(lessonImageRepository).save(any(LmsLessonImage.class));
     }
 
     @Test

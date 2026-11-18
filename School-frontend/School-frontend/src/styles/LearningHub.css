@@ -307,6 +307,39 @@
     text-align: center;
 }
 
+.lms-image-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 12rem), 1fr));
+    gap: 0.85rem;
+}
+
+.lms-image-card {
+    min-width: 0;
+    overflow: hidden;
+    margin: 0;
+    border: 1px solid #e2eaf2;
+    border-radius: 0.75rem;
+    background: #fff;
+}
+
+.lms-image-card img {
+    display: block;
+    width: 100%;
+    max-height: 20rem;
+    object-fit: contain;
+    background: #f5f8fb;
+}
+
+.lms-image-card figcaption {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding: 0.45rem 0.6rem;
+    color: #64748b;
+    font-size: 0.78rem;
+}
+
 .learning-lesson-view {
     min-height: 15rem;
     padding: 1.2rem;
