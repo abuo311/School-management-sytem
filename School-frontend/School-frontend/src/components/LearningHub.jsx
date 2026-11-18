@@ -14,7 +14,9 @@ const getErrorMessage = (error, fallback) =>
 
 const getRequestFailure = (label, error) => {
     const status = error.response?.status;
-    const detail = getErrorMessage(error, status ? 'Access denied or endpoint unavailable.' : 'Network request failed.');
+    const detail = status === 404
+        ? 'This endpoint is missing from the deployed backend. Deploy the updated school backend.'
+        : getErrorMessage(error, status ? 'Access denied.' : 'Network request failed.');
     return `${label}${status ? ` (HTTP ${status})` : ''}: ${detail}`;
 };
 
