@@ -4,6 +4,7 @@ import {
     Save, Trash2, Video, X
 } from 'lucide-react';
 import API from '../services/api';
+import LessonContentEditor, { sanitizeLessonContent } from './LessonContentEditor';
 import '../styles/LearningHub.css';
 
 const emptyCourse = { title: '', description: '', className: '', subjectId: '', published: false };
@@ -187,8 +188,14 @@ const LearningHub = () => {
         try {
             const request = {
                 ...lessonForm,
+                content: sanitizeLessonContent(lessonForm.content),
                 position: lessonForm.position ? Number(lessonForm.position) : null
             };
+            if (request.content.length > 50000) {
+                setError('Lesson content must be 50,000 characters or fewer.');
+                setBusy(false);
+                return;
+            }
             if (editingLesson) {
                 await API.put(`/lms/lessons/${editingLesson.id}`, request);
             } else {
@@ -514,10 +521,9 @@ const LearningHub = () => {
                                     <label className="form-label" htmlFor="lesson-title">Lesson title</label>
                                     <input id="lesson-title" className="form-control mb-3" maxLength="120" value={lessonForm.title}
                                         onChange={event => setLessonForm(current => ({ ...current, title: event.target.value }))} required />
-                                    <label className="form-label" htmlFor="lesson-content">Lesson content / notes</label>
-                                    <textarea id="lesson-content" className="form-control mb-3" rows="5" maxLength="50000"
+                                    <LessonContentEditor
                                         value={lessonForm.content}
-                                        onChange={event => setLessonForm(current => ({ ...current, content: event.target.value }))} />
+                                        onChange={content => setLessonForm(current => ({ ...current, content }))} />
                                     <div className="row g-2">
                                         <div className="col-md-8">
                                             <label className="form-label" htmlFor="lesson-video">Video URL (YouTube, Vimeo, or direct video)</label>
@@ -583,7 +589,10 @@ const LearningHub = () => {
                                             </div>
                                             {selectedLesson.completed && <span className="badge text-bg-success">Completed</span>}
                                         </div>
-                                        {selectedLesson.content && <div className="learning-lesson-content">{selectedLesson.content}</div>}
+                                        {selectedLesson.content && (
+                                            <div className="learning-lesson-content"
+                                                dangerouslySetInnerHTML={{ __html: sanitizeLessonContent(selectedLesson.content) }} />
+                                        )}
                                         {renderLessonMedia(selectedLesson)}
                                         {selectedLesson.resourceUrl && (
                                             <a className="btn btn-outline-primary mt-3" href={selectedLesson.resourceUrl} target="_blank" rel="noreferrer">
