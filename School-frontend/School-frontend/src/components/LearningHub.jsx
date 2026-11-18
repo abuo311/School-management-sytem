@@ -12,6 +12,12 @@ const emptyLesson = { title: '', content: '', videoUrl: '', resourceUrl: '', pos
 const getErrorMessage = (error, fallback) =>
     error.response?.data?.message || (typeof error.response?.data === 'string' ? error.response.data : fallback);
 
+const getRequestFailure = (label, error) => {
+    const status = error.response?.status;
+    const detail = getErrorMessage(error, status ? 'Access denied or endpoint unavailable.' : 'Network request failed.');
+    return `${label}${status ? ` (HTTP ${status})` : ''}: ${detail}`;
+};
+
 const getVideoEmbed = (videoUrl) => {
     if (!videoUrl) return null;
     try {
@@ -81,18 +87,38 @@ const LearningHub = () => {
             setLoading(true);
             setError('');
             try {
-                const requests = [API.get('/lms/courses')];
-                if (canManage) requests.push(API.get('/classes'), API.get('/subjects'));
-                if (isAdmin) requests.push(API.get('/lms/students/available'));
-                const responses = await Promise.all(requests);
-                setCourses(responses[0].data || []);
+                const requests = [{ key: 'courses', label: 'courses', request: API.get('/lms/courses') }];
                 if (canManage) {
-                    setClasses(responses[1].data || []);
-                    setSubjects(responses[2].data || []);
+                    requests.push(
+                        { key: 'classes', label: 'classes', request: API.get('/classes') },
+                        { key: 'subjects', label: 'subjects', request: API.get('/subjects') }
+                    );
                 }
-                if (isAdmin) setAvailableStudents(responses[3].data || []);
-            } catch (requestError) {
-                setError(getErrorMessage(requestError, 'Could not load learning content.'));
+                if (isAdmin) {
+                    requests.push({
+                        key: 'students',
+                        label: 'students eligible for learning accounts',
+                        request: API.get('/lms/students/available')
+                    });
+                }
+
+                const results = await Promise.allSettled(requests.map(item => item.request));
+                const failures = [];
+                results.forEach((result, index) => {
+                    const { key, label } = requests[index];
+                    if (result.status === 'rejected') {
+                        failures.push(getRequestFailure(label, result.reason));
+                        return;
+                    }
+                    const data = result.value.data || [];
+                    if (key === 'courses') setCourses(data);
+                    if (key === 'classes') setClasses(data);
+                    if (key === 'subjects') setSubjects(data);
+                    if (key === 'students') setAvailableStudents(data);
+                });
+                if (failures.length) {
+                    setError(`Some learning data could not be loaded. ${failures.join(' ')}`);
+                }
             } finally {
                 setLoading(false);
             }
