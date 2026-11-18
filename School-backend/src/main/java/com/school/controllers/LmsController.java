@@ -48,7 +48,7 @@ public class LmsController {
 
     @DeleteMapping("/courses/{courseId}")
     public ResponseEntity<?> deleteCourse(Authentication authentication, @PathVariable Long courseId) {
-        return respond(() -> {
+        return respondWithResponse(() -> {
             lmsService.deleteCourse(courseId, authentication.getName());
             return ResponseEntity.noContent().build();
         });
@@ -68,7 +68,7 @@ public class LmsController {
 
     @DeleteMapping("/lessons/{lessonId}")
     public ResponseEntity<?> deleteLesson(Authentication authentication, @PathVariable Long lessonId) {
-        return respond(() -> {
+        return respondWithResponse(() -> {
             lmsService.deleteLesson(lessonId, authentication.getName());
             return ResponseEntity.noContent().build();
         });
@@ -92,7 +92,7 @@ public class LmsController {
                 () -> lmsService.createStudentAccount(studentId, authentication.getName(), request));
     }
 
-    private ResponseEntity<?> respond(SupplierWithResponse<?> action) {
+    private ResponseEntity<?> respondWithResponse(SupplierWithResponse<?> action) {
         try {
             return action.get();
         } catch (IllegalArgumentException exception) {
