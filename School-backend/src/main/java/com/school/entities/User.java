@@ -30,6 +30,7 @@ public class User {
     private String profilePhoto;
 
     @Enumerated(EnumType.STRING)
+    @Column(length = 20)
     private Role role;
 
     private String status = "ACTIVE";
