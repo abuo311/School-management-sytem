@@ -6,6 +6,7 @@ import {
 import API from '../services/api';
 import LessonContentEditor, { sanitizeLessonContent } from './LessonContentEditor';
 import LessonImageGallery from './LessonImageGallery';
+import LearningExams from './LearningExams';
 import '../styles/LearningHub.css';
 
 const emptyCourse = { title: '', description: '', className: '', subjectId: '', published: false };
@@ -689,6 +690,7 @@ const LearningHub = () => {
                             </div>
                         )}
                     </div>
+                    <LearningExams course={selectedCourse} canManage={canManage} isStudent={isStudent} />
                 </section>
             )}
         </div>

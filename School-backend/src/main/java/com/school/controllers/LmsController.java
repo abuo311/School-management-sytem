@@ -2,12 +2,15 @@ package com.school.controllers;
 
 import com.school.dto.LmsCourseDto;
 import com.school.dto.LmsCourseRequest;
+import com.school.dto.LmsExamRequest;
+import com.school.dto.LmsExamSubmissionRequest;
 import com.school.dto.LmsLessonDto;
 import com.school.dto.LmsLessonRequest;
 import com.school.dto.LmsStudentAccountRequest;
 import com.school.dto.LmsStudentDto;
 import com.school.entities.LmsLessonImage;
 import com.school.services.LmsService;
+import com.school.services.LmsExamService;
 import org.springframework.http.CacheControl;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpStatus;
@@ -27,9 +30,11 @@ import java.util.Map;
 public class LmsController {
 
     private final LmsService lmsService;
+    private final LmsExamService lmsExamService;
 
-    public LmsController(LmsService lmsService) {
+    public LmsController(LmsService lmsService, LmsExamService lmsExamService) {
         this.lmsService = lmsService;
+        this.lmsExamService = lmsExamService;
     }
 
     @GetMapping("/courses")
@@ -123,6 +128,69 @@ public class LmsController {
     public ResponseEntity<?> completeLesson(Authentication authentication, @PathVariable Long courseId,
             @PathVariable Long lessonId) {
         return respond(() -> lmsService.completeLesson(courseId, lessonId, authentication.getName()));
+    }
+
+    @GetMapping("/courses/{courseId}/exams")
+    public ResponseEntity<?> listExams(Authentication authentication, @PathVariable Long courseId) {
+        return respond(() -> lmsExamService.listCourseExams(courseId, authentication.getName()));
+    }
+
+    @PostMapping("/courses/{courseId}/exams")
+    public ResponseEntity<?> createExam(Authentication authentication, @PathVariable Long courseId,
+            @RequestBody LmsExamRequest request) {
+        return respond(HttpStatus.CREATED,
+                () -> lmsExamService.createExam(courseId, authentication.getName(), request));
+    }
+
+    @GetMapping("/courses/{courseId}/exam-results")
+    public ResponseEntity<?> listExamResults(Authentication authentication, @PathVariable Long courseId) {
+        return respond(() -> lmsExamService.listCourseResults(courseId, authentication.getName()));
+    }
+
+    @GetMapping("/exams/{examId}/manage")
+    public ResponseEntity<?> getExamForEditing(Authentication authentication, @PathVariable Long examId) {
+        return respond(() -> lmsExamService.getExamForEditing(examId, authentication.getName()));
+    }
+
+    @PutMapping("/exams/{examId}")
+    public ResponseEntity<?> updateExam(Authentication authentication, @PathVariable Long examId,
+            @RequestBody LmsExamRequest request) {
+        return respond(() -> lmsExamService.updateExam(examId, authentication.getName(), request));
+    }
+
+    @DeleteMapping("/exams/{examId}")
+    public ResponseEntity<?> deleteExam(Authentication authentication, @PathVariable Long examId) {
+        return respondWithResponse(() -> {
+            lmsExamService.deleteExam(examId, authentication.getName());
+            return ResponseEntity.noContent().build();
+        });
+    }
+
+    @PostMapping("/exams/{examId}/attempts")
+    public ResponseEntity<?> startExamAttempt(Authentication authentication, @PathVariable Long examId) {
+        return respond(() -> lmsExamService.startAttempt(examId, authentication.getName()));
+    }
+
+    @PutMapping("/exams/{examId}/attempts/{attemptId}/answers")
+    public ResponseEntity<?> saveExamAnswers(Authentication authentication, @PathVariable Long examId,
+            @PathVariable Long attemptId, @RequestBody LmsExamSubmissionRequest request) {
+        return respondWithResponse(() -> {
+            lmsExamService.saveAttemptAnswers(examId, attemptId, authentication.getName(), request);
+            return ResponseEntity.noContent().build();
+        });
+    }
+
+    @PostMapping("/exams/{examId}/attempts/{attemptId}/submit")
+    public ResponseEntity<?> submitExamAttempt(Authentication authentication, @PathVariable Long examId,
+            @PathVariable Long attemptId, @RequestBody LmsExamSubmissionRequest request) {
+        return respond(() -> lmsExamService.submitAttempt(
+                examId, attemptId, authentication.getName(), request));
+    }
+
+    @GetMapping("/exams/{examId}/attempts/{attemptId}/report")
+    public ResponseEntity<?> getExamReport(Authentication authentication, @PathVariable Long examId,
+            @PathVariable Long attemptId) {
+        return respond(() -> lmsExamService.getReport(examId, attemptId, authentication.getName()));
     }
 
     @GetMapping("/students/available")

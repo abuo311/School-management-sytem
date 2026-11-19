@@ -367,6 +367,110 @@
     margin-bottom: 0;
 }
 
+.lms-exams-panel {
+    box-shadow: none;
+}
+
+.lms-exams-panel .learning-panel-heading h2 {
+    display: flex;
+    align-items: center;
+}
+
+.lms-exam-editor,
+.lms-active-exam {
+    padding: 1rem;
+    border: 1px solid #dfe7ef;
+    border-radius: 0.85rem;
+    background: #f8fafc;
+}
+
+.lms-exam-question-editor,
+.lms-exam-live-question {
+    padding: 1rem;
+    border: 1px solid #e1e8f0;
+    border-radius: 0.75rem;
+    background: #fff;
+}
+
+.lms-exam-question-editor .form-select {
+    width: auto;
+}
+
+.lms-points-input {
+    width: 5rem;
+}
+
+.lms-exam-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.85rem 1rem;
+    border: 1px solid #e2eaf2;
+    border-radius: 0.75rem;
+}
+
+.lms-exam-row small {
+    display: block;
+    margin-top: 0.25rem;
+}
+
+.lms-exam-live-question legend {
+    float: none;
+    width: auto;
+    margin-bottom: 0.75rem;
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+.lms-exam-live-question legend small {
+    color: #748197;
+    font-size: 0.78rem;
+    font-weight: 500;
+}
+
+.lms-exam-choice {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.6rem;
+    padding: 0.45rem 0.6rem;
+    border-radius: 0.45rem;
+}
+
+.lms-exam-choice:hover {
+    background: #f3f8fc;
+}
+
+.lms-exam-choice input {
+    margin-top: 0.25rem;
+}
+
+.lms-exam-report-card {
+    padding: 1.15rem;
+    border: 1px solid #dfe7ef;
+    border-radius: 0.85rem;
+    background: #fff;
+}
+
+.lms-exam-score {
+    display: grid;
+    min-width: 5.5rem;
+    min-height: 5.5rem;
+    place-content: center;
+    border-radius: 50%;
+    color: #fff;
+    background: #254a70;
+    font-size: 1.2rem;
+    font-weight: 800;
+    text-align: center;
+}
+
+.lms-exam-score small {
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
 .learning-video {
     overflow: hidden;
     border-radius: 0.75rem;
@@ -383,6 +487,30 @@
 
 .learning-video video {
     object-fit: contain;
+}
+
+@media print {
+    body.lms-exam-printing * {
+        visibility: hidden !important;
+    }
+
+    body.lms-exam-printing .lms-exam-report-card,
+    body.lms-exam-printing .lms-exam-report-card * {
+        visibility: visible !important;
+    }
+
+    body.lms-exam-printing .lms-exam-report-card {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        border: 0;
+        padding: 0;
+    }
+
+    body.lms-exam-printing .lms-report-actions {
+        display: none !important;
+    }
 }
 
 @media (max-width: 575.98px) {

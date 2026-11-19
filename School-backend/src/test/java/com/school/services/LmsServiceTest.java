@@ -57,7 +57,7 @@ class LmsServiceTest {
         classRepository = mock(ClassRepository.class);
         userRepository = mock(UserRepository.class);
         passwordEncoder = mock(PasswordEncoder.class);
-        service = new LmsService(courseRepository, lessonRepository, lessonImageRepository, progressRepository,
+        service = new LmsService(courseRepository, lessonRepository, lessonImageRepository, mock(LmsExamService.class), progressRepository,
                 studentRepository, subjectRepository, classRepository, userRepository, passwordEncoder);
     }
 

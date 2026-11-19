@@ -45,6 +45,7 @@ public class LmsService {
     private final LmsCourseRepository courseRepository;
     private final LmsLessonRepository lessonRepository;
     private final LmsLessonImageRepository lessonImageRepository;
+    private final LmsExamService lmsExamService;
     private final LmsProgressRepository progressRepository;
     private final StudentRepository studentRepository;
     private final SubjectRepository subjectRepository;
@@ -53,13 +54,14 @@ public class LmsService {
     private final PasswordEncoder passwordEncoder;
 
     public LmsService(LmsCourseRepository courseRepository, LmsLessonRepository lessonRepository,
-            LmsLessonImageRepository lessonImageRepository,
+            LmsLessonImageRepository lessonImageRepository, LmsExamService lmsExamService,
             LmsProgressRepository progressRepository, StudentRepository studentRepository,
             SubjectRepository subjectRepository, ClassRepository classRepository, UserRepository userRepository,
             PasswordEncoder passwordEncoder) {
         this.courseRepository = courseRepository;
         this.lessonRepository = lessonRepository;
         this.lessonImageRepository = lessonImageRepository;
+        this.lmsExamService = lmsExamService;
         this.progressRepository = progressRepository;
         this.studentRepository = studentRepository;
         this.subjectRepository = subjectRepository;
@@ -126,6 +128,7 @@ public class LmsService {
         requireCanManage(course, user);
         progressRepository.deleteByLessonCourseId(courseId);
         lessonImageRepository.deleteByLessonCourseId(courseId);
+        lmsExamService.deleteCourseExams(courseId);
         lessonRepository.deleteByCourseId(courseId);
         courseRepository.delete(course);
     }

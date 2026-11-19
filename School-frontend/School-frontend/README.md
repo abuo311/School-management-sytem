@@ -6,6 +6,8 @@ Administrators and teachers can open **Learning Hub** from the dashboard to crea
 
 Administrators can create student learning accounts from the Student learning accounts panel in Learning Hub. Each account is linked to an active student record; share the username and initial password with the student securely.
 
+Teachers can create course exams with automatically marked multiple-choice and true/false questions, set the number of attempts and an optional time limit, and publish exams to the course class. Students can complete exams, resume saved attempts, and view their marked reports. Reports can be printed or downloaded as PDFs; teachers can review submitted results from the course exam panel.
+
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
 Currently, two official plugins are available:
