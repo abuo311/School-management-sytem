@@ -26,8 +26,9 @@ API.interceptors.request.use((config) => {
     // Updated debugging logs for tracking
     console.log(`[API Request] Path: ${config.url} | Resolved BaseURL: ${baseURL}`);
     
-    // Allow unauthenticated GET requests to reach public settings
-    if (config.url.endsWith('/settings') && config.method?.toLowerCase() === 'get') {
+    // Allow public read-only endpoints without a login token.
+    if (config.method?.toLowerCase() === 'get' &&
+        (config.url.endsWith('/settings') || config.url.endsWith('/subscription/plans'))) {
         return config;
     }
 

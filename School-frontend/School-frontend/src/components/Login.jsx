@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import API from '../services/api';
 import {
     Lock, User, ShieldAlert, LogIn, GraduationCap,
-    Eye, EyeOff, Mail, Phone, HelpCircle, X
+    Eye, EyeOff, Mail, Phone, HelpCircle, X, CreditCard
 } from 'lucide-react';
 import '../styles/LoginMobile.css';
 
@@ -14,6 +14,10 @@ const Login = () => {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const [showSupport, setShowSupport] = useState(false);
+    const [showPlans, setShowPlans] = useState(false);
+    const [subscriptionPlans, setSubscriptionPlans] = useState([]);
+    const [plansError, setPlansError] = useState('');
+    const [selectedPlan, setSelectedPlan] = useState(null);
 
     // NEW: State for school settings and loading flag
     const [schoolInfo, setSchoolInfo] = useState({ name: '', logo: null });
@@ -43,6 +47,12 @@ const Login = () => {
         fetchSchoolSettings();
     }, []);
 
+    useEffect(() => {
+        API.get('/subscription/plans')
+            .then(response => setSubscriptionPlans(response.data))
+            .catch(() => setPlansError('Subscription plans are temporarily unavailable. Please try again later.'));
+    }, []);
+
     const handleLogin = async (e) => {
         e.preventDefault();
         setLoading(true);
@@ -58,7 +68,12 @@ const Login = () => {
                 if (res.data.fullName) sessionStorage.setItem('fullName', res.data.fullName);
                 if (res.data.profilePhoto) sessionStorage.setItem('profilePhoto', res.data.profilePhoto);
                 sessionStorage.setItem('isAuthenticated', 'true');
-                navigate('/dashboard', { replace: true });
+                navigate(
+                    selectedPlan
+                        ? `/subscription?plan=${encodeURIComponent(selectedPlan.code)}`
+                        : '/dashboard',
+                    { replace: true }
+                );
             }
         } catch (err) {
             setError("Invalid username or password.");
@@ -160,6 +175,22 @@ const Login = () => {
                             </button>
                         </form>
 
+                        <div className="mt-4">
+                            <button
+                                type="button"
+                                className="btn btn-outline-primary w-100 d-flex align-items-center justify-content-center gap-2"
+                                onClick={() => setShowPlans(true)}
+                            >
+                                <CreditCard size={18} />
+                                View plans and subscribe
+                            </button>
+                            {selectedPlan && (
+                                <p className="small text-primary text-center mt-2 mb-0">
+                                    Selected: {selectedPlan.name}. Sign in as an administrator to continue.
+                                </p>
+                            )}
+                        </div>
+
                         <div className="text-center mt-5 border-top pt-4">
                             <p className="text-muted fw-bold mb-1" style={{ fontSize: '0.65rem' }}>RESTRICTED ACCESS AREA</p>
                             <button
@@ -173,6 +204,66 @@ const Login = () => {
                     </div>
                 </div>
             </div>
+
+            {showPlans && (
+                <div
+                    className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center p-3"
+                    style={{ backgroundColor: 'rgba(0,0,0,0.75)', zIndex: 1050, overflowY: 'auto' }}
+                    role="dialog"
+                    aria-modal="true"
+                    aria-labelledby="subscription-plans-title"
+                >
+                    <section className="card border-0 rounded-4 shadow-lg p-4" style={{ maxWidth: 820, width: '100%', maxHeight: '90vh', overflowY: 'auto' }}>
+                        <div className="d-flex justify-content-between align-items-start mb-3">
+                            <div>
+                                <h2 id="subscription-plans-title" className="h4 fw-bold mb-1">Choose a subscription plan</h2>
+                                <p className="text-muted small mb-0">Start with a free one-month trial. Prices are in Ghana cedis.</p>
+                            </div>
+                            <button type="button" className="btn btn-link text-dark p-0" onClick={() => setShowPlans(false)} aria-label="Close subscription plans">
+                                <X size={22} />
+                            </button>
+                        </div>
+                        {plansError && <div className="alert alert-warning">{plansError}</div>}
+                        {!plansError && subscriptionPlans.length === 0 && (
+                            <div className="text-center text-muted py-4">
+                                <span className="spinner-border spinner-border-sm me-2" role="status" />
+                                Loading plans…
+                            </div>
+                        )}
+                        <div className="row g-3">
+                            {subscriptionPlans.map(plan => (
+                                <div className="col-md-6" key={plan.code}>
+                                    <article className="card h-100 border shadow-sm rounded-3 p-3">
+                                        <div className="d-flex justify-content-between gap-2">
+                                            <h3 className="h6 fw-bold mb-1">{plan.name}</h3>
+                                            <span className="badge text-bg-light border">
+                                                {plan.code.startsWith('PREMIUM') ? 'Premium' : 'Standard'}
+                                            </span>
+                                        </div>
+                                        <p className="text-muted small mb-2">{plan.duration} access</p>
+                                        <p className="h4 fw-bold mb-3">
+                                            GHS {Number(plan.amount).toLocaleString('en-GH')}
+                                        </p>
+                                        <button
+                                            type="button"
+                                            className={`btn btn-sm ${selectedPlan?.code === plan.code ? 'btn-primary' : 'btn-outline-primary'}`}
+                                            onClick={() => {
+                                                setSelectedPlan(plan);
+                                                setShowPlans(false);
+                                            }}
+                                        >
+                                            {selectedPlan?.code === plan.code ? 'Selected' : 'Select this plan'}
+                                        </button>
+                                    </article>
+                                </div>
+                            ))}
+                        </div>
+                        <p className="small text-muted mt-3 mb-0">
+                            After selecting a plan, sign in as your school administrator to continue to secure checkout.
+                        </p>
+                    </section>
+                </div>
+            )}
 
             {/* SUPPORT MODAL OVERLAY */}
             {showSupport && (

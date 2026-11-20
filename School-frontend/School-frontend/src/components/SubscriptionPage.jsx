@@ -75,6 +75,7 @@ const SubscriptionPage = () => {
         setStatus(statusResponse.data);
         setPlans(plansResponse.data);
     }, []);
+    const selectedPlanCode = searchParams.get('plan');
 
     useEffect(() => {
         let isCurrent = true;
@@ -201,6 +202,12 @@ const SubscriptionPage = () => {
                         <p className="text-muted mb-0">Pay securely with Paystack. Prices are in Ghana cedis.</p>
                     </div>
                 </div>
+                {selectedPlanCode && plans.some(plan => plan.code === selectedPlanCode) && (
+                    <div className="alert alert-primary">
+                        Plan selected from login: <strong>{plans.find(plan => plan.code === selectedPlanCode).name}</strong>.
+                        Enter a receipt email below to continue to checkout.
+                    </div>
+                )}
 
                 {!isAdmin && (
                     <div className="alert alert-warning">Only a school administrator can purchase or renew a subscription.</div>
@@ -224,7 +231,10 @@ const SubscriptionPage = () => {
                 <div className="row g-3">
                     {plans.map(plan => (
                         <div className="col-md-6" key={plan.code}>
-                            <article className="card h-100 border-0 shadow-sm rounded-4 p-4">
+                            <article
+                                className="card h-100 border-0 shadow-sm rounded-4 p-4"
+                                style={plan.code === selectedPlanCode ? { outline: '2px solid var(--bs-primary)' } : undefined}
+                            >
                                 <div className="d-flex justify-content-between align-items-start gap-2">
                                     <div>
                                         <h3 className="h5 fw-bold mb-1">{plan.name}</h3>
