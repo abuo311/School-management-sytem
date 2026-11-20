@@ -59,7 +59,7 @@ SERVER_PORT=8080
 
 3. Click "Deploy" to rebuild with environment variables
 
-For online fee and subscription payments, set `PAYSTACK_SECRET_KEY` to the secret key from your Paystack dashboard. Keep this key only in the backend environment; do not add it to the frontend. Set `PAYSTACK_CURRENCY=GHS` and configure the webhooks as `https://<your-backend-domain>/api/paystack/webhook` and `https://<your-backend-domain>/api/subscription/webhook`. Set `PAYSTACK_CALLBACK_URL` to the deployed fee management page and `PAYSTACK_SUBSCRIPTION_CALLBACK_URL` to `https://<your-frontend-domain>/subscription`.
+For online fee and subscription payments, set `PAYSTACK_SECRET_KEY` in the Render backend environment to the secret key from your Paystack dashboard. Keep this key only in the backend environment; do not add it to the frontend. Render is configured with `PAYSTACK_CURRENCY=GHS`, `PAYSTACK_CALLBACK_URL=https://school-management-sytem-seven.vercel.app/dashboard/fees`, and `PAYSTACK_SUBSCRIPTION_CALLBACK_URL=https://school-management-sytem-seven.vercel.app/dashboard/subscription`. In the Paystack dashboard, configure the subscription webhook URL as `https://school-management-sytem.onrender.com/api/subscription/webhook` (and the fee webhook as `https://school-management-sytem.onrender.com/api/paystack/webhook` if using fee webhooks).
 
 Each school database receives one free month beginning on first authenticated use. The available plans are Standard/Premium for four months (GHS 1,000/GHS 2,000) and Standard/Premium for one academic year (GHS 2,000/GHS 3,500); an academic year is currently treated as 12 months.
 
@@ -72,7 +72,7 @@ Once deployed:
 To test with Railway MySQL locally:
 1. Set `DB_URL`, `DB_USERNAME`, and `DB_PASSWORD` in `School-backend/.env` using your Railway MySQL public connection details.
 2. Set `PAYSTACK_SECRET_KEY` in `School-backend/.env` to your Paystack test secret key. Keep secret keys out of source control.
-3. Set `PAYSTACK_CURRENCY=GHS`, `PAYSTACK_CALLBACK_URL=http://localhost:5173/dashboard/fees`, and `PAYSTACK_SUBSCRIPTION_CALLBACK_URL=http://localhost:5173/subscription` in that file for local checkout. The backend loads `.env` automatically when started from `School-backend`.
+3. Set `PAYSTACK_CURRENCY=GHS`, `PAYSTACK_CALLBACK_URL=http://localhost:5173/dashboard/fees`, and `PAYSTACK_SUBSCRIPTION_CALLBACK_URL=http://localhost:5173/dashboard/subscription` in that file for local checkout. The backend loads `.env` automatically when started from `School-backend`.
 4. In one terminal, run `mvn spring-boot:run` from `School-backend`. In another, run `npm run dev` from `School-frontend/School-frontend`.
 5. To test subscription checkout, sign in as an administrator, open **Subscription**, choose a Standard or Premium plan, enter a receipt email, and complete Paystack checkout. Fee-payment checkout remains available to administrators and bursars.
 

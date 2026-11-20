@@ -206,6 +206,11 @@ const StudentDashboardRedirect = () => {
     return userRole === 'STUDENT' ? <Navigate to="/dashboard/learning" replace /> : <DashboardHome />;
 };
 
+const SubscriptionRouteRedirect = () => {
+    const location = useLocation();
+    return <Navigate to={{ pathname: '/dashboard/subscription', search: location.search }} replace />;
+};
+
 // --- MAIN APP COMPONENT ---
 function App() {
     return (
@@ -213,31 +218,34 @@ function App() {
             <PageTitleManager />
             <Routes>
                 <Route path="/login" element={<Login />} />
-                <Route path="/subscription" element={<ProtectedRoute><SubscriptionPage /></ProtectedRoute>} />
+                <Route path="/subscription" element={<SubscriptionRouteRedirect />} />
 
-                <Route path="/dashboard" element={<ProtectedRoute><SubscriptionGate><DashboardLayout /></SubscriptionGate></ProtectedRoute>}>
-                    <Route index element={<StudentDashboardRedirect />} />
-                    <Route path="learning" element={<ProtectedRoute allowedRoles={['ADMIN', 'TEACHER', 'STUDENT']}><LearningHub /></ProtectedRoute>} />
-                    <Route path="students" element={<ProtectedRoute allowedRoles={['ADMIN', 'TEACHER']}><StudentList /></ProtectedRoute>} />
-                    <Route path="attendance" element={<ProtectedRoute allowedRoles={['ADMIN', 'TEACHER']}><Attendance /></ProtectedRoute>} />
-                    <Route path="attendance-summary" element={<ProtectedRoute allowedRoles={['ADMIN', 'TEACHER']}><AttendanceSummary /></ProtectedRoute>} />
-                    <Route path="timetable" element={<ProtectedRoute allowedRoles={['ADMIN', 'TEACHER']}><Timetable /></ProtectedRoute>} />
-                    <Route path="lesson-notes" element={<ProtectedRoute allowedRoles={['ADMIN', 'TEACHER']}><LessonNotes /></ProtectedRoute>} />
-                    <Route path="staff-attendance" element={<ProtectedRoute allowedRoles={['ADMIN']}><StaffAttendance /></ProtectedRoute>} />
-                    <Route path="exams" element={<ProtectedRoute allowedRoles={['ADMIN', 'TEACHER']}><Exams /></ProtectedRoute>} />
-                    <Route path="reports" element={<ProtectedRoute allowedRoles={['ADMIN', 'TEACHER']}><ReportCard /></ProtectedRoute>} />
-                    <Route path="fees" element={<ProtectedRoute allowedRoles={['ADMIN', 'BURSAR']}><Fees /></ProtectedRoute>} />
-                    <Route path="debtors" element={<ProtectedRoute allowedRoles={['ADMIN', 'BURSAR']}><DebtorsList /></ProtectedRoute>} />
-                    <Route path="finance-summary" element={<ProtectedRoute allowedRoles={['ADMIN', 'BURSAR']}><FinanceSummary /></ProtectedRoute>} />
-                    <Route path="expenses" element={<ProtectedRoute allowedRoles={['ADMIN', 'BURSAR']}><Expenses /></ProtectedRoute>} />
-                    <Route path="canteen" element={<ProtectedRoute allowedRoles={['ADMIN', 'BURSAR']}><CanteenManagement /></ProtectedRoute>} />
-                    <Route path="payroll" element={<ProtectedRoute allowedRoles={['ADMIN', 'BURSAR']}><Payroll /></ProtectedRoute>} />
-                    <Route path="teachers" element={<ProtectedRoute allowedRoles={['ADMIN']}><TeacherList /></ProtectedRoute>} />
-                    <Route path="users" element={<ProtectedRoute allowedRoles={['ADMIN']}><UserManagement /></ProtectedRoute>} />
-                    <Route path="settings" element={<ProtectedRoute allowedRoles={['ADMIN']}><Settings /></ProtectedRoute>} />
-                    <Route path="classes" element={<ProtectedRoute allowedRoles={['ADMIN']}><ClassSettings /></ProtectedRoute>} />
-                    <Route path="promotion" element={<ProtectedRoute allowedRoles={['ADMIN']}><PromotionManager /></ProtectedRoute>} />
-                    <Route path="subjects" element={<ProtectedRoute allowedRoles={['ADMIN']}><SubjectManagement /></ProtectedRoute>} />
+                <Route path="/dashboard" element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
+                    <Route element={<SubscriptionGate />}>
+                        <Route index element={<StudentDashboardRedirect />} />
+                        <Route path="learning" element={<ProtectedRoute allowedRoles={['ADMIN', 'TEACHER', 'STUDENT']}><LearningHub /></ProtectedRoute>} />
+                        <Route path="students" element={<ProtectedRoute allowedRoles={['ADMIN', 'TEACHER']}><StudentList /></ProtectedRoute>} />
+                        <Route path="attendance" element={<ProtectedRoute allowedRoles={['ADMIN', 'TEACHER']}><Attendance /></ProtectedRoute>} />
+                        <Route path="attendance-summary" element={<ProtectedRoute allowedRoles={['ADMIN', 'TEACHER']}><AttendanceSummary /></ProtectedRoute>} />
+                        <Route path="timetable" element={<ProtectedRoute allowedRoles={['ADMIN', 'TEACHER']}><Timetable /></ProtectedRoute>} />
+                        <Route path="lesson-notes" element={<ProtectedRoute allowedRoles={['ADMIN', 'TEACHER']}><LessonNotes /></ProtectedRoute>} />
+                        <Route path="staff-attendance" element={<ProtectedRoute allowedRoles={['ADMIN']}><StaffAttendance /></ProtectedRoute>} />
+                        <Route path="exams" element={<ProtectedRoute allowedRoles={['ADMIN', 'TEACHER']}><Exams /></ProtectedRoute>} />
+                        <Route path="reports" element={<ProtectedRoute allowedRoles={['ADMIN', 'TEACHER']}><ReportCard /></ProtectedRoute>} />
+                        <Route path="fees" element={<ProtectedRoute allowedRoles={['ADMIN', 'BURSAR']}><Fees /></ProtectedRoute>} />
+                        <Route path="debtors" element={<ProtectedRoute allowedRoles={['ADMIN', 'BURSAR']}><DebtorsList /></ProtectedRoute>} />
+                        <Route path="finance-summary" element={<ProtectedRoute allowedRoles={['ADMIN', 'BURSAR']}><FinanceSummary /></ProtectedRoute>} />
+                        <Route path="expenses" element={<ProtectedRoute allowedRoles={['ADMIN', 'BURSAR']}><Expenses /></ProtectedRoute>} />
+                        <Route path="canteen" element={<ProtectedRoute allowedRoles={['ADMIN', 'BURSAR']}><CanteenManagement /></ProtectedRoute>} />
+                        <Route path="payroll" element={<ProtectedRoute allowedRoles={['ADMIN', 'BURSAR']}><Payroll /></ProtectedRoute>} />
+                        <Route path="teachers" element={<ProtectedRoute allowedRoles={['ADMIN']}><TeacherList /></ProtectedRoute>} />
+                        <Route path="users" element={<ProtectedRoute allowedRoles={['ADMIN']}><UserManagement /></ProtectedRoute>} />
+                        <Route path="settings" element={<ProtectedRoute allowedRoles={['ADMIN']}><Settings /></ProtectedRoute>} />
+                        <Route path="classes" element={<ProtectedRoute allowedRoles={['ADMIN']}><ClassSettings /></ProtectedRoute>} />
+                        <Route path="promotion" element={<ProtectedRoute allowedRoles={['ADMIN']}><PromotionManager /></ProtectedRoute>} />
+                        <Route path="subjects" element={<ProtectedRoute allowedRoles={['ADMIN']}><SubjectManagement /></ProtectedRoute>} />
+                    </Route>
+                    <Route path="subscription" element={<SubscriptionPage />} />
                 </Route>
 
                 <Route path="/" element={<Navigate to="/login" replace />} />

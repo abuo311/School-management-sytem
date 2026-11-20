@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Navigate, useNavigate, useSearchParams } from 'react-router-dom';
+import { Navigate, Outlet, useNavigate, useSearchParams } from 'react-router-dom';
 import { CheckCircle2, CreditCard, ShieldCheck } from 'lucide-react';
 import API from '../services/api';
 
@@ -44,9 +44,9 @@ export const SubscriptionGate = ({ children }) => {
         );
     }
     if (status.status !== 'ACTIVE' && status.status !== 'TRIALING') {
-        return <Navigate to="/subscription" replace />;
+        return <Navigate to="/dashboard/subscription" replace />;
     }
-    return children;
+    return children || <Outlet />;
 };
 
 const SubscriptionPage = () => {
@@ -111,7 +111,7 @@ const SubscriptionPage = () => {
             })
             .finally(() => {
                 setVerifying(false);
-                if (verified) navigate('/subscription', { replace: true });
+                if (verified) navigate('/dashboard/subscription', { replace: true });
             });
     }, [reference, verificationAttempt, loadSubscription, navigate]);
 

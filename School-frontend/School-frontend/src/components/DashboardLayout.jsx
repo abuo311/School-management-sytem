@@ -280,7 +280,7 @@ const DashboardLayout = () => {
                             <Link to="/dashboard/settings" className={`menu-item d-flex align-items-center gap-2 p-2 rounded text-decoration-none ${isActive('/dashboard/settings') ? 'active' : ''}`} onClick={closeMobileMenu}>
                                 <Settings size={20} /><span>Settings</span>
                             </Link>
-                            <Link to="/subscription" className={`menu-item d-flex align-items-center gap-2 p-2 rounded text-decoration-none ${location.pathname === '/subscription' ? 'active' : ''}`} onClick={closeMobileMenu}>
+                            <Link to="/dashboard/subscription" className={`menu-item d-flex align-items-center gap-2 p-2 rounded text-decoration-none ${isActive('/dashboard/subscription') ? 'active' : ''}`} onClick={closeMobileMenu}>
                                 <Wallet size={20} /><span>Subscription</span>
                             </Link>
                         </>

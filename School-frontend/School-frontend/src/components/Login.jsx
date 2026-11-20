@@ -70,7 +70,7 @@ const Login = () => {
                 sessionStorage.setItem('isAuthenticated', 'true');
                 navigate(
                     selectedPlan
-                        ? `/subscription?plan=${encodeURIComponent(selectedPlan.code)}`
+                        ? `/dashboard/subscription?plan=${encodeURIComponent(selectedPlan.code)}`
                         : '/dashboard',
                     { replace: true }
                 );
