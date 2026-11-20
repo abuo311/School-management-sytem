@@ -80,6 +80,19 @@ const AttendanceSummary = () => {
         day: 'numeric', month: 'long', year: 'numeric'
     });
 
+    const printAttendanceList = () => {
+        document.body.classList.add('attendance-summary-printing');
+        let cleanupTimer;
+        const clearPrintClass = () => {
+            document.body.classList.remove('attendance-summary-printing');
+            window.removeEventListener('afterprint', clearPrintClass);
+            window.clearTimeout(cleanupTimer);
+        };
+        window.addEventListener('afterprint', clearPrintClass, { once: true });
+        window.requestAnimationFrame(() => window.print());
+        cleanupTimer = window.setTimeout(clearPrintClass, 2000);
+    };
+
     if (isDetailView) {
         const statusLabel = STATUS_COLUMNS.find(column => column.key === selectedStatus)?.label || selectedStatus;
 
@@ -93,7 +106,7 @@ const AttendanceSummary = () => {
                         <h2 className="h4 fw-bold mb-1">{selectedClass} - {statusLabel} attendance</h2>
                         <p className="text-muted mb-0">{formattedDate} · {detailRecords.length} student{detailRecords.length === 1 ? '' : 's'}</p>
                     </div>
-                    <button type="button" className="btn btn-primary no-print" onClick={() => window.print()}>
+                    <button type="button" className="btn btn-primary no-print" onClick={printAttendanceList}>
                         <Printer size={16} className="me-2" />Print list
                     </button>
                 </div>
