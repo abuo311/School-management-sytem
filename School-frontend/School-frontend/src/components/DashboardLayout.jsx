@@ -243,6 +243,9 @@ const DashboardLayout = () => {
                             <Link to="/dashboard/finance-summary" className={`menu-item d-flex align-items-center gap-2 p-2 rounded text-decoration-none ${isActive('/dashboard/finance-summary') ? 'active' : ''}`} onClick={closeMobileMenu}>
                                 <BarChart3 size={20} /><span>Finance Summary</span>
                             </Link>
+                            <Link to="/dashboard/expenses" className={`menu-item d-flex align-items-center gap-2 p-2 rounded text-decoration-none ${isActive('/dashboard/expenses') ? 'active' : ''}`} onClick={closeMobileMenu}>
+                                <Banknote size={20} /><span>Expenses</span>
+                            </Link>
                             <Link to="/dashboard/canteen" className={`menu-item d-flex align-items-center gap-2 p-2 rounded text-decoration-none ${isActive('/dashboard/canteen') ? 'active' : ''}`} onClick={closeMobileMenu}>
                                 <Utensils size={20} /><span>Canteen Management</span>
                             </Link>

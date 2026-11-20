@@ -12,6 +12,10 @@ Teachers can create course exams with automatically marked multiple-choice and t
 
 The Photo check compares the stored profile photo with a webcam capture locally in the browser. A sufficiently strong one-to-one face match immediately saves the person as Present for the selected date. Webcam captures and face descriptors are not uploaded or stored. Automated matching requires a profile photo and a modern browser with camera access over HTTPS or localhost; it is not liveness-proof and should not replace manual attendance review when a match fails.
 
+## Expense tracking
+
+Administrators and bursars can record, edit, and remove school expenses from **Expenses** in the dashboard. The finance summary and dashboard show the all-time available balance, calculated as collected school and canteen fees minus recorded expenses and payroll marked as paid. Outstanding fee debt and unpaid payroll are not counted as available cash. Payroll is included automatically, so do not record it again as a manual expense.
+
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
 Currently, two official plugins are available:

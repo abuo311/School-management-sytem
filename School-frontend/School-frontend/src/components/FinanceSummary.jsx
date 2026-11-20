@@ -15,6 +15,9 @@ const FinanceSummary = () => {
     });
     const [trendData, setTrendData] = useState([]); // State for the chart
     const [loading, setLoading] = useState(true);
+    const [accountLoading, setAccountLoading] = useState(true);
+    const [accountSummary, setAccountSummary] = useState(null);
+    const [accountError, setAccountError] = useState('');
     const [schoolConfig, setSchoolConfig] = useState({
         schoolName: "EduManager School",
         address: "Main Campus, City"
@@ -34,6 +37,10 @@ const FinanceSummary = () => {
         fetchSchoolSettings();
     }, [selectedTerm]);
 
+    useEffect(() => {
+        fetchAccountSummary();
+    }, []);
+
     const fetchSchoolSettings = async () => {
         try {
             const res = await API.get('/settings');
@@ -51,6 +58,20 @@ const FinanceSummary = () => {
             console.error("Finance Error:", err);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const fetchAccountSummary = async () => {
+        setAccountLoading(true);
+        setAccountError('');
+        try {
+            const response = await API.get('/expenses/account-summary');
+            setAccountSummary(response.data);
+        } catch (requestError) {
+            console.error('Account balance load error:', requestError);
+            setAccountError(requestError.response?.data?.message || 'Unable to load the account balance.');
+        } finally {
+            setAccountLoading(false);
         }
     };
 
@@ -128,6 +149,24 @@ const FinanceSummary = () => {
                         <h2 className="fw-bold mb-0 currency-display text-danger">₵{stats.debt.toLocaleString()}</h2>
                     </div>
                 </div>
+            </div>
+
+            {accountError && <div className="alert alert-danger" role="alert">{accountError}</div>}
+            <div className="row g-4 mb-5 no-print">
+                {[
+                    { label: 'Recorded Expenses', value: accountSummary?.recordedExpenses },
+                    { label: 'Payroll Paid', value: accountSummary?.payrollPaid },
+                    { label: 'Available Account Balance · All Time', value: accountSummary?.availableBalance, emphasis: true }
+                ].map(item => (
+                    <div className="col-12 col-sm-6 col-xl-4" key={item.label}>
+                        <div className={`card shadow-sm rounded-4 p-4 h-100 ${item.emphasis ? 'bg-dark text-white' : 'bg-white'}`}>
+                            <label className="small fw-bold opacity-75 text-uppercase">{item.label}</label>
+                            <h2 className={`fw-bold mb-0 currency-display ${item.emphasis ? 'text-warning' : ''}`}>
+                                {accountLoading ? 'Loading…' : accountSummary ? `₵${Number(item.value || 0).toLocaleString()}` : '—'}
+                            </h2>
+                        </div>
+                    </div>
+                ))}
             </div>
 
             {/* --- TREND CHART SECTION --- */}
@@ -219,6 +258,10 @@ const FinanceSummary = () => {
                         <tr><td>Projected Revenue</td><td>{stats.expected.toLocaleString()}</td></tr>
                         <tr><td>Actual Collected</td><td>{stats.collected.toLocaleString()}</td></tr>
                         <tr><td>Total Arrears</td><td>{stats.debt.toLocaleString()}</td></tr>
+                        <tr><td>All-Time Fee and Canteen Income</td><td>{accountSummary ? Number(accountSummary.totalIncome).toLocaleString() : '—'}</td></tr>
+                        <tr><td>All-Time Recorded Expenses</td><td>{accountSummary ? Number(accountSummary.recordedExpenses).toLocaleString() : '—'}</td></tr>
+                        <tr><td>All-Time Payroll Paid</td><td>{accountSummary ? Number(accountSummary.payrollPaid).toLocaleString() : '—'}</td></tr>
+                        <tr><td>Available Account Balance</td><td>{accountSummary ? Number(accountSummary.availableBalance).toLocaleString() : '—'}</td></tr>
                     </tbody>
                 </table>
             </div>

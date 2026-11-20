@@ -14,6 +14,7 @@ import ReportCard from './components/ReportCard';
 import Fees from './components/Fees';
 import DebtorsList from './components/DebtorsList';
 import FinanceSummary from './components/FinanceSummary';
+import Expenses from './components/Expenses';
 import CanteenManagement from './components/CanteenManagement';
 import Payroll from './components/Payroll';
 import Settings from './components/Settings';
@@ -76,6 +77,7 @@ const PageTitleManager = () => {
 // --- DASHBOARD HOME COMPONENT ---
 const DashboardHome = () => {
     const [data, setData] = useState({ totalStudents: 0, totalTeachers: 0, totalCollected: 0, totalDebt: 0 });
+    const [availableBalance, setAvailableBalance] = useState(null);
     const [schoolName, setSchoolName] = useState('EDUMANAGER');
     const userRole = sessionStorage.getItem('userRole');
     const canViewFinance = userRole === 'ADMIN' || userRole === 'BURSAR';
@@ -110,6 +112,12 @@ const DashboardHome = () => {
             }
         };
         loadDashboard();
+
+        if (canViewFinance) {
+            API.get('/expenses/account-summary')
+                .then(response => setAvailableBalance(response.data.availableBalance))
+                .catch(err => console.error("Account Balance Load Error:", err));
+        }
     }, [canViewFinance]);
 
     const stats = [
@@ -117,7 +125,8 @@ const DashboardHome = () => {
         { label: 'Staff Count', value: data.totalTeachers, icon: <UserCog size={22}/>, bg: '#f8f9fa', border: darkColor },
         ...(canViewFinance ? [
             { label: 'Fees Collected', value: `₵${data.totalCollected.toLocaleString()}`, icon: <Wallet size={22}/>, bg: 'var(--theme-accent-soft)', border: goldColor },
-            { label: 'Outstanding', value: `₵${data.totalDebt.toLocaleString()}`, icon: <AlertTriangle size={22}/>, bg: '#fff5f5', border: '#e74a3b' }
+            { label: 'Outstanding', value: `₵${data.totalDebt.toLocaleString()}`, icon: <AlertTriangle size={22}/>, bg: '#fff5f5', border: '#e74a3b' },
+            { label: 'Available Balance · All Time', value: availableBalance === null ? '—' : `₵${Number(availableBalance).toLocaleString()}`, icon: <Wallet size={22}/>, bg: 'var(--theme-accent-soft)', border: goldColor }
         ] : [])
     ];
 
@@ -218,6 +227,7 @@ function App() {
                     <Route path="fees" element={<ProtectedRoute allowedRoles={['ADMIN', 'BURSAR']}><Fees /></ProtectedRoute>} />
                     <Route path="debtors" element={<ProtectedRoute allowedRoles={['ADMIN', 'BURSAR']}><DebtorsList /></ProtectedRoute>} />
                     <Route path="finance-summary" element={<ProtectedRoute allowedRoles={['ADMIN', 'BURSAR']}><FinanceSummary /></ProtectedRoute>} />
+                    <Route path="expenses" element={<ProtectedRoute allowedRoles={['ADMIN', 'BURSAR']}><Expenses /></ProtectedRoute>} />
                     <Route path="canteen" element={<ProtectedRoute allowedRoles={['ADMIN', 'BURSAR']}><CanteenManagement /></ProtectedRoute>} />
                     <Route path="payroll" element={<ProtectedRoute allowedRoles={['ADMIN', 'BURSAR']}><Payroll /></ProtectedRoute>} />
                     <Route path="teachers" element={<ProtectedRoute allowedRoles={['ADMIN']}><TeacherList /></ProtectedRoute>} />
