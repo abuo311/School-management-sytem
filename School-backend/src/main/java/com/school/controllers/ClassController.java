@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
+import java.util.Locale;
 
 @RestController
 @RequestMapping("/api/classes")
@@ -22,13 +23,15 @@ public class ClassController {
 
     @PostMapping
     public ResponseEntity<?> add(@RequestBody SchoolClass schoolClass) {
-        String name = schoolClass.getClassName().toUpperCase().trim();
+        String name = prepareClassIdentity(schoolClass);
+        if (name == null) {
+            return ResponseEntity.badRequest().body("{\"message\": \"Class name is required.\"}");
+        }
 
         if (classRepository.existsByClassName(name)) {
             return ResponseEntity.badRequest().body("{\"message\": \"This class already exists.\"}");
         }
 
-        schoolClass.setClassName(name);
         // formMasterName is automatically set by @RequestBody if it matches the entity
         // field
         return ResponseEntity.ok(classRepository.save(schoolClass));
@@ -37,7 +40,10 @@ public class ClassController {
     @PutMapping("/{id}")
     public ResponseEntity<?> update(@PathVariable Long id, @RequestBody SchoolClass classDetails) {
         return classRepository.findById(id).map(schoolClass -> {
-            String newName = classDetails.getClassName().toUpperCase().trim();
+            String newName = prepareClassIdentity(classDetails);
+            if (newName == null) {
+                return ResponseEntity.badRequest().body("{\"message\": \"Class name is required.\"}");
+            }
 
             // Check if the name is being changed to something that already exists elsewhere
             if (!schoolClass.getClassName().equals(newName) && classRepository.existsByClassName(newName)) {
@@ -47,6 +53,8 @@ public class ClassController {
 
             // Update fields
             schoolClass.setClassName(newName);
+            schoolClass.setGradeName(classDetails.getGradeName());
+            schoolClass.setDescription(classDetails.getDescription());
 
             // CRITICAL: Update the form master name here
             schoolClass.setFormMasterName(classDetails.getFormMasterName());
@@ -65,5 +73,30 @@ public class ClassController {
             return ResponseEntity.status(500)
                     .body("{\"message\": \"Could not delete class. It may be linked to students.\"}");
         }
+    }
+
+    private String prepareClassIdentity(SchoolClass schoolClass) {
+        if (schoolClass == null) {
+            return null;
+        }
+
+        String gradeName = schoolClass.getGradeName();
+        if (gradeName == null || gradeName.isBlank()) {
+            gradeName = schoolClass.getClassName();
+        }
+        if (gradeName == null || gradeName.isBlank()) {
+            return null;
+        }
+
+        gradeName = gradeName.trim().toUpperCase(Locale.ROOT);
+        String description = schoolClass.getDescription() == null ? "" : schoolClass.getDescription().trim();
+        String className = description.isEmpty()
+                ? gradeName
+                : gradeName + " " + description.toUpperCase(Locale.ROOT);
+
+        schoolClass.setGradeName(gradeName);
+        schoolClass.setDescription(description);
+        schoolClass.setClassName(className);
+        return className;
     }
 }

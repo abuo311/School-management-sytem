@@ -16,6 +16,10 @@ The Photo check compares the stored profile photo with a webcam capture locally 
 
 Administrators and bursars can record, edit, and remove school expenses from **Expenses** in the dashboard. The finance summary and dashboard show the all-time available balance, calculated as collected school and canteen fees minus recorded expenses and payroll marked as paid. Outstanding fee debt and unpaid payroll are not counted as available cash. Payroll is included automatically, so do not record it again as a manual expense.
 
+## Class sections
+
+Administrators can add a section or description when creating a class. The section becomes part of the class identity used for enrollment, attendance, and other class lists; for example, grade **Basic 1** with section **Gold** is stored as **BASIC 1 GOLD**, separately from **BASIC 1 DIAMOND**.
+
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
 Currently, two official plugins are available:

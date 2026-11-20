@@ -13,5 +13,11 @@ public class SchoolClass {
     @Column(unique = true, nullable = false)
     private String className; // e.g., "JHS 1A"
 
+    @Column(length = 120)
+    private String gradeName;
+
+    @Column(length = 120)
+    private String description;
+
     private String formMasterName; // This will match a name in your Settings list
 }

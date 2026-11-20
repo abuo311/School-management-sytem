@@ -6,6 +6,7 @@ const ClassSettings = () => {
     const [classes, setClasses] = useState([]);
     const [availableMasters, setAvailableMasters] = useState([]); 
     const [newClassName, setNewClassName] = useState('');
+    const [classDescription, setClassDescription] = useState('');
     const [selectedMaster, setSelectedMaster] = useState('');
     
     const [selectedClass, setSelectedClass] = useState(null);
@@ -44,7 +45,8 @@ const ClassSettings = () => {
         
         setActionLoading(true);
         const payload = { 
-            className: newClassName.toUpperCase().trim(), 
+            gradeName: newClassName.toUpperCase().trim(),
+            description: classDescription.trim(),
             formMasterName: selectedMaster 
         };
 
@@ -74,6 +76,7 @@ const ClassSettings = () => {
     const resetForm = () => {
         setSelectedClass(null);
         setNewClassName('');
+        setClassDescription('');
         setSelectedMaster('');
     };
 
@@ -88,7 +91,7 @@ const ClassSettings = () => {
             <header className="mb-4 d-flex justify-content-between align-items-center">
                 <div>
                     <h3 className="fw-bold m-0">Class Registry</h3>
-                    <p className="text-muted small mb-0">Manage classes and assign form masters</p>
+                    <p className="text-muted small mb-0">Manage classes, sections, and form masters</p>
                 </div>
                 <button className="btn btn-sm btn-outline-dark rounded-pill px-3" onClick={() => { fetchClasses(); fetchAvailableMasters(); }}>
                     <RefreshCw size={14} className={loading ? 'spin me-1' : 'me-1'} /> Sync Data
@@ -113,9 +116,18 @@ const ClassSettings = () => {
                         
                         <form onSubmit={handleAddOrUpdate}>
                             <div className="mb-3">
-                                <label className="small fw-bold text-muted mb-1">Class Name</label>
+                                <label className="small fw-bold text-muted mb-1">Grade / Class Name</label>
                                 <input className="form-control border-2 shadow-none" value={newClassName} 
-                                    onChange={e => setNewClassName(e.target.value)} placeholder="e.g. JHS 1A" />
+                                    onChange={e => setNewClassName(e.target.value)} placeholder="e.g. Basic 1" required />
+                            </div>
+
+                            <div className="mb-3">
+                                <label className="small fw-bold text-muted mb-1">Section / Description</label>
+                                <input className="form-control border-2 shadow-none" value={classDescription}
+                                    onChange={e => setClassDescription(e.target.value)} placeholder="e.g. Gold or Diamond" />
+                                <small className="text-muted mt-2 d-block px-1" style={{ fontSize: '0.75rem' }}>
+                                    The section is included in the class name used for student enrollment (for example, BASIC 1 GOLD).
+                                </small>
                             </div>
 
                             <div className="mb-4">
@@ -156,6 +168,7 @@ const ClassSettings = () => {
                                                     {c.className}
                                                 </div>
                                                 <div>
+                                                    {c.description && <div className="small fw-semibold">{c.description}</div>}
                                                     <div className="small text-muted d-flex align-items-center gap-1">
                                                         <UserCheck size={12} /> {c.formMasterName || 'Unassigned'}
                                                     </div>
@@ -173,7 +186,8 @@ const ClassSettings = () => {
                                                 <button className="btn btn-light btn-sm rounded-circle shadow-none" 
                                                     onClick={() => {
                                                         setSelectedClass(c);
-                                                        setNewClassName(c.className);
+                                                        setNewClassName(c.gradeName || c.className);
+                                                        setClassDescription(c.description || '');
                                                         setSelectedMaster(c.formMasterName || '');
                                                     }}><Edit3 size={15}/></button>
                                                 <button className="btn btn-light btn-sm rounded-circle text-danger shadow-none" 
