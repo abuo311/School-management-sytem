@@ -180,12 +180,13 @@ const DashboardLayout = () => {
 
                 <div className="sidebar-header p-4 d-flex justify-content-between align-items-center border-bottom border-secondary border-opacity-25">
                     <div className="d-flex align-items-center gap-2 overflow-hidden">
-                        <div className="flex-shrink-0 d-flex align-items-center justify-content-center bg-white rounded-circle"
-                             style={{ width: '35px', height: '35px', border: `1px solid ${goldColor}` }}>
+                        <div className="flex-shrink-0 d-flex align-items-center justify-content-center bg-white rounded-3 overflow-hidden"
+                             style={{ width: '48px', height: '48px', border: `1px solid ${goldColor}`, padding: '4px' }}>
                             {schoolInfo.logo ? (
-                                <img src={schoolInfo.logo} alt="L" style={{ width: '80%', height: '80%', objectFit: 'contain' }} />
+                                <img src={schoolInfo.logo} alt={`${schoolInfo.name || 'School'} logo`}
+                                     style={{ display: 'block', width: '100%', height: '100%', objectFit: 'contain' }} />
                             ) : (
-                                <BookOpen size={20} style={{ color: goldColor }} />
+                                <BookOpen size={24} style={{ color: goldColor }} />
                             )}
                         </div>
                         <h5 className="fw-black mb-0 text-white text-uppercase"

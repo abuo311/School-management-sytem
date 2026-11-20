@@ -89,9 +89,7 @@ const Settings = () => {
                 canvas.height = Math.max(1, Math.round(img.height * scaleSize));
                 const ctx = canvas.getContext('2d');
                 ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                const compressedBase64 = isSchoolLogo
-                    ? canvas.toDataURL('image/jpeg', 0.78)
-                    : canvas.toDataURL('image/png');
+                const compressedBase64 = canvas.toDataURL('image/png');
 
                 if (isFormMaster) {
                     setConfig(prev => {
@@ -177,10 +175,11 @@ const Settings = () => {
                         
                         <div className="row mb-4 align-items-center">
                             <div className="col-auto">
-                                <div className="border rounded-circle d-flex align-items-center justify-content-center bg-light shadow-sm" 
-                                     style={{ width: '100px', height: '100px', overflow: 'hidden' }}>
+                                <div className="border rounded-3 d-flex align-items-center justify-content-center bg-white shadow-sm p-2"
+                                     style={{ width: '140px', height: '100px', overflow: 'hidden' }}>
                                     {config.logoUrl ? (
-                                        <img src={config.logoUrl} alt="Logo" className="w-100 h-100 object-fit-cover" />
+                                        <img src={config.logoUrl} alt="Logo" className="w-100 h-100"
+                                             style={{ objectFit: 'contain' }} />
                                     ) : (
                                         <ImageIcon size={40} className="text-muted opacity-50" />
                                     )}
@@ -191,7 +190,7 @@ const Settings = () => {
                                 <input type="file" className="form-control form-control-sm border-0 bg-light" 
                                        style={{ maxWidth: '300px' }} accept="image/*"
                                        onChange={(e) => handleFileUpload(e, 'logoUrl')} />
-                                <span className="text-muted" style={{fontSize: '11px'}}>Best: Square PNG with transparent background</span>
+                                <span className="text-muted" style={{fontSize: '11px'}}>Any logo shape works; it will be scaled without cropping.</span>
                             </div>
                         </div>
 

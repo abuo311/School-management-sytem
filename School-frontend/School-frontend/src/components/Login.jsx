@@ -78,19 +78,17 @@ const Login = () => {
                         <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: `radial-gradient(circle at 0% 0%, color-mix(in srgb, ${goldColor} 7%, transparent) 0%, transparent 50%)` }}></div>
 
                         {/* Logo with Loading Spinner */}
-                        <div className={`mb-4 p-4 rounded-circle border border-2 shadow-lg d-flex align-items-center justify-content-center bg-white overflow-hidden transition-all ${isFetchingBranding ? 'opacity-50' : 'opacity-100'}`}
-                             style={{ borderColor: goldColor, width: '140px', height: '140px', transition: '0.4s ease' }}>
+                        <div className={`mb-4 p-3 rounded-4 border border-2 shadow-lg d-flex align-items-center justify-content-center bg-white overflow-hidden transition-all ${isFetchingBranding ? 'opacity-50' : 'opacity-100'}`}
+                             style={{ borderColor: goldColor, width: '180px', height: '136px', transition: '0.4s ease' }}>
                             {isFetchingBranding ? (
                                 <div className="spinner-border text-warning" style={{ width: '2rem', height: '2rem' }}></div>
                             ) : schoolInfo.logo ? (
                                 <img
                                     src={schoolInfo.logo}
-                                    alt="Logo"
-                                    width="128"
-                                    height="128"
+                                    alt={`${schoolInfo.name || 'School'} logo`}
                                     fetchPriority="high"
                                     decoding="async"
-                                    style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                                    style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }}
                                     onError={() => setSchoolInfo(previous => ({ ...previous, logo: null }))}
                                 />
                             ) : (
@@ -115,6 +113,8 @@ const Login = () => {
                                 src={schoolInfo.logo || '/school-logo-v1.jpg'}
                                 alt={`${schoolInfo.name || 'EDUMANAGER'} logo`}
                                 className="mobile-login-logo"
+                                fetchPriority="high"
+                                decoding="async"
                                 onError={(event) => {
                                     if (schoolInfo.logo) {
                                         setSchoolInfo(previous => ({ ...previous, logo: null }));
