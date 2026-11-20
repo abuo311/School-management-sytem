@@ -25,6 +25,7 @@ import AttendanceSummary from './components/AttendanceSummary';
 import SubjectManagement from './components/SubjectManagement';
 import LearningHub from './components/LearningHub';
 import API from './services/api';
+import SubscriptionPage, { SubscriptionGate } from './components/SubscriptionPage';
 
 import {
     Users, UserCog, Wallet,
@@ -212,8 +213,9 @@ function App() {
             <PageTitleManager />
             <Routes>
                 <Route path="/login" element={<Login />} />
+                <Route path="/subscription" element={<ProtectedRoute><SubscriptionPage /></ProtectedRoute>} />
 
-                <Route path="/dashboard" element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
+                <Route path="/dashboard" element={<ProtectedRoute><SubscriptionGate><DashboardLayout /></SubscriptionGate></ProtectedRoute>}>
                     <Route index element={<StudentDashboardRedirect />} />
                     <Route path="learning" element={<ProtectedRoute allowedRoles={['ADMIN', 'TEACHER', 'STUDENT']}><LearningHub /></ProtectedRoute>} />
                     <Route path="students" element={<ProtectedRoute allowedRoles={['ADMIN', 'TEACHER']}><StudentList /></ProtectedRoute>} />

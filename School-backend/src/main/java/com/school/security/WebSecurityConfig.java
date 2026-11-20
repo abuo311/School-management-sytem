@@ -29,11 +29,14 @@ public class WebSecurityConfig {
 
     private final UserDetailsServiceImpl userDetailsService;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final SubscriptionAccessFilter subscriptionAccessFilter;
 
     public WebSecurityConfig(UserDetailsServiceImpl userDetailsService,
-            JwtAuthenticationFilter jwtAuthenticationFilter) {
+            JwtAuthenticationFilter jwtAuthenticationFilter,
+            SubscriptionAccessFilter subscriptionAccessFilter) {
         this.userDetailsService = userDetailsService;
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+        this.subscriptionAccessFilter = subscriptionAccessFilter;
     }
 
     @Bean
@@ -66,6 +69,10 @@ public class WebSecurityConfig {
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/paystack/webhook").permitAll()
+                        .requestMatchers("/api/subscription/webhook").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/subscription/status", "/api/subscription/plans")
+                        .authenticated()
+                        .requestMatchers("/api/subscription/**").hasRole("ADMIN")
                         .requestMatchers("/api/paystack/status").hasAnyRole("ADMIN", "BURSAR")
                         .requestMatchers(HttpMethod.GET, "/api/settings", "/api/settings/branding").permitAll()
 
@@ -109,7 +116,8 @@ public class WebSecurityConfig {
                         .requestMatchers("/api/**").authenticated()
                         .anyRequest().permitAll())
                 .authenticationProvider(authenticationProvider())
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterAfter(subscriptionAccessFilter, JwtAuthenticationFilter.class);
 
         return http.build();
     }

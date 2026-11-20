@@ -26,3 +26,5 @@ services:
         value: GHS
       - key: PAYSTACK_CALLBACK_URL
         value: https://school-management-sytem-seven.vercel.app/dashboard/fees
+      - key: PAYSTACK_SUBSCRIPTION_CALLBACK_URL
+        value: https://school-management-sytem-seven.vercel.app/subscription

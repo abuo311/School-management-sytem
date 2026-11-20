@@ -59,7 +59,9 @@ SERVER_PORT=8080
 
 3. Click "Deploy" to rebuild with environment variables
 
-For online fee payments, also set `PAYSTACK_SECRET_KEY` to the secret key from your Paystack dashboard. Keep this key only in the backend environment; do not add it to the frontend. Set `PAYSTACK_CURRENCY` to `GHS` and configure the Paystack webhook URL as `https://<your-backend-domain>/api/paystack/webhook`. The return URL is configured with `PAYSTACK_CALLBACK_URL` and should point to the deployed fee management page.
+For online fee and subscription payments, set `PAYSTACK_SECRET_KEY` to the secret key from your Paystack dashboard. Keep this key only in the backend environment; do not add it to the frontend. Set `PAYSTACK_CURRENCY=GHS` and configure the webhooks as `https://<your-backend-domain>/api/paystack/webhook` and `https://<your-backend-domain>/api/subscription/webhook`. Set `PAYSTACK_CALLBACK_URL` to the deployed fee management page and `PAYSTACK_SUBSCRIPTION_CALLBACK_URL` to `https://<your-frontend-domain>/subscription`.
+
+Each school database receives one free month beginning on first authenticated use. The available plans are Standard/Premium for four months (GHS 1,000/GHS 2,000) and Standard/Premium for one academic year (GHS 2,000/GHS 3,500); an academic year is currently treated as 12 months.
 
 ### 7. Test Your Application
 Once deployed:
@@ -70,9 +72,9 @@ Once deployed:
 To test with Railway MySQL locally:
 1. Set `DB_URL`, `DB_USERNAME`, and `DB_PASSWORD` in `School-backend/.env` using your Railway MySQL public connection details.
 2. Set `PAYSTACK_SECRET_KEY` in `School-backend/.env` to your Paystack test secret key. Keep secret keys out of source control.
-3. Set `PAYSTACK_CURRENCY=GHS` and `PAYSTACK_CALLBACK_URL=http://localhost:5173/dashboard/fees` in that file for local checkout. The backend loads `.env` automatically when started from `School-backend`.
+3. Set `PAYSTACK_CURRENCY=GHS`, `PAYSTACK_CALLBACK_URL=http://localhost:5173/dashboard/fees`, and `PAYSTACK_SUBSCRIPTION_CALLBACK_URL=http://localhost:5173/subscription` in that file for local checkout. The backend loads `.env` automatically when started from `School-backend`.
 4. In one terminal, run `mvn spring-boot:run` from `School-backend`. In another, run `npm run dev` from `School-frontend/School-frontend`.
-5. Sign in as an administrator or bursar, issue fees if needed, and select a learner with a valid parent/guardian email or Ghana mobile number to test **Pay Online with Paystack**. Phone-only checkout uses a generated placeholder email because Paystack requires an email; email receipts will not reach that guardian. The hosted checkout flow uses the secret key server-side and does not require the public key in the frontend.
+5. To test subscription checkout, sign in as an administrator, open **Subscription**, choose a Standard or Premium plan, enter a receipt email, and complete Paystack checkout. Fee-payment checkout remains available to administrators and bursars.
 
 ## Notes
 - Free tier services sleep after 15 minutes inactivity
