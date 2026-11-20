@@ -12,6 +12,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/attendance")
@@ -41,9 +42,34 @@ public class AttendanceController {
 
     @PostMapping("/bulk")
     public List<Attendance> saveBulk(@RequestBody List<Attendance> list) {
+        list.forEach(this::useExistingRecordId);
         List<Attendance> saved = attendanceRepository.saveAll(list);
         attendanceNotificationService.notifyParents(saved);
         return saved;
+    }
+
+    @PostMapping("/verified")
+    public ResponseEntity<?> saveVerifiedAttendance(@RequestBody Attendance request) {
+        if (request == null || request.getStudent() == null || request.getStudent().getId() == null
+                || request.getAttendanceDate() == null) {
+            return ResponseEntity.badRequest().body("Student and attendance date are required.");
+        }
+
+        Long studentId = request.getStudent().getId();
+        LocalDate attendanceDate = request.getAttendanceDate();
+        Attendance record = attendanceRepository.findFirstByStudentIdAndAttendanceDate(studentId, attendanceDate)
+                .orElseGet(Attendance::new);
+        boolean notifyParent = !"PRESENT".equalsIgnoreCase(record.getStatus());
+        record.setStudent(request.getStudent());
+        record.setAttendanceDate(attendanceDate);
+        record.setStatus("PRESENT");
+        record.setReason("");
+
+        Attendance saved = attendanceRepository.save(record);
+        if (notifyParent) {
+            attendanceNotificationService.notifyParents(List.of(saved));
+        }
+        return ResponseEntity.ok(saved);
     }
 
     @DeleteMapping("/clear-all")
@@ -66,5 +92,15 @@ public class AttendanceController {
         stats.put("present", present);
         stats.put("absent", absent);
         return ResponseEntity.ok(stats);
+    }
+
+    private void useExistingRecordId(Attendance incoming) {
+        if (incoming.getId() != null || incoming.getStudent() == null || incoming.getStudent().getId() == null
+                || incoming.getAttendanceDate() == null) {
+            return;
+        }
+        Optional<Attendance> existing = attendanceRepository.findFirstByStudentIdAndAttendanceDate(
+                incoming.getStudent().getId(), incoming.getAttendanceDate());
+        existing.ifPresent(record -> incoming.setId(record.getId()));
     }
 }

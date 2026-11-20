@@ -8,6 +8,10 @@ Administrators can create student learning accounts from the Student learning ac
 
 Teachers can create course exams with automatically marked multiple-choice and true/false questions, set the number of attempts and an optional time limit, and publish exams to the course class. Students can complete exams, resume saved attempts, and view their marked reports. Reports can be printed or downloaded as PDFs; teachers can review submitted results from the course exam panel.
 
+## Attendance photo verification
+
+The Photo check compares the stored profile photo with a webcam capture locally in the browser. A sufficiently strong one-to-one face match immediately saves the person as Present for the selected date. Webcam captures and face descriptors are not uploaded or stored. Automated matching requires a profile photo and a modern browser with camera access over HTTPS or localhost; it is not liveness-proof and should not replace manual attendance review when a match fails.
+
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
 Currently, two official plugins are available:

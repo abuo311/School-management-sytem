@@ -10,6 +10,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface AttendanceRepository extends JpaRepository<Attendance, Long> {
@@ -17,6 +18,9 @@ public interface AttendanceRepository extends JpaRepository<Attendance, Long> {
     // Using a custom query ensures the database compares ONLY the date part
     @Query("SELECT a FROM Attendance a WHERE a.attendanceDate = :date")
     List<Attendance> findByAttendanceDate(@Param("date") LocalDate date);
+
+    Optional<Attendance> findFirstByStudentIdAndAttendanceDate(Long studentId, LocalDate attendanceDate);
+
     @Transactional
     @Modifying
     @Query("DELETE FROM Attendance")

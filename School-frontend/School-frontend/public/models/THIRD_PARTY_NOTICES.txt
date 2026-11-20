@@ -1,0 +1,12 @@
+Face verification model attributions
+
+The @vladmandic/human library and its bundled model assets are distributed under their respective upstream licenses. The library license is included in HUMAN-LICENSE.txt.
+
+Bundled models:
+- BlazeFace face detector and FaceMesh geometry model: MediaPipe, Google AI Edge.
+- FaceRes face description model: HSE FaceRec TensorFlow.
+
+The upstream model documentation identifies these model sources as Apache License 2.0. A copy is included in Apache-2.0.txt. Model source and usage details:
+- https://github.com/vladmandic/human/wiki/Models
+- https://github.com/google-ai-edge/mediapipe
+- https://github.com/av-savchenko/HSE_FaceRec_tf

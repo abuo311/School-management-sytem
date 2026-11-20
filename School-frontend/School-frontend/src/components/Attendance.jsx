@@ -172,6 +172,27 @@ const Attendance = () => {
         }
     };
 
+    const markVerifiedStudentPresent = async () => {
+        if (!verificationTarget) return;
+        const student = verificationTarget;
+        setSubmitting(true);
+        try {
+            await API.post('/attendance/verified', {
+                student: { id: student.id },
+                attendanceDate: selectedDate
+            });
+            setAttendanceMap(current => ({ ...current, [student.id]: 'PRESENT' }));
+            setAttendanceReasons(current => ({ ...current, [student.id]: '' }));
+            setVerifiedStudents(current => ({ ...current, [student.id]: true }));
+            setSuccessMessage(`${student.name} matched and was marked present for ${selectedDate}.`);
+            const toastElement = document.getElementById('successToast');
+            if (toastElement) new bootstrap.Toast(toastElement).show();
+            setVerificationTarget(null);
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
     const generatePDF = () => {
         const doc = new jsPDF();
         const dateStr = new Date(selectedDate).toLocaleDateString('en-GB', {
@@ -267,10 +288,7 @@ const Attendance = () => {
             {verificationTarget && (
                 <WebcamVerification
                     person={verificationTarget}
-                    onCapture={() => {
-                        setVerifiedStudents(current => ({ ...current, [verificationTarget.id]: true }));
-                        setVerificationTarget(null);
-                    }}
+                    onCapture={markVerifiedStudentPresent}
                     onClose={() => setVerificationTarget(null)}
                 />
             )}

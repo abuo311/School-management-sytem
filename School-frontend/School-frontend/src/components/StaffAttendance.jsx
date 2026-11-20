@@ -118,6 +118,31 @@ const StaffAttendance = () => {
         }
     };
 
+    const markVerifiedStaffPresent = async () => {
+        if (!verificationTarget) return;
+        const staffMember = verificationTarget;
+        setSaving(true);
+        setError('');
+        setSuccess('');
+        try {
+            const response = await API.put(`/staff-attendance/date/${date}`, [{
+                userId: staffMember.userId,
+                nonTeachingStaffId: staffMember.nonTeachingStaffId,
+                status: 'PRESENT',
+                reason: ''
+            }]);
+            setRecords(response.data || []);
+            setVerifiedStaff(current => ({ ...current, [staffMember.key]: true }));
+            setSuccess(`${staffMember.name} matched and was marked present for ${date}.`);
+            setVerificationTarget(null);
+        } catch (requestError) {
+            setError(requestError.response?.data?.message || 'Unable to save verified staff attendance.');
+            throw requestError;
+        } finally {
+            setSaving(false);
+        }
+    };
+
     const exportReport = () => {
         if (!records.length) {
             setError('There are no staff accounts to include in the report.');
@@ -183,10 +208,7 @@ const StaffAttendance = () => {
             {verificationTarget && (
                 <WebcamVerification
                     person={verificationTarget}
-                    onCapture={() => {
-                        setVerifiedStaff(current => ({ ...current, [verificationTarget.key]: true }));
-                        setVerificationTarget(null);
-                    }}
+                    onCapture={markVerifiedStaffPresent}
                     onClose={() => setVerificationTarget(null)}
                 />
             )}
@@ -245,6 +267,8 @@ const StaffAttendance = () => {
                                                         onClick={() => setVerificationTarget({
                                                             key: recordKey(record),
                                                             name: record.fullName,
+                                                            userId: record.userId,
+                                                            nonTeachingStaffId: record.nonTeachingStaffId,
                                                             profilePhoto: record.profilePhoto
                                                         })}>
                                                     <Camera size={15} className="me-1" />{verifiedStaff[recordKey(record)] ? 'Checked' : 'Verify'}
