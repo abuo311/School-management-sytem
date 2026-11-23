@@ -359,7 +359,8 @@ const Attendance = () => {
 
             {/* Table */}
             <div className="card border-0 shadow-sm rounded-4 overflow-hidden">
-                <table className="table table-hover align-middle mb-0">
+                <div className="table-responsive">
+                <table className="table table-hover align-middle mb-0" style={{ minWidth: '760px' }}>
                     <thead className="bg-dark text-warning small">
                         <tr>
                             <th className="px-4 py-3">Student</th>
@@ -417,6 +418,7 @@ const Attendance = () => {
                         )}
                     </tbody>
                 </table>
+                </div>
             </div>
         </div>
     );
