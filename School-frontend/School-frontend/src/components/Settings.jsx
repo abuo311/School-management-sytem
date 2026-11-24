@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import API from '../services/api';
-import { Save, Building2, UserCheck, Signature, Plus, Trash2, Image as ImageIcon, Calendar, MessageSquare, MapPin } from 'lucide-react';
+import { Save, Building2, UserCheck, Signature, Plus, Trash2, Image as ImageIcon, Calendar, MessageSquare, MapPin, AlertTriangle, RotateCcw } from 'lucide-react';
 
 const Settings = () => {
     const [config, setConfig] = useState({
@@ -30,6 +30,9 @@ const Settings = () => {
     const [activeMasterIndex, setActiveMasterIndex] = useState(0);
     const [activeRemarkIndex, setActiveRemarkIndex] = useState(0);
     const [loading, setLoading] = useState(false);
+    const [showResetModal, setShowResetModal] = useState(false);
+    const [resetConfirmation, setResetConfirmation] = useState('');
+    const [resetting, setResetting] = useState(false);
 
     const goldColor = 'var(--theme-accent, #1d4ed8)';
     const blackColor = '#1a1a1a';
@@ -152,6 +155,30 @@ const Settings = () => {
         } finally { setLoading(false); }
     };
 
+    const handleResetSystem = async () => {
+        if (resetConfirmation.trim().toUpperCase() !== 'RESET') return;
+
+        setResetting(true);
+        try {
+            const response = await API.post('/settings/reset-system', { confirmation: 'RESET' });
+            if (response.data?.settings) {
+                setConfig(previous => ({
+                    ...previous,
+                    ...response.data.settings,
+                    formMasters: response.data.settings.formMasters?.length ? response.data.settings.formMasters : [{ name: '', signature: '' }],
+                    staffRemarks: response.data.settings.staffRemarks?.length ? response.data.settings.staffRemarks : [{ staffName: '', remarks: '' }]
+                }));
+            }
+            setShowResetModal(false);
+            setResetConfirmation('');
+            alert(response.data?.message || 'System data reset successfully.');
+        } catch (err) {
+            alert(err.response?.data?.message || err.response?.data || 'Failed to reset system data.');
+        } finally {
+            setResetting(false);
+        }
+    };
+
     return (
         <div className="container-fluid py-4 text-start bg-light min-vh-100">
             <header className="mb-4 d-flex justify-content-between align-items-center">
@@ -159,10 +186,16 @@ const Settings = () => {
                     <h3 className="fw-bold" style={{ color: blackColor }}>General Settings</h3>
                     <p className="text-muted small">Update school identity, academic cycles, and report templates</p>
                 </div>
-                <button onClick={handleSave} className="btn px-4 py-2 fw-bold shadow-sm"
-                        style={{ backgroundColor: blackColor, color: goldColor }} disabled={loading}>
-                    {loading ? 'Saving...' : <><Save size={18} className="me-2"/> Save Changes</>}
-                </button>
+                <div className="d-flex gap-2">
+                    <button type="button" onClick={() => setShowResetModal(true)}
+                            className="btn btn-outline-danger px-3 py-2 fw-bold shadow-sm" disabled={resetting}>
+                        <RotateCcw size={18} className="me-2"/> Reset System
+                    </button>
+                    <button onClick={handleSave} className="btn px-4 py-2 fw-bold shadow-sm"
+                            style={{ backgroundColor: blackColor, color: goldColor }} disabled={loading}>
+                        {loading ? 'Saving...' : <><Save size={18} className="me-2"/> Save Changes</>}
+                    </button>
+                </div>
             </header>
 
             <form onSubmit={handleSave} className="row g-4">
@@ -487,6 +520,54 @@ const Settings = () => {
                     </div>
                 </div>
             </form>
+
+            {showResetModal && (
+                <div className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center px-3"
+                     style={{ backgroundColor: 'rgba(0, 0, 0, 0.55)', zIndex: 1055 }}>
+                    <div className="card border-0 shadow-lg rounded-4" style={{ maxWidth: '520px', width: '100%' }}>
+                        <div className="card-body p-4">
+                            <div className="d-flex align-items-start gap-3 mb-3">
+                                <div className="rounded-circle bg-danger-subtle text-danger p-3">
+                                    <AlertTriangle size={24} />
+                                </div>
+                                <div>
+                                    <h5 className="fw-bold text-danger mb-1">Reset the entire system?</h5>
+                                    <p className="text-muted small mb-0">
+                                        This permanently deletes students, staff records, attendance, fees, exams, payroll,
+                                        expenses, classes, lessons, and other operational data. School settings will be restored
+                                        to defaults. Administrator accounts and subscription status will be preserved.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <label className="small fw-bold mb-2">Type <span className="text-danger">RESET</span> to confirm</label>
+                            <input
+                                type="text"
+                                className="form-control mb-3"
+                                value={resetConfirmation}
+                                onChange={event => setResetConfirmation(event.target.value)}
+                                placeholder="RESET"
+                                autoComplete="off"
+                            />
+
+                            <div className="d-flex justify-content-end gap-2">
+                                <button type="button" className="btn btn-light" disabled={resetting}
+                                        onClick={() => {
+                                            setShowResetModal(false);
+                                            setResetConfirmation('');
+                                        }}>
+                                    Cancel
+                                </button>
+                                <button type="button" className="btn btn-danger fw-bold"
+                                        disabled={resetting || resetConfirmation.trim().toUpperCase() !== 'RESET'}
+                                        onClick={handleResetSystem}>
+                                    {resetting ? 'Resetting...' : 'Permanently Reset System'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

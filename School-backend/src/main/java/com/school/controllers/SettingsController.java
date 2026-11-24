@@ -4,8 +4,12 @@ import com.school.entities.SchoolSettings;
 import com.school.dto.SchoolBrandingDto;
 import com.school.repositories.SettingsRepository;
 import com.school.services.SchoolBrandingService;
+import com.school.services.SystemResetService;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import java.util.Optional;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/settings")
@@ -14,10 +18,13 @@ public class SettingsController {
 
     private final SettingsRepository settingsRepository;
     private final SchoolBrandingService schoolBrandingService;
+    private final SystemResetService systemResetService;
 
-    public SettingsController(SettingsRepository settingsRepository, SchoolBrandingService schoolBrandingService) {
+    public SettingsController(SettingsRepository settingsRepository, SchoolBrandingService schoolBrandingService,
+                              SystemResetService systemResetService) {
         this.settingsRepository = settingsRepository;
         this.schoolBrandingService = schoolBrandingService;
+        this.systemResetService = systemResetService;
     }
 
     @GetMapping
@@ -84,5 +91,19 @@ public class SettingsController {
             settings.setId(1L);
             return settingsRepository.save(settings);
         }
+    }
+
+    @PostMapping("/reset-system")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> resetSystem(@RequestBody(required = false) Map<String, String> confirmation) {
+        if (confirmation == null || !"RESET".equalsIgnoreCase(confirmation.get("confirmation"))) {
+            return ResponseEntity.badRequest().body("Type RESET to confirm the system reset.");
+        }
+
+        systemResetService.resetAllSystemData();
+        return ResponseEntity.ok(Map.of(
+                "message", "System data was reset and school settings restored to defaults.",
+                "settings", systemResetService.getDefaultSettings()
+        ));
     }
 }
