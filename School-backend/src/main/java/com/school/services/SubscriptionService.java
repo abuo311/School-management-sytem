@@ -12,6 +12,7 @@ import com.school.entities.SubscriptionStatus;
 import com.school.repositories.SubscriptionPaymentRepository;
 import com.school.repositories.SubscriptionRepository;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -36,6 +37,7 @@ public class SubscriptionService {
     private final SubscriptionRepository subscriptionRepository;
     private final SubscriptionPaymentRepository paymentRepository;
     private final ObjectMapper objectMapper;
+    private final SubscriptionPlanService subscriptionPlanService;
     private final String secretKey;
     private final String callbackUrl;
 
@@ -46,10 +48,23 @@ public class SubscriptionService {
             ObjectMapper objectMapper,
             @Value("${paystack.secret-key:}") String secretKey,
             @Value("${paystack.subscription-callback-url:http://localhost:5173/subscription}") String callbackUrl) {
+        this(restClientBuilder, subscriptionRepository, paymentRepository, objectMapper, null, secretKey, callbackUrl);
+    }
+
+    @Autowired
+    public SubscriptionService(
+            RestClient.Builder restClientBuilder,
+            SubscriptionRepository subscriptionRepository,
+            SubscriptionPaymentRepository paymentRepository,
+            ObjectMapper objectMapper,
+            SubscriptionPlanService subscriptionPlanService,
+            @Value("${paystack.secret-key:}") String secretKey,
+            @Value("${paystack.subscription-callback-url:http://localhost:5173/subscription}") String callbackUrl) {
         this.restClient = restClientBuilder.baseUrl("https://api.paystack.co").build();
         this.subscriptionRepository = subscriptionRepository;
         this.paymentRepository = paymentRepository;
         this.objectMapper = objectMapper;
+        this.subscriptionPlanService = subscriptionPlanService;
         this.secretKey = secretKey;
         this.callbackUrl = callbackUrl;
     }
@@ -62,7 +77,7 @@ public class SubscriptionService {
 
         String planName = subscription.getPlanCode() == null
                 ? null
-                : SubscriptionPlan.fromCode(subscription.getPlanCode()).planName();
+                : getPlanName(subscription.getPlanCode());
         LocalDateTime accessEndsAt = subscription.getStatus() == SubscriptionStatus.TRIALING
                 ? subscription.getTrialEndsAt()
                 : subscription.getCurrentPeriodEndsAt();
@@ -77,7 +92,9 @@ public class SubscriptionService {
 
     @Transactional(readOnly = true)
     public List<SubscriptionPlanDto> getPlans() {
-        return SubscriptionPlan.allPlans();
+        return subscriptionPlanService == null
+                ? SubscriptionPlan.allPlans()
+                : subscriptionPlanService.getPlans();
     }
 
     @Transactional
@@ -92,7 +109,7 @@ public class SubscriptionService {
     @Transactional
     public SubscriptionCheckoutResponse initializeCheckout(String planCode, String email) {
         requireConfigured();
-        SubscriptionPlan plan = SubscriptionPlan.fromCode(planCode);
+        SubscriptionPlanDto plan = getPlan(planCode);
         if (email == null || !email.trim().matches("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$")) {
             throw new IllegalArgumentException("Enter a valid email address for the Paystack receipt.");
         }
@@ -187,11 +204,11 @@ public class SubscriptionService {
                         && subscription.getCurrentPeriodEndsAt().isAfter(now)
                 ? subscription.getCurrentPeriodEndsAt()
                 : now;
-        SubscriptionPlan plan = SubscriptionPlan.fromCode(payment.getPlanCode());
+        SubscriptionPlanDto plan = getPlan(payment.getPlanCode());
         subscription.setStatus(SubscriptionStatus.ACTIVE);
         subscription.setPlanCode(plan.code());
         subscription.setCurrentPeriodStartsAt(periodStart);
-        subscription.setCurrentPeriodEndsAt(plan.addDurationTo(periodStart));
+        subscription.setCurrentPeriodEndsAt(periodStart.plusMonths(plan.durationMonths()));
         subscriptionRepository.save(subscription);
 
         payment.setStatus(SUCCESS);
@@ -236,6 +253,21 @@ public class SubscriptionService {
                 || subscription.getStatus() == SubscriptionStatus.ACTIVE)
                 && (endsAt == null || !endsAt.isAfter(now))) {
             subscription.setStatus(SubscriptionStatus.EXPIRED);
+        }
+    }
+
+    private SubscriptionPlanDto getPlan(String planCode) {
+        if (subscriptionPlanService != null) {
+            return subscriptionPlanService.getPlan(planCode);
+        }
+        return SubscriptionPlan.fromCode(planCode).toDto();
+    }
+
+    private String getPlanName(String planCode) {
+        try {
+            return getPlan(planCode).name();
+        } catch (IllegalArgumentException exception) {
+            return SubscriptionPlan.fromCode(planCode).planName();
         }
     }
 

@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Navigate, Outlet, useNavigate, useSearchParams } from 'react-router-dom';
-import { CheckCircle2, CreditCard, ShieldCheck } from 'lucide-react';
+import { CheckCircle2, CreditCard, ShieldCheck, Save, SlidersHorizontal } from 'lucide-react';
 import API from '../services/api';
 
 const formatGhs = amount => `GHS ${Number(amount).toLocaleString('en-GH')}`;
@@ -54,6 +54,8 @@ const SubscriptionPage = () => {
     const [searchParams] = useSearchParams();
     const [status, setStatus] = useState(null);
     const [plans, setPlans] = useState([]);
+    const [draftPlans, setDraftPlans] = useState([]);
+    const [savingPlans, setSavingPlans] = useState(false);
     const [email, setEmail] = useState(() => {
         const username = sessionStorage.getItem('userName') || '';
         return username.includes('@') ? username : '';
@@ -74,6 +76,7 @@ const SubscriptionPage = () => {
         ]);
         setStatus(statusResponse.data);
         setPlans(plansResponse.data);
+        setDraftPlans(plansResponse.data.map(plan => ({ ...plan })));
     }, []);
     const selectedPlanCode = searchParams.get('plan');
 
@@ -125,6 +128,30 @@ const SubscriptionPage = () => {
         } catch (requestError) {
             setError(requestError.response?.data?.message || 'Unable to start checkout. Please try again.');
             setCheckoutPlan('');
+        }
+    };
+
+    const updateDraftPlan = (index, field, value) => {
+        setDraftPlans(current => current.map((plan, planIndex) => (
+            planIndex === index
+                ? { ...plan, [field]: field === 'amount' || field === 'durationMonths' ? Number(value) : value }
+                : plan
+        )));
+    };
+
+    const savePlans = async () => {
+        setSavingPlans(true);
+        setError('');
+        setNotice('');
+        try {
+            const response = await API.post('/subscription/plans', draftPlans);
+            setPlans(response.data);
+            setDraftPlans(response.data.map(plan => ({ ...plan })));
+            setNotice('Subscription plans updated successfully.');
+        } catch (requestError) {
+            setError(requestError.response?.data?.message || 'Unable to update subscription plans.');
+        } finally {
+            setSavingPlans(false);
         }
     };
 
@@ -207,6 +234,69 @@ const SubscriptionPage = () => {
                         Plan selected from login: <strong>{plans.find(plan => plan.code === selectedPlanCode).name}</strong>.
                         Enter a receipt email below to continue to checkout.
                     </div>
+                )}
+
+                {isAdmin && (
+                    <section className="card border-0 shadow-sm rounded-4 p-4 mb-4">
+                        <div className="d-flex align-items-center gap-2 mb-3">
+                            <SlidersHorizontal size={20} className="text-primary" aria-hidden="true" />
+                            <h2 className="h5 fw-bold mb-0">Manage subscription plans</h2>
+                        </div>
+                        <div className="row g-3">
+                            {draftPlans.map((plan, index) => (
+                                <div className="col-lg-6" key={plan.code}>
+                                    <div className="border rounded-4 p-3 h-100">
+                                        <span className="badge text-bg-light border mb-3">{plan.code}</span>
+                                        <div className="row g-2">
+                                            <div className="col-md-6">
+                                                <label className="form-label small fw-semibold">Plan name</label>
+                                                <input
+                                                    type="text"
+                                                    className="form-control"
+                                                    value={plan.name}
+                                                    onChange={event => updateDraftPlan(index, 'name', event.target.value)}
+                                                />
+                                            </div>
+                                            <div className="col-md-3">
+                                                <label className="form-label small fw-semibold">Price (GHS)</label>
+                                                <input
+                                                    type="number"
+                                                    min="1"
+                                                    step="0.01"
+                                                    className="form-control"
+                                                    value={plan.amount}
+                                                    onChange={event => updateDraftPlan(index, 'amount', event.target.value)}
+                                                />
+                                            </div>
+                                            <div className="col-md-3">
+                                                <label className="form-label small fw-semibold">Duration</label>
+                                                <div className="input-group">
+                                                    <input
+                                                        type="number"
+                                                        min="1"
+                                                        className="form-control"
+                                                        value={plan.durationMonths}
+                                                        onChange={event => updateDraftPlan(index, 'durationMonths', event.target.value)}
+                                                    />
+                                                    <span className="input-group-text">mo.</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                        <div className="d-flex justify-content-end mt-3">
+                            <button type="button" className="btn btn-primary fw-bold d-flex align-items-center gap-2"
+                                    disabled={savingPlans || draftPlans.length === 0}
+                                    onClick={savePlans}>
+                                {savingPlans
+                                    ? <span className="spinner-border spinner-border-sm" role="status" aria-label="Saving plans" />
+                                    : <Save size={18} aria-hidden="true" />}
+                                {savingPlans ? 'Saving plans…' : 'Save plan changes'}
+                            </button>
+                        </div>
+                    </section>
                 )}
 
                 {!isAdmin && (

@@ -6,6 +6,8 @@ import com.school.dto.SubscriptionCheckoutResponse;
 import com.school.dto.SubscriptionVerifyRequest;
 import com.school.services.PaystackService;
 import com.school.services.SubscriptionService;
+import com.school.services.SubscriptionPlanService;
+import com.school.dto.SubscriptionPlanDto;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,16 +21,20 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestClientException;
 
 import java.util.Map;
+import java.util.List;
 
 @RestController
 @RequestMapping(value = "/api/subscription", produces = "application/json")
 public class SubscriptionController {
     private final SubscriptionService subscriptionService;
     private final PaystackService paystackService;
+    private final SubscriptionPlanService subscriptionPlanService;
 
-    public SubscriptionController(SubscriptionService subscriptionService, PaystackService paystackService) {
+    public SubscriptionController(SubscriptionService subscriptionService, PaystackService paystackService,
+                                  SubscriptionPlanService subscriptionPlanService) {
         this.subscriptionService = subscriptionService;
         this.paystackService = paystackService;
+        this.subscriptionPlanService = subscriptionPlanService;
     }
 
     @GetMapping("/status")
@@ -39,6 +45,15 @@ public class SubscriptionController {
     @GetMapping("/plans")
     public ResponseEntity<?> getPlans() {
         return ResponseEntity.ok(subscriptionService.getPlans());
+    }
+
+    @PostMapping("/plans")
+    public ResponseEntity<?> updatePlans(@RequestBody List<SubscriptionPlanDto> plans) {
+        try {
+            return ResponseEntity.ok(subscriptionPlanService.updatePlans(plans));
+        } catch (IllegalArgumentException exception) {
+            return ResponseEntity.badRequest().body(Map.of("message", exception.getMessage()));
+        }
     }
 
     @PostMapping("/checkout")

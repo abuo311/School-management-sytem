@@ -33,6 +33,7 @@ public class SystemResetService {
     }
 
     private void deleteInDependencyOrder() {
+        entityManager.createQuery("DELETE FROM SubscriptionPlanConfig").executeUpdate();
         entityManager.createQuery("DELETE FROM LmsExamAnswer").executeUpdate();
         entityManager.createQuery("DELETE FROM LmsProgress").executeUpdate();
         entityManager.createQuery("DELETE FROM LmsExamAttempt").executeUpdate();
