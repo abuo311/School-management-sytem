@@ -84,6 +84,28 @@ class AttendanceControllerTest {
         assertEquals(12L, incoming.getId());
     }
 
+    @Test
+    void bulkSaveRejectsSaturdayAttendance() {
+        Attendance incoming = attendance(student(5L), LocalDate.of(2026, 11, 21), "PRESENT");
+
+        ResponseEntity<?> response = controller.saveBulk(List.of(incoming));
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        verify(attendanceRepository, never()).saveAll(anyList());
+        verify(notificationService, never()).notifyParents(anyList());
+    }
+
+    @Test
+    void verifiedAttendanceRejectsSundayAttendance() {
+        Attendance request = attendance(student(5L), LocalDate.of(2026, 11, 22), "PRESENT");
+
+        ResponseEntity<?> response = controller.saveVerifiedAttendance(request);
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        verify(attendanceRepository, never()).save(org.mockito.ArgumentMatchers.any(Attendance.class));
+        verify(notificationService, never()).notifyParents(anyList());
+    }
+
     private Student student(Long id) {
         Student student = new Student();
         student.setId(id);

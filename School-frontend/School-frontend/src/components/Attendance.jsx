@@ -10,6 +10,13 @@ import {
 } from 'lucide-react';
 import WebcamVerification from './WebcamVerification';
 
+const isWeekend = date => {
+    if (!date) return false;
+    const [year, month, day] = date.split('-').map(Number);
+    const dayOfWeek = new Date(year, month - 1, day).getDay();
+    return dayOfWeek === 0 || dayOfWeek === 6;
+};
+
 const Attendance = () => {
     const [students, setStudents] = useState([]);
     const [attendanceMap, setAttendanceMap] = useState({});
@@ -33,6 +40,7 @@ const Attendance = () => {
     const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
     const [selectedGrade, setSelectedGrade] = useState('All');
     const [searchTerm, setSearchTerm] = useState('');
+    const selectedDateIsWeekend = isWeekend(selectedDate);
     const attendanceStatuses = [
         { value: 'PRESENT', label: 'Present' },
         { value: 'LATE', label: 'Late' },
@@ -112,6 +120,7 @@ const Attendance = () => {
     };
 
     const handleSubmit = async () => {
+        if (selectedDateIsWeekend) return;
         const targetStudents = students.filter(s => selectedGrade === 'All' || s.gradeLevel === selectedGrade);
         if (targetStudents.length === 0) return alert("No students found.");
 
@@ -141,6 +150,7 @@ const Attendance = () => {
     };
 
     const handleMarkAllPresent = async () => {
+        if (selectedDateIsWeekend) return;
         const targetStudents = filteredStudents;
         if (targetStudents.length === 0) return alert("No students found.");
 
@@ -173,7 +183,7 @@ const Attendance = () => {
     };
 
     const markVerifiedStudentPresent = async () => {
-        if (!verificationTarget) return;
+        if (!verificationTarget || selectedDateIsWeekend) return;
         const student = verificationTarget;
         setSubmitting(true);
         try {
@@ -337,19 +347,24 @@ const Attendance = () => {
                         <input type="text" className="form-control" placeholder="Search pupil..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
                     </div>
                 </div>
+                {viewMode === 'mark' && selectedDateIsWeekend && (
+                    <div className="alert alert-warning mt-3 mb-0" role="alert">
+                        Attendance cannot be recorded on weekends. Choose a weekday to mark attendance.
+                    </div>
+                )}
                 {viewMode === 'mark' && (
                     <div className="d-flex justify-content-end gap-2 mt-3">
                         <button
                             className="btn btn-outline-success fw-bold d-flex align-items-center justify-content-center gap-2"
                             onClick={handleMarkAllPresent}
-                            disabled={submitting || loading || filteredStudents.length === 0}
+                            disabled={submitting || loading || selectedDateIsWeekend || filteredStudents.length === 0}
                         >
                             <CheckCircle size={18} /> Mark all present
                         </button>
                         <button
                             className="btn btn-success fw-bold d-flex align-items-center justify-content-center gap-2"
                             onClick={handleSubmit}
-                            disabled={submitting}
+                            disabled={submitting || selectedDateIsWeekend}
                         >
                             {submitting ? <Loader2 size={18} className="animate-spin" /> : "Save Data"}
                         </button>
@@ -384,18 +399,19 @@ const Attendance = () => {
                                     </td>
                                     <td className="text-center">
                                         <button type="button" className={`btn btn-sm ${verifiedStudents[s.id] ? 'btn-outline-success' : 'btn-outline-secondary'}`}
+                                                disabled={selectedDateIsWeekend}
                                                 onClick={() => setVerificationTarget({ id: s.id, name: `${s.firstName} ${s.lastName}`, profilePhoto: s.studentPhoto })}>
                                             <Camera size={15} className="me-1" />{verifiedStudents[s.id] ? 'Checked' : 'Verify'}
                                         </button>
                                     </td>
                                     <td>{s.gradeLevel}</td>
                                     <td className="text-center">
-                                        <select className="form-select form-select-sm" value={attendanceMap[s.id] || 'PRESENT'} onChange={e => updateAttendanceStatus(s.id, e.target.value)}>
+                                        <select className="form-select form-select-sm" value={attendanceMap[s.id] || 'PRESENT'} disabled={selectedDateIsWeekend} onChange={e => updateAttendanceStatus(s.id, e.target.value)}>
                                             {attendanceStatuses.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}
                                         </select>
                                     </td>
                                     <td>
-                                        <input type="text" className="form-control form-control-sm" value={attendanceReasons[s.id] || ''} onChange={e => setAttendanceReasons(prev => ({ ...prev, [s.id]: e.target.value }))} placeholder="Optional reason" />
+                                        <input type="text" className="form-control form-control-sm" value={attendanceReasons[s.id] || ''} disabled={selectedDateIsWeekend} onChange={e => setAttendanceReasons(prev => ({ ...prev, [s.id]: e.target.value }))} placeholder="Optional reason" />
                                     </td>
                                 </tr>
                             ))

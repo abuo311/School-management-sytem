@@ -41,11 +41,15 @@ public class AttendanceController {
     }
 
     @PostMapping("/bulk")
-    public List<Attendance> saveBulk(@RequestBody List<Attendance> list) {
+    public ResponseEntity<?> saveBulk(@RequestBody List<Attendance> list) {
+        if (list.stream().anyMatch(record -> record != null && isWeekend(record.getAttendanceDate()))) {
+            return ResponseEntity.badRequest().body("Attendance cannot be recorded on weekends.");
+        }
+
         list.forEach(this::useExistingRecordId);
         List<Attendance> saved = attendanceRepository.saveAll(list);
         attendanceNotificationService.notifyParents(saved);
-        return saved;
+        return ResponseEntity.ok(saved);
     }
 
     @PostMapping("/verified")
@@ -57,6 +61,10 @@ public class AttendanceController {
 
         Long studentId = request.getStudent().getId();
         LocalDate attendanceDate = request.getAttendanceDate();
+        if (isWeekend(attendanceDate)) {
+            return ResponseEntity.badRequest().body("Attendance cannot be recorded on weekends.");
+        }
+
         Attendance record = attendanceRepository.findFirstByStudentIdAndAttendanceDate(studentId, attendanceDate)
                 .orElseGet(Attendance::new);
         boolean notifyParent = !"PRESENT".equalsIgnoreCase(record.getStatus());
@@ -102,5 +110,9 @@ public class AttendanceController {
         Optional<Attendance> existing = attendanceRepository.findFirstByStudentIdAndAttendanceDate(
                 incoming.getStudent().getId(), incoming.getAttendanceDate());
         existing.ifPresent(record -> incoming.setId(record.getId()));
+    }
+
+    private boolean isWeekend(LocalDate date) {
+        return date != null && date.getDayOfWeek().getValue() >= 6;
     }
 }
