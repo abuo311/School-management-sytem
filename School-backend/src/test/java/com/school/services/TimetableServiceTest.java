@@ -1,6 +1,8 @@
 package com.school.services;
 
 import com.school.dto.TimetableEntryRequest;
+import com.school.dto.TimetableCycleDto;
+import com.school.dto.TimetableTeacherDto;
 import com.school.entities.Role;
 import com.school.entities.SchoolClass;
 import com.school.entities.SchoolSettings;
@@ -108,5 +110,20 @@ class TimetableServiceTest {
 
         assertThrows(IllegalArgumentException.class, () -> service.create(new TimetableEntryRequest(
                 3L, 4L, 5L, "MONDAY", LocalTime.of(8, 0), LocalTime.of(8, 45), "Room 2")));
+    }
+
+    @Test
+    void listsActiveTeacherAccountsForTimetableOptions() {
+        when(userRepository.findByRoleAndEnabledTrueOrderByFullNameAsc(Role.TEACHER))
+                .thenReturn(List.of(teacher));
+
+        List<TimetableTeacherDto> result = service.listAvailableTeachers();
+
+        assertEquals(List.of(new TimetableTeacherDto(5L, "teacher1", "Teacher One")), result);
+    }
+
+    @Test
+    void returnsCurrentCycleWithoutExposingGlobalSettings() {
+        assertEquals(new TimetableCycleDto("Term 1", "2026/2027"), service.currentCycle());
     }
 }

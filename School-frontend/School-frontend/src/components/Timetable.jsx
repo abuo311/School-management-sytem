@@ -26,18 +26,24 @@ const Timetable = () => {
         setLoading(true);
         setError('');
         try {
-            const requests = [API.get('/timetable'), API.get('/settings')];
-            if (isAdmin) requests.push(API.get('/classes'), API.get('/subjects'), API.get('/users'));
-            const [timetableResponse, settingsResponse, classesResponse, subjectsResponse, usersResponse] = await Promise.all(requests);
+            const [timetableResponse, cycleResponse] = await Promise.all([
+                API.get('/timetable'),
+                API.get('/timetable/current-cycle')
+            ]);
             setEntries(timetableResponse.data || []);
             setSchoolInfo({
-                currentTerm: settingsResponse.data?.currentTerm || '',
-                academicYear: settingsResponse.data?.academicYear || ''
+                currentTerm: cycleResponse.data?.currentTerm || '',
+                academicYear: cycleResponse.data?.academicYear || ''
             });
             if (isAdmin) {
+                const [classesResponse, subjectsResponse, teachersResponse] = await Promise.all([
+                    API.get('/classes'),
+                    API.get('/subjects'),
+                    API.get('/timetable/teachers')
+                ]);
                 setClasses(classesResponse.data || []);
                 setSubjects(subjectsResponse.data || []);
-                setTeachers((usersResponse.data || []).filter(user => user.role === 'TEACHER' && user.enabled));
+                setTeachers(teachersResponse.data || []);
             }
         } catch (requestError) {
             setError(requestError.response?.data?.message || 'Unable to load timetable data.');

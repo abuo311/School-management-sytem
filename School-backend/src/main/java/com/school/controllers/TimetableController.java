@@ -2,6 +2,8 @@ package com.school.controllers;
 
 import com.school.dto.TimetableEntryDto;
 import com.school.dto.TimetableEntryRequest;
+import com.school.dto.TimetableCycleDto;
+import com.school.dto.TimetableTeacherDto;
 import com.school.services.TimetableService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -29,6 +31,17 @@ public class TimetableController {
     @GetMapping
     public List<TimetableEntryDto> list(Authentication authentication) {
         return timetableService.list(authentication.getName(), isAdmin(authentication));
+    }
+
+    @GetMapping("/current-cycle")
+    public TimetableCycleDto currentCycle() {
+        return timetableService.currentCycle();
+    }
+
+    @GetMapping("/teachers")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'DIRECTOR', 'MANAGER')")
+    public List<TimetableTeacherDto> listAvailableTeachers() {
+        return timetableService.listAvailableTeachers();
     }
 
     @PostMapping

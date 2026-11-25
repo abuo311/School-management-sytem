@@ -2,6 +2,8 @@ package com.school.services;
 
 import com.school.dto.TimetableEntryDto;
 import com.school.dto.TimetableEntryRequest;
+import com.school.dto.TimetableCycleDto;
+import com.school.dto.TimetableTeacherDto;
 import com.school.entities.Role;
 import com.school.entities.SchoolClass;
 import com.school.entities.SchoolSettings;
@@ -57,6 +59,19 @@ public class TimetableService {
                             teacher.getId(), term, year);
         }
         return entries.stream().map(this::toDto).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<TimetableTeacherDto> listAvailableTeachers() {
+        return userRepository.findByRoleAndEnabledTrueOrderByFullNameAsc(Role.TEACHER).stream()
+                .map(user -> new TimetableTeacherDto(user.getId(), user.getUsername(), user.getFullName()))
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public TimetableCycleDto currentCycle() {
+        SchoolSettings settings = currentSettings();
+        return new TimetableCycleDto(settings.getCurrentTerm(), settings.getAcademicYear());
     }
 
     @Transactional
