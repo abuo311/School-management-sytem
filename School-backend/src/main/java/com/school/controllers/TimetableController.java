@@ -11,10 +11,14 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/api/timetable")
 public class TimetableController {
+
+    private static final Set<String> ADMINISTRATIVE_ROLES = Set.of(
+            "ROLE_SUPER_ADMIN", "ROLE_ADMIN", "ROLE_DIRECTOR", "ROLE_MANAGER");
 
     private final TimetableService timetableService;
 
@@ -60,6 +64,6 @@ public class TimetableController {
 
     private boolean isAdmin(Authentication authentication) {
         return authentication.getAuthorities().stream()
-                .anyMatch(authority -> "ROLE_ADMIN".equals(authority.getAuthority()));
+                .anyMatch(authority -> ADMINISTRATIVE_ROLES.contains(authority.getAuthority()));
     }
 }

@@ -19,10 +19,14 @@ import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/api/lesson-notes")
 public class LessonNoteController {
+
+    private static final Set<String> ADMINISTRATIVE_ROLES = Set.of(
+            "ROLE_SUPER_ADMIN", "ROLE_ADMIN", "ROLE_DIRECTOR", "ROLE_MANAGER");
 
     private final LessonNoteService lessonNoteService;
 
@@ -111,6 +115,6 @@ public class LessonNoteController {
 
     private boolean isAdmin(Authentication authentication) {
         return authentication.getAuthorities().stream()
-                .anyMatch(authority -> "ROLE_ADMIN".equals(authority.getAuthority()));
+                .anyMatch(authority -> ADMINISTRATIVE_ROLES.contains(authority.getAuthority()));
     }
 }
