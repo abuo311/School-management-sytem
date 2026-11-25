@@ -47,7 +47,7 @@ public class SubscriptionService {
             SubscriptionPaymentRepository paymentRepository,
             ObjectMapper objectMapper,
             @Value("${paystack.secret-key:}") String secretKey,
-            @Value("${paystack.subscription-callback-url:http://localhost:5173/subscription}") String callbackUrl) {
+            @Value("${paystack.subscription-callback-url:https://school-management-sytem-seven.vercel.app/dashboard/subscription}") String callbackUrl) {
         this(restClientBuilder, subscriptionRepository, paymentRepository, objectMapper, null, secretKey, callbackUrl);
     }
 
@@ -59,7 +59,7 @@ public class SubscriptionService {
             ObjectMapper objectMapper,
             SubscriptionPlanService subscriptionPlanService,
             @Value("${paystack.secret-key:}") String secretKey,
-            @Value("${paystack.subscription-callback-url:http://localhost:5173/subscription}") String callbackUrl) {
+            @Value("${paystack.subscription-callback-url:https://school-management-sytem-seven.vercel.app/dashboard/subscription}") String callbackUrl) {
         this.restClient = restClientBuilder.baseUrl("https://api.paystack.co").build();
         this.subscriptionRepository = subscriptionRepository;
         this.paymentRepository = paymentRepository;
