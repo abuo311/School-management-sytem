@@ -24,6 +24,15 @@ public class UserController {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    private boolean isSuperUser(UserDetails currentUser) {
+        if (currentUser == null) {
+            return false;
+        }
+        return userRepository.findByUsername(currentUser.getUsername())
+                .map(user -> user.getRole() == Role.SUPER_ADMIN || user.getRole() == Role.ADMIN)
+                .orElse(false);
+    }
+
     @GetMapping
     public ResponseEntity<List<User>> getAllUsers() {
         return ResponseEntity.ok(userRepository.findAll());
@@ -41,7 +50,19 @@ public class UserController {
     }
 
     @PostMapping
-    public ResponseEntity<?> createUser(@RequestBody User user) {
+    public ResponseEntity<?> createUser(
+            @RequestBody User user,
+            @AuthenticationPrincipal UserDetails currentUser) {
+        if (!isSuperUser(currentUser)) {
+            return ResponseEntity.status(403).body("Only the super administrator can create user accounts.");
+        }
+        if (user.getRole() == null) {
+            return ResponseEntity.badRequest().body("A system role is required.");
+        }
+        if (user.getRole() == Role.STUDENT) {
+            return ResponseEntity.badRequest()
+                    .body("Student accounts must be created from the pupil registry.");
+        }
         if (userRepository.findByUsername(user.getUsername()).isPresent()) {
             return ResponseEntity.badRequest().body("Username already exists!");
         }
@@ -57,6 +78,9 @@ public class UserController {
             @PathVariable Long id,
             @RequestBody User userDetails,
             @AuthenticationPrincipal UserDetails currentUser) {
+        if (!isSuperUser(currentUser)) {
+            return ResponseEntity.status(403).body("Only the super administrator can update user accounts.");
+        }
         return userRepository.findById(id).map(user -> {
             if ((user.getRole() == Role.ADMIN || user.getRole() == Role.SUPER_ADMIN)
                     && "INACTIVE".equalsIgnoreCase(userDetails.getStatus())) {
@@ -70,6 +94,16 @@ public class UserController {
                 user.setFullName(userDetails.getFullName().trim());
             }
             if (userDetails.getRole() != null) {
+                if (userDetails.getRole() == Role.STUDENT) {
+                    return ResponseEntity.badRequest()
+                            .body("Student learning accounts must remain linked to their student record.");
+                }
+                if ((user.getRole() == Role.SUPER_ADMIN || user.getRole() == Role.ADMIN)
+                        && userDetails.getRole() != Role.SUPER_ADMIN
+                        && userDetails.getRole() != Role.ADMIN) {
+                    return ResponseEntity.badRequest()
+                            .body("Administrator accounts cannot be changed to a lower role.");
+                }
                 if (user.getRole() == Role.STUDENT && userDetails.getRole() != Role.STUDENT) {
                     return ResponseEntity.badRequest()
                             .body("Student learning accounts must remain linked to their student record.");
@@ -94,7 +128,13 @@ public class UserController {
     }
 
     @PutMapping("/reset-password/{id}")
-    public ResponseEntity<?> resetPassword(@PathVariable Long id, @RequestBody Map<String, String> payload) {
+    public ResponseEntity<?> resetPassword(
+            @PathVariable Long id,
+            @RequestBody Map<String, String> payload,
+            @AuthenticationPrincipal UserDetails currentUser) {
+        if (!isSuperUser(currentUser)) {
+            return ResponseEntity.status(403).body("Only the super administrator can reset passwords.");
+        }
         String newPassword = payload.get("password");
         return userRepository.findById(id).map(user -> {
             user.setPassword(passwordEncoder.encode(newPassword));
@@ -104,7 +144,12 @@ public class UserController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteUser(@PathVariable Long id) {
+    public ResponseEntity<?> deleteUser(
+            @PathVariable Long id,
+            @AuthenticationPrincipal UserDetails currentUser) {
+        if (!isSuperUser(currentUser)) {
+            return ResponseEntity.status(403).body("Only the super administrator can delete user accounts.");
+        }
         return userRepository.findById(id).map(user -> {
             if (user.getRole() == Role.ADMIN || user.getRole() == Role.SUPER_ADMIN) {
                 return ResponseEntity.badRequest()
