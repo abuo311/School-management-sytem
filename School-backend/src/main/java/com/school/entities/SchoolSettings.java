@@ -17,6 +17,8 @@ public class SchoolSettings {
     private Long id = 1L;
 
     private String schoolName;
+    @Column(length = 10)
+    private String studentIdPrefix;
     private String motto;
     private String address;
     private String phone;

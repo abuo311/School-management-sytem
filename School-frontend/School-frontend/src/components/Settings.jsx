@@ -3,8 +3,15 @@ import API from '../services/api';
 import { Save, Building2, UserCheck, Signature, Plus, Trash2, Image as ImageIcon, Calendar, MessageSquare, MapPin, AlertTriangle, RotateCcw } from 'lucide-react';
 
 const Settings = () => {
+    const deriveStudentIdPrefix = (schoolName) => {
+        const words = String(schoolName || '').toUpperCase().match(/[A-Z0-9]+/g) || [];
+        if (words.length === 1) return words[0].slice(0, 3);
+        return words.map(word => word[0]).join('').slice(0, 10) || 'SCH';
+    };
+
     const [config, setConfig] = useState({
         schoolName: '',
+        studentIdPrefix: 'PPS',
         motto: '',
         address: '',
         phone: '',
@@ -30,6 +37,7 @@ const Settings = () => {
     const [activeMasterIndex, setActiveMasterIndex] = useState(0);
     const [activeRemarkIndex, setActiveRemarkIndex] = useState(0);
     const [loading, setLoading] = useState(false);
+    const [studentIdPrefixAuto, setStudentIdPrefixAuto] = useState(true);
     const [showResetModal, setShowResetModal] = useState(false);
     const [resetConfirmation, setResetConfirmation] = useState('');
     const [resetting, setResetting] = useState(false);
@@ -66,9 +74,15 @@ const Settings = () => {
 
                 setConfig({
                     ...res.data,
+                    studentIdPrefix: res.data.studentIdPrefix || 'PPS',
                     formMasters: masters,
                     staffRemarks: remarks
                 });
+                setStudentIdPrefixAuto(
+                    !res.data.schoolName
+                    || !res.data.studentIdPrefix
+                    || res.data.studentIdPrefix === deriveStudentIdPrefix(res.data.schoolName)
+                );
             }
         } catch (err) {
             console.error("Error loading settings:", err);
@@ -231,12 +245,62 @@ const Settings = () => {
                             <div className="col-md-7">
                                 <label className="small fw-bold mb-1">School Name</label>
                                 <input type="text" className="form-control bg-light border-0"
-                                       value={config.schoolName} onChange={e => setConfig({...config, schoolName: e.target.value})} />
+                                       value={config.schoolName}
+                                       onChange={e => {
+                                           const schoolName = e.target.value;
+                                           setConfig(current => ({
+                                               ...current,
+                                               schoolName,
+                                               ...(studentIdPrefixAuto
+                                                   ? { studentIdPrefix: deriveStudentIdPrefix(schoolName) }
+                                                   : {})
+                                           }));
+                                       }} />
                             </div>
                             <div className="col-md-5">
                                 <label className="small fw-bold mb-1">Motto</label>
                                 <input type="text" className="form-control bg-light border-0" placeholder="Knowledge is Power"
                                        value={config.motto} onChange={e => setConfig({...config, motto: e.target.value})} />
+                            </div>
+                            <div className="col-md-5">
+                                <label className="small fw-bold mb-1">Student ID Prefix</label>
+                                <input
+                                    type="text"
+                                    className="form-control bg-light border-0 text-uppercase"
+                                    value={config.studentIdPrefix}
+                                    onChange={e => {
+                                        setStudentIdPrefixAuto(false);
+                                        setConfig(current => ({
+                                            ...current,
+                                            studentIdPrefix: e.target.value.toUpperCase()
+                                        }));
+                                    }}
+                                    maxLength={10}
+                                    pattern="[A-Za-z0-9]{1,10}"
+                                    title="Use 1 to 10 letters or numbers."
+                                    required
+                                />
+                                {!studentIdPrefixAuto && (
+                                    <button
+                                        type="button"
+                                        className="btn btn-link btn-sm px-0"
+                                        onClick={() => {
+                                            setStudentIdPrefixAuto(true);
+                                            setConfig(current => ({
+                                                ...current,
+                                                studentIdPrefix: deriveStudentIdPrefix(current.schoolName)
+                                            }));
+                                        }}
+                                    >
+                                        Use school name initials
+                                    </button>
+                                )}
+                                <small className="text-muted d-block">
+                                    {studentIdPrefixAuto
+                                        ? 'Automatically generated from the school name. Edit this field to set a custom prefix.'
+                                        : 'Custom prefix. Change the school name without changing this prefix, or edit the prefix directly.'}
+                                    {' '}New IDs will look like {config.studentIdPrefix || 'SCH'}-0001. Existing student IDs will not change.
+                                </small>
                             </div>
                             <div className="col-12">
                                 <label className="small fw-bold mb-1 d-flex align-items-center gap-1">

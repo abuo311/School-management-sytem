@@ -84,6 +84,7 @@ public class SystemResetService {
         SchoolSettings defaults = new SchoolSettings();
         defaults.setId(1L);
         defaults.setSchoolName("EduManager School");
+        defaults.setStudentIdPrefix("PPS");
         defaults.setMotto("");
         defaults.setAddress("");
         defaults.setPhone("");

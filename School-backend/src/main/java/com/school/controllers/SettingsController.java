@@ -6,10 +6,14 @@ import com.school.repositories.SettingsRepository;
 import com.school.services.SchoolBrandingService;
 import com.school.services.SystemResetService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.bind.annotation.*;
 import java.util.Optional;
 import java.util.Map;
+import java.util.Locale;
+import java.util.Objects;
 
 @RestController
 @RequestMapping("/api/settings")
@@ -46,7 +50,25 @@ public class SettingsController {
             SchoolSettings existing = existingOpt.get();
 
             // 1. Update Basic Identity Fields
+            String previousSchoolName = existing.getSchoolName();
+            String previousStudentIdPrefix = existing.getStudentIdPrefix();
+            String requestedStudentIdPrefix = settings.getStudentIdPrefix();
+            boolean schoolNameChanged = !Objects.equals(previousSchoolName, settings.getSchoolName());
+            boolean prefixUnchanged = requestedStudentIdPrefix == null
+                    || requestedStudentIdPrefix.equalsIgnoreCase(previousStudentIdPrefix == null
+                            ? ""
+                            : previousStudentIdPrefix);
+            boolean prefixTracksSchoolName = previousStudentIdPrefix != null
+                    && previousStudentIdPrefix.equals(deriveStudentIdPrefix(previousSchoolName));
+
             existing.setSchoolName(settings.getSchoolName());
+            if (schoolNameChanged && prefixUnchanged && prefixTracksSchoolName) {
+                existing.setStudentIdPrefix(deriveStudentIdPrefix(settings.getSchoolName()));
+            } else if (requestedStudentIdPrefix != null) {
+                existing.setStudentIdPrefix(validateStudentIdPrefix(requestedStudentIdPrefix));
+            } else if (previousStudentIdPrefix == null || previousStudentIdPrefix.isBlank()) {
+                existing.setStudentIdPrefix(deriveStudentIdPrefix(settings.getSchoolName()));
+            }
             existing.setMotto(settings.getMotto());
             existing.setAddress(settings.getAddress());
             existing.setPhone(settings.getPhone());
@@ -89,8 +111,41 @@ public class SettingsController {
         } else {
             // Very first time setup
             settings.setId(1L);
+            settings.setStudentIdPrefix(settings.getStudentIdPrefix() == null
+                    ? deriveStudentIdPrefix(settings.getSchoolName())
+                    : validateStudentIdPrefix(settings.getStudentIdPrefix()));
             return settingsRepository.save(settings);
         }
+    }
+
+    private String validateStudentIdPrefix(String prefix) {
+        String normalized = prefix.trim().toUpperCase(Locale.ROOT);
+        if (!normalized.matches("[A-Z0-9]{1,10}")) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Student ID prefix must contain 1 to 10 letters or numbers.");
+        }
+        return normalized;
+    }
+
+    private String deriveStudentIdPrefix(String schoolName) {
+        String[] words = (schoolName == null ? "" : schoolName.toUpperCase(Locale.ROOT))
+                .split("[^A-Z0-9]+");
+        StringBuilder prefix = new StringBuilder();
+        int wordCount = 0;
+        String onlyWord = "";
+        for (String word : words) {
+            if (!word.isEmpty()) {
+                wordCount++;
+                onlyWord = word;
+                if (prefix.length() < 10) {
+                    prefix.append(word.charAt(0));
+                }
+            }
+        }
+        if (wordCount == 1) {
+            return onlyWord.substring(0, Math.min(3, onlyWord.length()));
+        }
+        return prefix.length() == 0 ? "SCH" : prefix.toString();
     }
 
     @PostMapping("/reset-system")

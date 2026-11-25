@@ -10,6 +10,8 @@ import java.util.Optional;
 
 @Repository
 public interface StudentRepository extends JpaRepository<Student, Long> {
+    long countByAdmissionNumberStartingWith(String admissionNumberPrefix);
+
 
     // --- CRITICAL FOR SERVICE LAYER ---
     boolean existsByAdmissionNumber(String admissionNumber);
