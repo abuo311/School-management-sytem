@@ -235,6 +235,32 @@
     background-color: var(--theme-accent) !important;
 }
 
+.dashboard-wrapper .table thead {
+    background: linear-gradient(
+        90deg,
+        var(--theme-accent),
+        color-mix(in srgb, var(--theme-accent) 72%, #1a1a1a)
+    ) !important;
+}
+
+.dashboard-wrapper .table thead th {
+    color: #fff !important;
+    border-color: color-mix(in srgb, var(--theme-accent) 55%, #ffffff) !important;
+}
+
+.dashboard-wrapper .modal-header,
+.dashboard-wrapper .card-header {
+    border-bottom-color: color-mix(in srgb, var(--theme-accent) 24%, #dee2e6) !important;
+}
+
+.dashboard-wrapper .pagination .page-link {
+    color: var(--theme-accent);
+}
+
+.dashboard-wrapper .dropdown-menu {
+    border-top: 3px solid var(--theme-accent);
+}
+
 @media print {
     body.attendance-summary-printing .sidebar,
     body.attendance-summary-printing .top-navbar,

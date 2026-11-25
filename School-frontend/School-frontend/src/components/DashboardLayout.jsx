@@ -146,7 +146,24 @@ const DashboardLayout = () => {
             }}
         >
             <style>{`
-                .sidebar { background: ${darkBg} !important; border-right: 2px solid ${goldColor}33; transition: margin-left 0.3s ease, left 0.3s ease; }
+                .sidebar {
+                    background: linear-gradient(180deg,
+                        color-mix(in srgb, ${goldColor} 24%, ${darkBg}) 0,
+                        ${darkBg} 34%,
+                        ${darkBg} 100%) !important;
+                    border-right: 2px solid ${goldColor};
+                    transition: margin-left 0.3s ease, left 0.3s ease, background 0.25s ease;
+                }
+                .sidebar-header {
+                    background: color-mix(in srgb, ${goldColor} 12%, ${darkBg});
+                    border-bottom: 1px solid ${goldColor}55 !important;
+                }
+                .sidebar-menu .menu-label { color: ${goldColor} !important; }
+                .sidebar-menu .menu-item:hover { background: ${goldColor}18; }
+                .sidebar-menu .menu-item.active {
+                    background: ${goldColor}26;
+                    box-shadow: inset 3px 0 0 ${goldColor};
+                }
                 @media (min-width: 992px) { .sidebar.desktop-collapsed { margin-left: -280px; } }
                 .desktop-sidebar-toggle {
                     position: fixed; top: 50%; z-index: 1060; transform: translateY(-50%);
@@ -164,8 +181,31 @@ const DashboardLayout = () => {
                 .menu-item:hover { background: color-mix(in srgb, ${goldColor} 10%, transparent); color: ${goldColor} !important; }
                 .menu-item.active { background: color-mix(in srgb, ${goldColor} 15%, transparent); color: ${goldColor} !important; border-left: 3px solid ${goldColor}; font-weight: 600; }
                 .menu-item.active svg { color: ${goldColor} !important; }
-                .main-content { height: 100vh; overflow-y: auto; display: flex; flex-direction: column; background-color: #f8f9fa; }
-                .top-navbar { border-bottom: 2px solid ${goldColor}22; }
+                .main-content {
+                    height: 100vh;
+                    overflow-y: auto;
+                    display: flex;
+                    flex-direction: column;
+                    background: linear-gradient(135deg,
+                        color-mix(in srgb, ${goldColor} 4%, #f8f9fa) 0,
+                        #f8f9fa 38%,
+                        color-mix(in srgb, ${goldColor} 2%, #f8f9fa) 100%) !important;
+                    transition: background 0.25s ease;
+                }
+                .main-content .content-body {
+                    background: transparent;
+                    transition: background 0.25s ease;
+                }
+                .main-content .top-navbar {
+                    background: color-mix(in srgb, ${goldColor} 3%, #ffffff) !important;
+                    border-bottom: 2px solid ${goldColor}44;
+                }
+                .dashboard-wrapper .card {
+                    border-color: color-mix(in srgb, ${goldColor} 10%, #dee2e6) !important;
+                }
+                .dashboard-wrapper .bg-light {
+                    background-color: color-mix(in srgb, ${goldColor} 7%, #f8f9fa) !important;
+                }
                 @media (max-width: 991px) { .sidebar { position: fixed; z-index: 1050; transition: all 0.3s ease; left: -280px; } .sidebar.mobile-open { left: 0; } }
             `}</style>
 
