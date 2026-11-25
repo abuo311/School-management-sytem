@@ -49,7 +49,7 @@ const getVideoEmbed = (videoUrl) => {
 const LearningHub = () => {
     const role = sessionStorage.getItem('userRole');
     const isStudent = role === 'STUDENT';
-    const isAdmin = role === 'ADMIN';
+    const isAdmin = ['SUPER_ADMIN', 'ADMIN', 'DIRECTOR', 'MANAGER'].includes(role);
     const canManage = isAdmin || role === 'TEACHER';
     const [courses, setCourses] = useState([]);
     const [classes, setClasses] = useState([]);

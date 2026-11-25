@@ -69,7 +69,7 @@ public class SystemResetService {
         entityManager.createQuery("DELETE FROM Student").executeUpdate();
 
         java.util.List<User> nonAdminUsers = userRepository.findAll().stream()
-                .filter(user -> user.getRole() != Role.ADMIN)
+                .filter(user -> user.getRole() != Role.ADMIN && user.getRole() != Role.SUPER_ADMIN)
                 .toList();
         if (!nonAdminUsers.isEmpty()) {
             userRepository.deleteAll(nonAdminUsers);

@@ -43,5 +43,8 @@ public class UserRoleSchemaMigration implements ApplicationRunner {
         } else if (!"varchar".equals(dataType) || columnLength < ROLE_COLUMN_LENGTH) {
             throw new IllegalStateException("Unsupported users.role column definition: " + dataType);
         }
+
+        jdbcTemplate.update("UPDATE users SET role = 'SUPER_ADMIN' WHERE role = 'ADMIN'");
+        logger.info("Migrated legacy ADMIN accounts to SUPER_ADMIN");
     }
 }

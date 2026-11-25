@@ -501,7 +501,11 @@ public class LmsExamService {
     }
 
     private void requireCanManage(LmsCourse course, User user) {
-        if (user.getRole() != Role.ADMIN && user.getRole() != Role.TEACHER) {
+        if (user.getRole() != Role.SUPER_ADMIN
+                && user.getRole() != Role.ADMIN
+                && user.getRole() != Role.DIRECTOR
+                && user.getRole() != Role.MANAGER
+                && user.getRole() != Role.TEACHER) {
             throw new IllegalArgumentException("Only administrators and teachers can manage exams.");
         }
         if (user.getRole() == Role.TEACHER && !course.getCreatedBy().getId().equals(user.getId())) {

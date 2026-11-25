@@ -67,7 +67,7 @@ const SubscriptionPage = () => {
     const [verifying, setVerifying] = useState(false);
     const [verificationAttempt, setVerificationAttempt] = useState(0);
     const handledReference = useRef('');
-    const isAdmin = sessionStorage.getItem('userRole') === 'ADMIN';
+    const isAdmin = ['SUPER_ADMIN', 'ADMIN'].includes(sessionStorage.getItem('userRole'));
 
     const loadSubscription = useCallback(async () => {
         const [statusResponse, plansResponse] = await Promise.all([

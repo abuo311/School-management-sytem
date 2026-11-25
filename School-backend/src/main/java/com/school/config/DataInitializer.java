@@ -22,8 +22,8 @@ public class DataInitializer implements CommandLineRunner {
     public void run(String... args) {
         System.out.println("--- System Initialization ---");
 
-        // 1. Create Admin
-        createUserIfNotFound("admin", "admin123", "System Admin", Role.ADMIN);
+        // 1. Create Super Administrator
+        createUserIfNotFound("admin", "admin123", "Super Administrator", Role.SUPER_ADMIN);
 
         // 2. Create Teacher
         createUserIfNotFound("teacher", "teacher123", "Default Teacher", Role.TEACHER);

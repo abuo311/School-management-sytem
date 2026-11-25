@@ -15,7 +15,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/canteen")
-@PreAuthorize("hasAnyRole('ADMIN', 'BURSAR')")
+@PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'DIRECTOR', 'MANAGER', 'BURSAR')")
 public class CanteenController {
 
     private final CanteenService canteenService;

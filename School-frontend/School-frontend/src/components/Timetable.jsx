@@ -16,7 +16,7 @@ const Timetable = () => {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState('');
-    const isAdmin = sessionStorage.getItem('userRole') === 'ADMIN';
+    const isAdmin = ['SUPER_ADMIN', 'ADMIN', 'DIRECTOR', 'MANAGER'].includes(sessionStorage.getItem('userRole'));
 
     useEffect(() => {
         loadPage();

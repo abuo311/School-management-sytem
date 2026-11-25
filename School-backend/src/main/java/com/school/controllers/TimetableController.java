@@ -28,7 +28,7 @@ public class TimetableController {
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'DIRECTOR', 'MANAGER')")
     public ResponseEntity<?> create(@RequestBody TimetableEntryRequest request) {
         try {
             return ResponseEntity.status(HttpStatus.CREATED).body(timetableService.create(request));
@@ -38,7 +38,7 @@ public class TimetableController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'DIRECTOR', 'MANAGER')")
     public ResponseEntity<?> update(@PathVariable Long id, @RequestBody TimetableEntryRequest request) {
         try {
             return ResponseEntity.ok(timetableService.update(id, request));
@@ -48,7 +48,7 @@ public class TimetableController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'DIRECTOR', 'MANAGER')")
     public ResponseEntity<?> delete(@PathVariable Long id) {
         try {
             timetableService.delete(id);

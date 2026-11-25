@@ -202,18 +202,20 @@ const DashboardLayout = () => {
                     <Link to="/dashboard" className={`menu-item d-flex align-items-center gap-2 p-2 rounded text-decoration-none ${location.pathname === '/dashboard' ? 'active' : ''}`} onClick={closeMobileMenu}>
                         <LayoutDashboard size={20} /><span>Dashboard</span>
                     </Link>
-                    {['ADMIN', 'TEACHER', 'STUDENT'].includes(userRole) && (
+                    {['SUPER_ADMIN', 'ADMIN', 'DIRECTOR', 'MANAGER', 'TEACHER', 'STUDENT'].includes(userRole) && (
                         <Link to="/dashboard/learning" className={`menu-item d-flex align-items-center gap-2 p-2 rounded text-decoration-none ${isActive('/dashboard/learning') ? 'active' : ''}`} onClick={closeMobileMenu}>
                             <GraduationCap size={20} /><span>{userRole === 'STUDENT' ? 'My Learning' : 'Learning Hub'}</span>
                         </Link>
                     )}
 
-                    {(userRole === 'ADMIN' || userRole === 'TEACHER') && (
+                    {['SUPER_ADMIN', 'ADMIN', 'DIRECTOR', 'MANAGER', 'TEACHER'].includes(userRole) && (
                         <>
                             <p className="menu-label small text-uppercase fw-bold mt-4 mb-2 px-2" style={{ color: goldColor, opacity: 0.7, fontSize: '0.7rem' }}>Academic</p>
-                            <Link to="/dashboard/students" className={`menu-item d-flex align-items-center gap-2 p-2 rounded text-decoration-none ${isActive('/dashboard/students') ? 'active' : ''}`} onClick={closeMobileMenu}>
-                                <Users size={20} /><span>Pupil Registry</span>
-                            </Link>
+                            {['SUPER_ADMIN', 'ADMIN', 'DIRECTOR', 'MANAGER'].includes(userRole) && (
+                                <Link to="/dashboard/students" className={`menu-item d-flex align-items-center gap-2 p-2 rounded text-decoration-none ${isActive('/dashboard/students') ? 'active' : ''}`} onClick={closeMobileMenu}>
+                                    <Users size={20} /><span>Pupil Registry</span>
+                                </Link>
+                            )}
                             <Link to="/dashboard/attendance" className={`menu-item d-flex align-items-center gap-2 p-2 rounded text-decoration-none ${isActive('/dashboard/attendance') ? 'active' : ''}`} onClick={closeMobileMenu}>
                                 <CalendarCheck size={20} /><span>Attendance</span>
                             </Link>
@@ -232,7 +234,7 @@ const DashboardLayout = () => {
                         </>
                     )}
 
-                    {(userRole === 'ADMIN' || userRole === 'BURSAR') && (
+                    {['SUPER_ADMIN', 'ADMIN', 'DIRECTOR', 'MANAGER', 'BURSAR'].includes(userRole) && (
                         <>
                             <p className="menu-label small text-uppercase fw-bold mt-4 mb-2 px-2" style={{ color: goldColor, opacity: 0.7, fontSize: '0.7rem' }}>Finance</p>
                             <Link to="/dashboard/fees" className={`menu-item d-flex align-items-center gap-2 p-2 rounded text-decoration-none ${isActive('/dashboard/fees') ? 'active' : ''}`} onClick={closeMobileMenu}>
@@ -256,7 +258,7 @@ const DashboardLayout = () => {
                         </>
                     )}
 
-                    {userRole === 'ADMIN' && (
+                    {['SUPER_ADMIN', 'ADMIN'].includes(userRole) && (
                         <>
                             <p className="menu-label small text-uppercase fw-bold mt-4 mb-2 px-2" style={{ color: goldColor, opacity: 0.7, fontSize: '0.7rem' }}>Admin Control</p>
                             <Link to="/dashboard/teachers" className={`menu-item d-flex align-items-center gap-2 p-2 rounded text-decoration-none ${isActive('/dashboard/teachers') ? 'active' : ''}`} onClick={closeMobileMenu}>
@@ -288,7 +290,7 @@ const DashboardLayout = () => {
                 </nav>
 
                 <div className="p-3 border-top border-secondary border-opacity-25">
-                    {userRole === 'ADMIN' && (
+                    {['SUPER_ADMIN', 'ADMIN'].includes(userRole) && (
                         <button
                             onClick={handleDatabaseBackup}
                             disabled={isBackingUp}

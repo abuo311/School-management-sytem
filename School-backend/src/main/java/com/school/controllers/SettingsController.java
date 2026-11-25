@@ -94,7 +94,7 @@ public class SettingsController {
     }
 
     @PostMapping("/reset-system")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
     public ResponseEntity<?> resetSystem(@RequestBody(required = false) Map<String, String> confirmation) {
         if (confirmation == null || !"RESET".equalsIgnoreCase(confirmation.get("confirmation"))) {
             return ResponseEntity.badRequest().body("Type RESET to confirm the system reset.");

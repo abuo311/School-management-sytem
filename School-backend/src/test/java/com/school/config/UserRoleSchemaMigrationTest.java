@@ -21,6 +21,7 @@ class UserRoleSchemaMigrationTest {
         new UserRoleSchemaMigration(jdbcTemplate).run(null);
 
         verify(jdbcTemplate).execute("ALTER TABLE users MODIFY COLUMN role VARCHAR(20) NULL DEFAULT NULL");
+        verify(jdbcTemplate).update("UPDATE users SET role = 'SUPER_ADMIN' WHERE role = 'ADMIN'");
     }
 
     @Test
@@ -32,5 +33,6 @@ class UserRoleSchemaMigrationTest {
         new UserRoleSchemaMigration(jdbcTemplate).run(null);
 
         verify(jdbcTemplate, never()).execute("ALTER TABLE users MODIFY COLUMN role VARCHAR(20) NULL DEFAULT NULL");
+        verify(jdbcTemplate).update("UPDATE users SET role = 'SUPER_ADMIN' WHERE role = 'ADMIN'");
     }
 }

@@ -136,7 +136,7 @@ const UserManagement = () => {
 
     const toggleUserStatus = async (user) => {
         // PREVENTION: Don't allow toggling Admin status
-        if (user.role === 'ADMIN') return;
+        if (['SUPER_ADMIN', 'ADMIN'].includes(user.role)) return;
 
         const newStatus = user.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE';
         try {
@@ -240,9 +240,11 @@ const UserManagement = () => {
                                         onChange={event => setEditForm(current => ({ ...current, role: event.target.value }))}
                                         disabled={editingUser.username === sessionStorage.getItem('userName') || editingUser.role === 'STUDENT'}
                                     >
+                                        <option value="DIRECTOR">Director / Board of Directors</option>
+                                        <option value="MANAGER">Manager / Management</option>
                                         <option value="TEACHER">Teacher / Faculty</option>
                                         <option value="BURSAR">Bursar / Accounts</option>
-                                        <option value="ADMIN">System Administrator</option>
+                                        <option value="SUPER_ADMIN">Super Administrator</option>
                                         {editingUser.role === 'STUDENT' && <option value="STUDENT">Student learner</option>}
                                     </select>
                                     {(editingUser.username === sessionStorage.getItem('userName') || editingUser.role === 'STUDENT') && (
@@ -313,9 +315,11 @@ const UserManagement = () => {
                                 <div className="mb-4">
                                     <label className="small fw-bold text-muted">SYSTEM ROLE</label>
                                     <select className="form-select bg-light border-0 py-2 gold-border-focus" value={newUser.role} onChange={e => setNewUser({...newUser, role: e.target.value})}>
+                                        <option value="DIRECTOR">Director / Board of Directors</option>
+                                        <option value="MANAGER">Manager / Management</option>
                                         <option value="TEACHER">Teacher / Faculty</option>
                                         <option value="BURSAR">Bursar / Accounts</option>
-                                        <option value="ADMIN">System Administrator</option>
+                                        <option value="SUPER_ADMIN">Super Administrator</option>
                                     </select>
                                 </div>
                                 <button className="btn w-100 fw-bold py-2 shadow-sm" style={{ backgroundColor: blackColor, color: goldColor }} disabled={loading || photoProcessing}>
@@ -362,7 +366,7 @@ const UserManagement = () => {
                                         <td className="text-start">
                                             {/* Logic: Only non-admins can be toggled */}
                                             <div
-                                                className={`status-switch d-inline-flex ${u.role === 'ADMIN' ? 'status-disabled' : 'status-active'}`}
+                                                className={`status-switch d-inline-flex ${['SUPER_ADMIN', 'ADMIN'].includes(u.role) ? 'status-disabled' : 'status-active'}`}
                                                 onClick={() => toggleUserStatus(u)}
                                             >
                                                 {u.status === 'ACTIVE' ? (
@@ -400,7 +404,7 @@ const UserManagement = () => {
                                                        disabled={photoProcessing}
                                                        onChange={event => handleProfilePhotoChange(event, u)} />
                                             </label>
-                                            {u.role !== 'ADMIN' ? (
+                                            {!['SUPER_ADMIN', 'ADMIN'].includes(u.role) ? (
                                                 <button className="btn text-danger opacity-75 hover-opacity-100" onClick={() => deleteUser(u.id)}>
                                                     <Trash2 size={18}/>
                                                 </button>

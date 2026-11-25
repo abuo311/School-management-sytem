@@ -72,45 +72,49 @@ public class WebSecurityConfig {
                         .requestMatchers("/api/subscription/webhook").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/subscription/plans").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/subscription/status").authenticated()
-                        .requestMatchers("/api/subscription/**").hasRole("ADMIN")
-                        .requestMatchers("/api/paystack/status").hasAnyRole("ADMIN", "BURSAR")
+                        .requestMatchers("/api/subscription/**").hasAnyRole("SUPER_ADMIN", "ADMIN")
+                        .requestMatchers("/api/paystack/status").hasAnyRole("SUPER_ADMIN", "ADMIN", "DIRECTOR", "MANAGER", "BURSAR")
                         .requestMatchers(HttpMethod.GET, "/api/settings", "/api/settings/branding").permitAll()
 
                         // --- ROLE-BASED ACCESS CONTROL ---
 
                         // Settings & Global Config: Only ADMIN
-                        .requestMatchers("/api/settings/**").hasRole("ADMIN")
-                        .requestMatchers("/api/backup/**").hasRole("ADMIN")
+                        .requestMatchers("/api/settings/**").hasAnyRole("SUPER_ADMIN", "ADMIN")
+                        .requestMatchers("/api/backup/**").hasAnyRole("SUPER_ADMIN", "ADMIN")
 
                         // Student Management: ADMIN, TEACHER, and BURSAR
-                        .requestMatchers("/api/students/**").hasAnyRole("ADMIN", "TEACHER", "BURSAR")
-                        .requestMatchers("/api/attendance/**").hasAnyRole("ADMIN", "TEACHER")
-                        .requestMatchers("/api/staff-attendance/**").hasRole("ADMIN")
+                        .requestMatchers("/api/students/**").hasAnyRole("SUPER_ADMIN", "ADMIN", "DIRECTOR", "MANAGER")
+                        .requestMatchers("/api/attendance/**").hasAnyRole("SUPER_ADMIN", "ADMIN", "DIRECTOR", "MANAGER", "TEACHER")
+                        .requestMatchers("/api/staff-attendance/**").hasAnyRole("SUPER_ADMIN", "ADMIN", "DIRECTOR", "MANAGER")
                         .requestMatchers("/api/lms/**").authenticated()
-                        .requestMatchers("/api/dashboard/**").hasAnyRole("ADMIN", "TEACHER", "BURSAR")
+                        .requestMatchers("/api/dashboard/**").hasAnyRole("SUPER_ADMIN", "ADMIN", "DIRECTOR", "MANAGER", "TEACHER", "BURSAR")
                         .requestMatchers("/api/classes/**", "/api/results/**", "/api/notifications/**")
-                        .hasAnyRole("ADMIN", "TEACHER")
-                        .requestMatchers("/api/promotion/**", "/api/debug/**").hasRole("ADMIN")
-                        .requestMatchers("/api/canteen/**").hasAnyRole("ADMIN", "BURSAR")
-                        .requestMatchers("/api/payroll/**").hasAnyRole("ADMIN", "BURSAR")
+                        .hasAnyRole("SUPER_ADMIN", "ADMIN", "DIRECTOR", "MANAGER", "TEACHER")
+                        .requestMatchers("/api/promotion/**", "/api/debug/**").hasAnyRole("SUPER_ADMIN", "ADMIN", "DIRECTOR", "MANAGER")
+                        .requestMatchers("/api/canteen/**").hasAnyRole("SUPER_ADMIN", "ADMIN", "DIRECTOR", "MANAGER", "BURSAR")
+                        .requestMatchers("/api/payroll/**").hasAnyRole("SUPER_ADMIN", "ADMIN", "DIRECTOR", "MANAGER", "BURSAR")
 
                         // Academic Management: ADMIN and TEACHER
-                        .requestMatchers("/api/subjects/**").hasAnyRole("ADMIN", "TEACHER")
-                        .requestMatchers("/api/classes/**").hasAnyRole("ADMIN", "TEACHER")
+                        .requestMatchers("/api/subjects/**")
+                        .hasAnyRole("SUPER_ADMIN", "ADMIN", "DIRECTOR", "MANAGER", "TEACHER")
+                        .requestMatchers("/api/classes/**")
+                        .hasAnyRole("SUPER_ADMIN", "ADMIN", "DIRECTOR", "MANAGER", "TEACHER")
                         .requestMatchers("/api/timetable/**", "/api/lesson-notes/**")
-                        .hasAnyRole("ADMIN", "TEACHER")
+                        .hasAnyRole("SUPER_ADMIN", "ADMIN", "DIRECTOR", "MANAGER", "TEACHER")
 
                         // Finance/Bursary Management: ADMIN and BURSAR
-                        .requestMatchers("/api/fees/**").hasAnyRole("ADMIN", "BURSAR")
+                        .requestMatchers("/api/fees/**")
+                        .hasAnyRole("SUPER_ADMIN", "ADMIN", "DIRECTOR", "MANAGER", "BURSAR")
                         .requestMatchers("/api/paystack/initialize", "/api/paystack/verify")
-                        .hasAnyRole("ADMIN", "BURSAR")
-                        .requestMatchers("/api/payments/**").hasAnyRole("ADMIN", "BURSAR")
-                        .requestMatchers("/api/expenses/**").hasAnyRole("ADMIN", "BURSAR")
+                        .hasAnyRole("SUPER_ADMIN", "ADMIN", "DIRECTOR", "MANAGER", "BURSAR")
+                        .requestMatchers("/api/payments/**")
+                        .hasAnyRole("SUPER_ADMIN", "ADMIN", "DIRECTOR", "MANAGER", "BURSAR")
+                        .requestMatchers("/api/expenses/**").hasAnyRole("SUPER_ADMIN", "ADMIN", "DIRECTOR", "MANAGER", "BURSAR")
 
                         // Teacher/Staff Management: Only ADMIN
-                        .requestMatchers("/api/teachers/**").hasRole("ADMIN")
-                        .requestMatchers("/api/non-teaching-staff/**").hasRole("ADMIN")
-                        .requestMatchers("/api/users/**").hasRole("ADMIN")
+                        .requestMatchers("/api/teachers/**").hasAnyRole("SUPER_ADMIN", "ADMIN", "DIRECTOR", "MANAGER")
+                        .requestMatchers("/api/non-teaching-staff/**").hasAnyRole("SUPER_ADMIN", "ADMIN", "DIRECTOR", "MANAGER")
+                        .requestMatchers("/api/users/**").hasAnyRole("SUPER_ADMIN", "ADMIN")
 
                         // --- PROTECT ALL OTHER ROUTES ---
                         .requestMatchers("/api/**").authenticated()

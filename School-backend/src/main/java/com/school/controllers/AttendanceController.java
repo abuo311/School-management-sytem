@@ -81,7 +81,7 @@ public class AttendanceController {
     }
 
     @DeleteMapping("/clear-all")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'DIRECTOR', 'MANAGER')")
     public ResponseEntity<?> clearAllAttendance() {
         try {
             attendanceRepository.deleteAllAttendance();

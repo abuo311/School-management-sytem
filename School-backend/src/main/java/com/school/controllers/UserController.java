@@ -58,7 +58,8 @@ public class UserController {
             @RequestBody User userDetails,
             @AuthenticationPrincipal UserDetails currentUser) {
         return userRepository.findById(id).map(user -> {
-            if (user.getRole() == Role.ADMIN && "INACTIVE".equalsIgnoreCase(userDetails.getStatus())) {
+            if ((user.getRole() == Role.ADMIN || user.getRole() == Role.SUPER_ADMIN)
+                    && "INACTIVE".equalsIgnoreCase(userDetails.getStatus())) {
                 return ResponseEntity.badRequest()
                         .body("Security Protection: Administrator accounts cannot be disabled.");
             }
@@ -105,7 +106,7 @@ public class UserController {
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteUser(@PathVariable Long id) {
         return userRepository.findById(id).map(user -> {
-            if (user.getRole() == Role.ADMIN) {
+            if (user.getRole() == Role.ADMIN || user.getRole() == Role.SUPER_ADMIN) {
                 return ResponseEntity.badRequest()
                         .body("Security Protection: Administrator accounts cannot be deleted.");
             }

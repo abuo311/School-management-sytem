@@ -74,7 +74,8 @@ public class LmsService {
     public List<LmsCourseDto> listCourses(String username) {
         User user = findUser(username);
         List<LmsCourse> courses;
-        if (user.getRole() == Role.ADMIN) {
+        if (user.getRole() == Role.SUPER_ADMIN || user.getRole() == Role.ADMIN
+                || user.getRole() == Role.DIRECTOR || user.getRole() == Role.MANAGER) {
             courses = courseRepository.findAllByOrderByCreatedAtDesc();
         } else if (user.getRole() == Role.TEACHER) {
             courses = courseRepository.findByCreatedByIdOrderByCreatedAtDesc(user.getId());
@@ -464,19 +465,24 @@ public class LmsService {
 
     private void requireCanManage(LmsCourse course, User user) {
         requireStaff(user);
-        if (user.getRole() != Role.ADMIN && !course.getCreatedBy().getId().equals(user.getId())) {
+        if (user.getRole() != Role.SUPER_ADMIN && user.getRole() != Role.ADMIN
+                && user.getRole() != Role.DIRECTOR && user.getRole() != Role.MANAGER
+                && !course.getCreatedBy().getId().equals(user.getId())) {
             throw new IllegalArgumentException("You can only manage courses that you created.");
         }
     }
 
     private void requireStaff(User user) {
-        if (user.getRole() != Role.ADMIN && user.getRole() != Role.TEACHER) {
+        if (user.getRole() != Role.SUPER_ADMIN && user.getRole() != Role.ADMIN
+                && user.getRole() != Role.DIRECTOR && user.getRole() != Role.MANAGER
+                && user.getRole() != Role.TEACHER) {
             throw new IllegalArgumentException("Only administrators and teachers can manage courses.");
         }
     }
 
     private void requireAdministrator(User user) {
-        if (user.getRole() != Role.ADMIN) {
+        if (user.getRole() != Role.SUPER_ADMIN && user.getRole() != Role.ADMIN
+                && user.getRole() != Role.DIRECTOR && user.getRole() != Role.MANAGER) {
             throw new IllegalArgumentException("Only administrators can create student accounts.");
         }
     }
