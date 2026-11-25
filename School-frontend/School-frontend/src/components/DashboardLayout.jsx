@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import API from '../services/api';
+import { notify } from '../services/notifications';
 import {
     LayoutDashboard, Users, UserCog, BookOpen,
     Settings, LogOut, Home, CalendarCheck,
@@ -72,6 +73,7 @@ const DashboardLayout = () => {
     }, []);
 
     const handleLogout = () => {
+        notify('Signed out successfully.', 'info');
         sessionStorage.clear();
         navigate('/login');
     };

@@ -26,6 +26,7 @@ import SubjectManagement from './components/SubjectManagement';
 import LearningHub from './components/LearningHub';
 import API from './services/api';
 import SubscriptionPage, { SubscriptionGate } from './components/SubscriptionPage';
+import AppNotifications from './components/AppNotifications';
 
 import {
     Users, UserCog, Wallet, ShieldPlus,
@@ -234,6 +235,7 @@ const SubscriptionRouteRedirect = () => {
 function App() {
     return (
         <Router>
+            <AppNotifications />
             <PageTitleManager />
             <Routes>
                 <Route path="/login" element={<Login />} />

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import API from '../services/api';
 import {
-    Lock, User, ShieldAlert, LogIn, GraduationCap,
+    Lock, User, LogIn, GraduationCap,
     Eye, EyeOff, Mail, Phone, HelpCircle, X, CreditCard
 } from 'lucide-react';
 import '../styles/LoginMobile.css';
@@ -11,7 +11,6 @@ const Login = () => {
     const navigate = useNavigate();
     const [credentials, setCredentials] = useState({ username: '', password: '' });
     const [showPassword, setShowPassword] = useState(false);
-    const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const [showSupport, setShowSupport] = useState(false);
     const [showPlans, setShowPlans] = useState(false);
@@ -56,7 +55,6 @@ const Login = () => {
     const handleLogin = async (e) => {
         e.preventDefault();
         setLoading(true);
-        setError('');
 
         try {
             sessionStorage.clear();
@@ -68,6 +66,8 @@ const Login = () => {
                 if (res.data.fullName) sessionStorage.setItem('fullName', res.data.fullName);
                 if (res.data.profilePhoto) sessionStorage.setItem('profilePhoto', res.data.profilePhoto);
                 sessionStorage.setItem('isAuthenticated', 'true');
+                sessionStorage.setItem('appLastActivityAt', String(Date.now()));
+                window.dispatchEvent(new Event('app:authenticated'));
                 navigate(
                     selectedPlan
                         ? `/dashboard/subscription?plan=${encodeURIComponent(selectedPlan.code)}`
@@ -76,7 +76,7 @@ const Login = () => {
                 );
             }
         } catch (err) {
-            setError("Invalid username or password.");
+            console.error('Login request failed:', err);
         } finally {
             setLoading(false);
         }
@@ -143,13 +143,6 @@ const Login = () => {
                             <h3 className="fw-black text-dark mb-1 text-uppercase" style={{ fontSize: '1.5rem' }}>Account Login</h3>
                             <p className="text-muted small fw-bold">Enter authorized credentials to continue</p>
                         </div>
-
-                        {error && (
-                            <div className="alert border-0 d-flex align-items-center mb-4 py-3 rounded-3 shadow-sm" style={{ backgroundColor: '#fff5f5', color: '#c53030' }}>
-                                <ShieldAlert size={18} className="me-2"/>
-                                <span className="small fw-bold">{error}</span>
-                            </div>
-                        )}
 
                         <form onSubmit={handleLogin}>
                             <div className="mb-3">

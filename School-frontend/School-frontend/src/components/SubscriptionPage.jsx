@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Navigate, Outlet, useNavigate, useSearchParams } from 'react-router-dom';
 import { CheckCircle2, CreditCard, ShieldCheck, Save, SlidersHorizontal } from 'lucide-react';
 import API from '../services/api';
+import { notify } from '../services/notifications';
 
 const formatGhs = amount => `GHS ${Number(amount).toLocaleString('en-GH')}`;
 
@@ -156,6 +157,7 @@ const SubscriptionPage = () => {
     };
 
     const signOut = () => {
+        notify('Signed out successfully.', 'info');
         sessionStorage.clear();
         navigate('/login', { replace: true });
     };
