@@ -6,6 +6,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 
 public interface NonTeachingStaffRepository extends JpaRepository<NonTeachingStaff, Long> {
+    long countByActiveTrue();
+
     List<NonTeachingStaff> findAllByOrderByFullNameAsc();
 
     List<NonTeachingStaff> findByActiveTrueOrderByFullNameAsc();

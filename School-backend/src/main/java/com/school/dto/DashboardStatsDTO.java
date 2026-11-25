@@ -8,4 +8,9 @@ import lombok.Data;
 public class DashboardStatsDTO {
     private long totalStudents;
     private long totalTeachers;
+    private long totalTeachingStaff;
+    private long totalNonTeachingStaff;
+    private long totalStaff;
+    private long totalDirectors;
+    private long totalManagers;
 }

@@ -3,6 +3,9 @@ package com.school.controllers;
 import com.school.repositories.FeeRepository;
 import com.school.repositories.StudentRepository;
 import com.school.repositories.TeacherRepository;
+import com.school.repositories.UserRepository;
+import com.school.repositories.NonTeachingStaffRepository;
+import com.school.entities.Role;
 import com.school.services.FeeAssessmentService;
 import org.junit.jupiter.api.Test;
 
@@ -25,14 +28,21 @@ class DashboardControllerTest {
         TeacherRepository teacherRepository = mock(TeacherRepository.class);
         FeeRepository feeRepository = mock(FeeRepository.class);
         FeeAssessmentService feeAssessmentService = mock(FeeAssessmentService.class);
+        UserRepository userRepository = mock(UserRepository.class);
+        NonTeachingStaffRepository nonTeachingStaffRepository = mock(NonTeachingStaffRepository.class);
 
         when(studentRepository.countByEnabledTrue()).thenReturn(0L);
         when(teacherRepository.count()).thenReturn(3L);
         when(feeRepository.sumCollectedFeesForActiveStudents()).thenReturn(0.0);
         when(feeAssessmentService.getActiveLearnerOutstandingTotal()).thenReturn(0.0);
+        when(userRepository.countByRoleAndEnabledTrue(Role.TEACHER)).thenReturn(3L);
+        when(nonTeachingStaffRepository.countByActiveTrue()).thenReturn(2L);
+        when(userRepository.countByRoleAndEnabledTrue(Role.DIRECTOR)).thenReturn(1L);
+        when(userRepository.countByRoleAndEnabledTrue(Role.MANAGER)).thenReturn(2L);
 
         DashboardController controller = new DashboardController(
-                studentRepository, teacherRepository, feeRepository, feeAssessmentService);
+                studentRepository, teacherRepository, feeRepository, feeAssessmentService,
+                userRepository, nonTeachingStaffRepository);
 
         var authentication = new UsernamePasswordAuthenticationToken("admin", "",
                 List.of(new SimpleGrantedAuthority("ROLE_ADMIN")));
@@ -41,6 +51,11 @@ class DashboardControllerTest {
         assertEquals(0L, stats.get("totalStudents"));
         assertEquals(0.0, stats.get("totalCollected"));
         assertEquals(0.0, stats.get("totalDebt"));
+        assertEquals(3L, stats.get("totalTeachingStaff"));
+        assertEquals(2L, stats.get("totalNonTeachingStaff"));
+        assertEquals(5L, stats.get("totalStaff"));
+        assertEquals(1L, stats.get("totalDirectors"));
+        assertEquals(2L, stats.get("totalManagers"));
         verify(feeRepository).sumCollectedFeesForActiveStudents();
         verify(feeRepository, never()).sumAllCollectedFees();
         verify(feeRepository, never()).findAllLatestPayments();
@@ -53,8 +68,11 @@ class DashboardControllerTest {
         TeacherRepository teacherRepository = mock(TeacherRepository.class);
         FeeRepository feeRepository = mock(FeeRepository.class);
         FeeAssessmentService feeAssessmentService = mock(FeeAssessmentService.class);
+        UserRepository userRepository = mock(UserRepository.class);
+        NonTeachingStaffRepository nonTeachingStaffRepository = mock(NonTeachingStaffRepository.class);
         DashboardController controller = new DashboardController(
-                studentRepository, teacherRepository, feeRepository, feeAssessmentService);
+                studentRepository, teacherRepository, feeRepository, feeAssessmentService,
+                userRepository, nonTeachingStaffRepository);
         var authentication = new UsernamePasswordAuthenticationToken("teacher", "",
                 List.of(new SimpleGrantedAuthority("ROLE_TEACHER")));
 

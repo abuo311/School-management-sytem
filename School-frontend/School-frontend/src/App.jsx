@@ -28,7 +28,7 @@ import API from './services/api';
 import SubscriptionPage, { SubscriptionGate } from './components/SubscriptionPage';
 
 import {
-    Users, UserCog, Wallet,
+    Users, UserCog, Wallet, ShieldPlus,
     AlertTriangle, CalendarCheck, PenTool, TrendingUp, Award
 } from 'lucide-react';
 
@@ -77,7 +77,17 @@ const PageTitleManager = () => {
 
 // --- DASHBOARD HOME COMPONENT ---
 const DashboardHome = () => {
-    const [data, setData] = useState({ totalStudents: 0, totalTeachers: 0, totalCollected: 0, totalDebt: 0 });
+    const [data, setData] = useState({
+        totalStudents: 0,
+        totalTeachers: 0,
+        totalTeachingStaff: 0,
+        totalNonTeachingStaff: 0,
+        totalStaff: 0,
+        totalDirectors: 0,
+        totalManagers: 0,
+        totalCollected: 0,
+        totalDebt: 0
+    });
     const [availableBalance, setAvailableBalance] = useState(null);
     const [schoolName, setSchoolName] = useState('EDUMANAGER');
     const userRole = sessionStorage.getItem('userRole');
@@ -101,6 +111,11 @@ const DashboardHome = () => {
                 setData({
                     totalStudents: statsRes.data.totalStudents || 0,
                     totalTeachers: statsRes.data.totalTeachers || 0,
+                    totalTeachingStaff: statsRes.data.totalTeachingStaff || 0,
+                    totalNonTeachingStaff: statsRes.data.totalNonTeachingStaff || 0,
+                    totalStaff: statsRes.data.totalStaff || 0,
+                    totalDirectors: statsRes.data.totalDirectors || 0,
+                    totalManagers: statsRes.data.totalManagers || 0,
                     totalCollected: canViewFinance ? statsRes.data.totalCollected || 0 : 0,
                     totalDebt: canViewFinance ? statsRes.data.totalDebt || 0 : 0
                 });
@@ -123,7 +138,11 @@ const DashboardHome = () => {
 
     const stats = [
         { label: 'Total Pupils', value: data.totalStudents, icon: <Users size={22}/>, bg: 'var(--theme-accent-soft)', border: goldColor },
-        { label: 'Staff Count', value: data.totalTeachers, icon: <UserCog size={22}/>, bg: '#f8f9fa', border: darkColor },
+        { label: 'Total Staff', value: data.totalStaff, icon: <UserCog size={22}/>, bg: '#f8f9fa', border: darkColor },
+        { label: 'Teaching Staff', value: data.totalTeachingStaff, icon: <UserCog size={22}/>, bg: '#f8f9fa', border: darkColor },
+        { label: 'Non-Teaching Staff', value: data.totalNonTeachingStaff, icon: <Users size={22}/>, bg: 'var(--theme-accent-soft)', border: goldColor },
+        { label: 'Directors / Board', value: data.totalDirectors, icon: <ShieldPlus size={22}/>, bg: '#f8f9fa', border: darkColor },
+        { label: 'Managers', value: data.totalManagers, icon: <UserCog size={22}/>, bg: 'var(--theme-accent-soft)', border: goldColor },
         ...(canViewFinance ? [
             { label: 'Fees Collected', value: `₵${data.totalCollected.toLocaleString()}`, icon: <Wallet size={22}/>, bg: 'var(--theme-accent-soft)', border: goldColor },
             { label: 'Outstanding', value: `₵${data.totalDebt.toLocaleString()}`, icon: <AlertTriangle size={22}/>, bg: '#fff5f5', border: '#e74a3b' },

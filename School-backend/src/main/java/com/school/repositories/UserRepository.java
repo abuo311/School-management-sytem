@@ -1,6 +1,7 @@
 package com.school.repositories;
 
 import com.school.entities.User;
+import com.school.entities.Role;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -18,6 +19,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
     boolean existsByStudentId(Long studentId);
 
     List<User> findByEnabledTrueOrderByFullNameAsc();
+
+    long countByRoleAndEnabledTrue(Role role);
 
     /**
      * Fetches users who do not have an associated Teacher record.
