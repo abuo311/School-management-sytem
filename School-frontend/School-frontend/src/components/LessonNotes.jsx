@@ -259,13 +259,18 @@ const LessonNotes = () => {
     };
 
     return (
-        <div className="container-fluid py-4 text-start">
-            <header className="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
-                <div>
-                    <h3 className="fw-bold mb-1"><BookOpenText className="me-2 text-primary" size={24} />Lesson Notes</h3>
-                    <p className="text-muted small mb-0">Plan lesson objectives, activities, resources and homework</p>
+        <div className="container-fluid py-4 text-start lesson-notes-page">
+            <header className="page-heading d-flex flex-wrap justify-content-between align-items-end gap-3 mb-4">
+                <div className="d-flex align-items-center gap-3">
+                    <div className="page-heading-icon"><BookOpenText size={23} /></div>
+                    <div>
+                        <h3 className="fw-bold mb-1">Lesson Notes</h3>
+                        <p className="text-muted small mb-0">Plan lesson objectives, activities, resources and homework</p>
+                    </div>
                 </div>
-                <label className="small fw-semibold">Notes for date <input aria-label="Filter notes by date" type="date" className="form-control mt-1" value={filterDate} onChange={event => { setError(''); setFilterDate(event.target.value); }} /></label>
+                <label className="small fw-semibold lesson-notes-date">Notes for date
+                    <input aria-label="Filter notes by date" type="date" className="form-control mt-1" value={filterDate} onChange={event => { setError(''); setFilterDate(event.target.value); }} />
+                </label>
             </header>
 
             {error && <div className="alert alert-danger py-2" role="alert">{error}</div>}
@@ -273,7 +278,7 @@ const LessonNotes = () => {
 
             <div className="row g-4">
                 <div className="col-xl-5">
-                    <form className="bg-white border rounded p-3" onSubmit={saveNote}>
+                    <form className="lesson-note-form card border-0 shadow-sm rounded-4 p-4" onSubmit={saveNote}>
                         <div className="d-flex justify-content-between align-items-center mb-3">
                             <h6 className="fw-bold mb-0">{editingId ? 'Edit lesson note' : 'Prepare lesson note'}</h6>
                             {editingId && <button type="button" className="btn btn-sm btn-outline-secondary" onClick={resetForm}><X size={15} /> Cancel</button>}
@@ -326,19 +331,23 @@ const LessonNotes = () => {
                 </div>
 
                 <div className="col-xl-7">
-                    <div className="d-flex justify-content-between align-items-center border-bottom pb-2 mb-3">
-                        <h5 className="fw-bold mb-0">Saved notes</h5><span className="badge bg-light text-dark border">{notes.length}</span>
+                    <div className="lesson-notes-list-heading d-flex justify-content-between align-items-center border-bottom pb-3 mb-3">
+                        <div>
+                            <h5 className="fw-bold mb-1">Saved notes</h5>
+                            <span className="small text-muted">Lessons planned for the selected date</span>
+                        </div>
+                        <span className="badge bg-light text-dark border rounded-pill px-3 py-2">{notes.length}</span>
                     </div>
                     {loading ? <div className="py-4 text-center text-muted"><Loader2 className="animate-spin me-2" />Loading...</div> : notes.length === 0 ? (
-                        <div className="bg-white border rounded p-4 text-center text-muted">No lesson notes saved for this date.</div>
+                        <div className="card border-0 shadow-sm rounded-4 p-4 text-center text-muted">No lesson notes saved for this date.</div>
                     ) : <div className="d-grid gap-3">
-                        {notes.map(note => <article key={note.id} className="bg-white border rounded p-3">
-                            <div className="d-flex justify-content-between gap-3">
+                        {notes.map(note => <article key={note.id} className="lesson-note-card card border-0 shadow-sm rounded-4 p-3 p-lg-4">
+                            <div className="d-flex justify-content-between align-items-start gap-3">
                                 <div>
                                     <div className="small text-muted">{note.startTime}–{note.endTime} · {note.className} · {note.subjectName}</div>
                                     <h6 className="fw-bold mt-1 mb-2">{note.topic}</h6>
                                 </div>
-                                <div className="d-flex align-items-start gap-2">
+                                <div className="d-flex flex-shrink-0 align-items-center gap-2">
                                     <button className="btn btn-sm btn-outline-secondary" onClick={() => editNote(note)} title="Edit note"><Save size={15} /></button>
                                     <button className="btn btn-sm btn-outline-danger" onClick={() => deleteNote(note)} title="Delete note"><Trash2 size={15} /></button>
                                 </div>

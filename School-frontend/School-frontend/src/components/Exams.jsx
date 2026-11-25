@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import * as bootstrap from 'bootstrap';
 import API from '../services/api';
-import { Save, RefreshCcw, Trash2, CheckCircle, TrendingUp, Loader2 } from 'lucide-react';
+import { Save, RefreshCcw, Trash2, CheckCircle, TrendingUp, Loader2, FileText } from 'lucide-react';
 
 const Exams = () => {
     const [students, setStudents] = useState([]);
@@ -183,7 +183,7 @@ const Exams = () => {
     const filteredStudents = students.filter(s => s.gradeLevel === selectedClass);
 
     return (
-        <div className="container-fluid py-4 bg-light min-vh-100 text-start">
+        <div className="container-fluid py-4 bg-light min-vh-100 text-start exams-page">
             {/* Success Toast */}
             <div className="toast-container position-fixed top-0 end-0 p-3" style={{ zIndex: 1100 }}>
                 <div id="successToast" className="toast align-items-center text-white bg-success border-0" role="alert">
@@ -194,7 +194,15 @@ const Exams = () => {
                 </div>
             </div>
 
-            <div className="card border-0 shadow-sm p-4 mb-4 bg-white rounded-4">
+            <header className="page-heading d-flex align-items-center gap-3 mb-4">
+                <div className="page-heading-icon"><FileText size={23} /></div>
+                <div>
+                    <h3 className="fw-bold mb-1">Exam Scores</h3>
+                    <p className="text-muted small mb-0">Enter, review and rank student assessment results</p>
+                </div>
+            </header>
+
+            <div className="exam-controls card border-0 shadow-sm p-4 mb-4 bg-white rounded-4">
                 <div className="row g-3 align-items-end">
                     <div className="col-md-3">
                         <label className="small fw-bold text-muted mb-2 text-uppercase">Class</label>
@@ -220,13 +228,13 @@ const Exams = () => {
                             <option>Term 1</option><option>Term 2</option><option>Term 3</option>
                         </select>
                     </div>
-                    <div className="col-md-4 d-flex gap-2">
-                        <button className="btn btn-primary flex-grow-1 fw-bold py-2 d-flex align-items-center justify-content-center gap-2"
+                    <div className="col-md-4 d-flex flex-wrap flex-sm-nowrap gap-2 exam-actions">
+                        <button className="btn btn-primary flex-fill fw-bold py-2 d-flex align-items-center justify-content-center gap-2"
                                 onClick={saveExamResults} disabled={saving || !selectedClass || !subject}>
                             {saving ? <Loader2 size={18} className="animate-spin"/> : <Save size={18}/>}
                             Save
                         </button>
-                        <button className="btn btn-dark flex-grow-1 fw-bold py-2 d-flex align-items-center justify-content-center gap-2"
+                        <button className="btn btn-dark flex-fill fw-bold py-2 d-flex align-items-center justify-content-center gap-2"
                                 onClick={handleCalculateRanks} disabled={ranking || !selectedClass}>
                             {ranking ? <Loader2 size={18} className="animate-spin"/> : <TrendingUp size={18}/>}
                             Rank
@@ -235,7 +243,7 @@ const Exams = () => {
                 </div>
             </div>
 
-            <div className="card border-0 shadow-sm rounded-4">
+            <div className="exam-results-card card border-0 shadow-sm rounded-4 overflow-hidden">
                 <div className="table-responsive">
                 <table className="table table-hover mb-0 align-middle" style={{ minWidth: '850px' }}>
                     <thead className="bg-dark text-white">

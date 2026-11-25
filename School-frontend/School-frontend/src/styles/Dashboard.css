@@ -261,6 +261,98 @@
     border-top: 3px solid var(--theme-accent);
 }
 
+.page-heading {
+    min-height: 4.25rem;
+}
+
+.page-heading h3 {
+    color: #1a1a1a;
+    letter-spacing: -0.02em;
+}
+
+.page-heading-icon {
+    width: 3rem;
+    height: 3rem;
+    flex: 0 0 3rem;
+    display: grid;
+    place-items: center;
+    color: var(--theme-accent);
+    background: var(--theme-accent-soft);
+    border: 1px solid color-mix(in srgb, var(--theme-accent) 18%, transparent);
+    border-radius: 0.9rem;
+}
+
+.lesson-notes-page,
+.exams-page {
+    max-width: 1680px;
+    margin-inline: auto;
+}
+
+.lesson-notes-date {
+    width: min(100%, 220px);
+}
+
+.lesson-note-form,
+.lesson-note-card,
+.exam-controls,
+.exam-results-card {
+    border-top: 3px solid color-mix(in srgb, var(--theme-accent) 65%, transparent) !important;
+}
+
+.lesson-notes-list-heading {
+    border-color: color-mix(in srgb, var(--theme-accent) 20%, #dee2e6) !important;
+}
+
+.lesson-note-card h6 {
+    overflow-wrap: anywhere;
+}
+
+.lesson-note-card .small > div {
+    line-height: 1.6;
+}
+
+.exam-controls .form-select {
+    min-height: 2.75rem;
+}
+
+.exam-actions .btn {
+    min-width: 7rem;
+    min-height: 2.75rem;
+}
+
+.exam-results-card .table th,
+.exam-results-card .table td {
+    vertical-align: middle;
+}
+
+.exam-results-card .table th:not(:first-child),
+.exam-results-card .table td:not(:first-child) {
+    text-align: center;
+}
+
+@media (max-width: 575.98px) {
+    .page-heading {
+        align-items: flex-start !important;
+    }
+
+    .lesson-notes-date {
+        width: 100%;
+    }
+
+    .lesson-note-form {
+        padding: 1rem !important;
+    }
+
+    .exam-controls {
+        padding: 1rem !important;
+    }
+
+    .exam-actions .btn {
+        min-width: 0;
+        flex: 1 1 100%;
+    }
+}
+
 @media print {
     body.attendance-summary-printing .sidebar,
     body.attendance-summary-printing .top-navbar,
