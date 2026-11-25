@@ -22,6 +22,20 @@ services:
         value: update
       - key: PAYSTACK_SECRET_KEY
         sync: false
+      - key: SPRING_MAIL_USERNAME
+        sync: false
+      - key: SPRING_MAIL_PASSWORD
+        sync: false
+      - key: SPRING_MAIL_HOST
+        value: smtp.gmail.com
+      - key: SPRING_MAIL_PORT
+        value: "587"
+      - key: ARKESEL_API_KEY
+        sync: false
+      - key: ARKESEL_SENDER_ID
+        sync: false
+      - key: ARKESEL_API_URL
+        value: https://sms.arkesel.com/sms/api
       - key: PAYSTACK_CURRENCY
         value: GHS
       - key: PAYSTACK_CALLBACK_URL

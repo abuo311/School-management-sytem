@@ -2,25 +2,36 @@ package com.school.services;
 
 import com.school.entities.SchoolSettings;
 import com.school.repositories.SettingsRepository;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.util.StringUtils;
 import org.springframework.web.util.UriComponentsBuilder;
+
+import java.net.URI;
 
 @Service
 public class SmsService {
 
-    @Value("${arkesel.api.key}")
+    @Value("${arkesel.api.key:}")
     private String apiKey;
 
-    @Value("${arkesel.sender.id}")
+    @Value("${arkesel.sender.id:}")
     private String senderId;
+
+    @Value("${arkesel.api.url:https://sms.arkesel.com/sms/api}")
+    private String apiUrl;
 
     private final SettingsRepository settingsRepository;
     private final RestTemplate restTemplate = new RestTemplate();
+    private final ObjectMapper objectMapper;
 
-    public SmsService(SettingsRepository settingsRepository) {
+    public SmsService(SettingsRepository settingsRepository, ObjectMapper objectMapper) {
         this.settingsRepository = settingsRepository;
+        this.objectMapper = objectMapper;
     }
 
     /**
@@ -48,21 +59,48 @@ public class SmsService {
     }
 
     public void sendSms(String phoneNumber, String message) {
+        if (!StringUtils.hasText(apiKey) || !StringUtils.hasText(senderId) || !StringUtils.hasText(apiUrl)) {
+            throw new IllegalStateException(
+                    "Arkesel SMS is not configured. Set ARKESEL_API_KEY and ARKESEL_SENDER_ID.");
+        }
+        String recipient = formatPhoneNumber(phoneNumber);
+        if (!StringUtils.hasText(recipient)) {
+            throw new IllegalArgumentException("A phone number is required to send SMS.");
+        }
+
+        URI uri = UriComponentsBuilder.fromUriString(apiUrl.trim())
+                .queryParam("action", "send-sms")
+                .queryParam("api_key", apiKey.trim())
+                .queryParam("to", recipient)
+                .queryParam("from", senderId.trim())
+                .queryParam("sms", message)
+                .queryParam("response", "json")
+                .build()
+                .encode()
+                .toUri();
+
+        String response = restTemplate.getForObject(uri, String.class);
+        if (!isSuccessfulResponse(response)) {
+            throw new IllegalStateException("Arkesel did not accept the SMS request.");
+        }
+    }
+
+    private boolean isSuccessfulResponse(String response) {
+        if (!StringUtils.hasText(response)) {
+            return false;
+        }
+        String body = response.trim();
+        if ("OK".equalsIgnoreCase(body)) {
+            return true;
+        }
         try {
-            String url = UriComponentsBuilder.fromHttpUrl("https://sms.arkesel.com/sms/api")
-                    .queryParam("action", "send-sms")
-                    .queryParam("api_key", apiKey)
-                    .queryParam("to", formatPhoneNumber(phoneNumber))
-                    .queryParam("from", senderId)
-                    .queryParam("sms", message)
-                    .build()
-                    .toUriString();
-
-            String response = restTemplate.getForObject(url, String.class);
-            System.out.println("Arkesel Response: " + response);
-
-        } catch (Exception e) {
-            System.err.println("Failed to send SMS to " + phoneNumber + ": " + e.getMessage());
+            JsonNode result = objectMapper.readTree(body);
+            return "ok".equalsIgnoreCase(result.path("code").asText())
+                    || "success".equalsIgnoreCase(result.path("status").asText())
+                    || "successfully sent".equalsIgnoreCase(result.path("message").asText())
+                    || (result.isTextual() && "OK".equalsIgnoreCase(result.asText()));
+        } catch (JsonProcessingException exception) {
+            return false;
         }
     }
 
